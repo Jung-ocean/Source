@@ -1,0 +1,818 @@
+   program enkf
+
+   use background
+   use kalman
+   use observation
+   use netcdf
+
+   implicit none   
+
+        integer, parameter :: LLOOF=30
+        integer :: i, j, k, kk, ii, jj, kkki, iil
+        integer :: iens,IDobs,IDobs2,loof_num
+	real :: start, finish
+        real :: gasdev 
+        real(kind=8) :: aa, bb, delt,distst_hPh,distst_Ph, std, Kgain_inov,HBHT     
+        real(kind=8) :: mean2, Nensd ,sum ,inflref 
+        real(kind=8), allocatable, dimension(:) :: ens_mean,errvec ,Dummy
+        real(kind=8), allocatable, dimension(:,:) :: mft_cov_mft,Cov_measft,LHS,err_covar       
+!        real(kind=8), allocatable, dimension(:,:) :: obs_p 
+!        real(kind=8) :: avgrmserr,fctrmserr,anlrmserr, fctobserr,anlobserr
+        
+        character(20) :: text
+        character(44) :: expname
+!        real(kind=8) :: inflation, infl1, infl2,inflold,inflref
+        integer :: lwork4,rcode
+        real(kind=8), allocatable, dimension(:)  ::  work4
+        integer,allocatable,dimension(:) :: iloof 
+
+        real(kind=8), allocatable, dimension(:) :: RHS, borig, diag, x,check,Mbdata
+        real(kind=8), allocatable, dimension(:) :: diff
+        real, allocatable, dimension(:) :: gauss_rand
+        real(kind=8), allocatable, dimension(:,:) :: aorig, sol 
+        real(kind=8), parameter :: eps = 0.001d0 
+        real(kind=8), parameter :: cinf2=2*cinf
+        real(kind=8), parameter :: hinf2=2*hinf	
+
+!!!!!!! For observation error!!!!!!!!
+!        integer, parameter :: ori_wN=5, new_wN=1
+!        real, allocatable, dimension(:) :: coef, sdepth, stt, sdepth_new, stt_new
+!        real, allocatable, dimension(:) :: wcoef, ori_wx, ori_wy, new_wx, new_wy
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        lwork4=5*ss_dim
+        Nensd = 1.0d0 / dfloat(Nens)
+
+        open(11,file='kalman.par',status='old')
+        read(11,*)
+        read(11,'(15X,I2)')istep
+        write(*,*) 'Step :',istep
+        close(11)
+        
+        allocate(iloof(LLOOF))
+        open(21,file='kalman_loof.par',status='old')
+        read(21,*)
+        do i=1,istep
+        read(21,'(i5)') iloof(i)
+        write(*,*) iloof(i)
+        enddo
+        loof_num= iloof(istep)
+        write(*,*)'Step loof : ', loof_num
+        close(21)
+! save initial
+       call save_ini
+       !write(*,*)'save initial'
+       
+      do iil = 1,loof_num
+!!!!!!!!!!!!Get the Locations of Observations!!!!!!!!!!!!!
+        call get_observation(istep,iil)
+        write(*,*)'get observation'
+!!!!!!!!!!!!!Get the background fields!!!!!!!!!!!!!!!!!!!!
+        call get_background_new
+        write(*,*)'get background'
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        
+        allocate(LHS(Nobs,Nobs),err_covar(Nobs,Nobs),mft_cov_mft(Nobs,Nobs),aorig(Nobs,Nobs))
+        allocate(Cov_measft(Nsta,Nobs),sol(Nens,Nobs),Mbdata(Nobs))
+        allocate(RHS(Nobs),borig(Nobs),diag(Nobs),x(Nobs),check(Nobs),diff(Nobs),gauss_rand(Nobs),Dummy(Nobs))
+        allocate(errvec(Nsta),ens_mean(Nsta))
+        allocate(work4(lwork4))
+!        allocate(ori_wx(ori_wN), ori_wy(ori_wN), wcoef(ori_wN), new_wx(new_wN), new_wy(new_wN))
+
+!        ori_wx(1) = 0
+!        ori_wx(2) = 100
+!        ori_wx(3) = 300
+!        ori_wx(4) = 500
+!        ori_wx(5) = 1000
+!        ori_wy(1) = 0.05
+!        ori_wy(2) = 0.05
+!        ori_wy(3) = 0.4
+!        ori_wy(4) = 0.2
+!        ori_wy(5) = 0.1 
+    
+!        call spline(ori_wx, ori_wy, ori_wN, 1e31, 1e31, wcoef)
+
+        expname='./out' 
+
+        inflref = 1.
+
+!       open(401,file='EnSp.dat')
+        open(402,file='Lambda.dat')
+!       open(403,file='ErrOut.dat')
+        open(411,file='IDobs.dat')
+
+!!!!!!!!!!!!!!!!Calculate the Ensemble Mean !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
+!        Nsta: the length of state vector             (ista)             !
+!        Nens: the number of ensemble member          (iens)             !  
+!        old_ens(ista,iens): state vector                                !
+!        ens_mean(ista)    : mean of ensemble member old_ens(ista,iens)  !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            do i=1,Nsta
+             aa=0.0d0
+               do K=1,Nens            
+                aa=aa+old_ens(i,K)
+               enddo
+             ens_mean(i)=aa*Nensd
+            enddo
+ write(*,*) 'calulate ensemble mean'
+!!!!!!!!!!!!!! Calculate obs_p(1:Nobs,1:Nens) !!!!!!!!!!!!!!!!!!!!!!!!!!
+!             obs_p=Nobs*Nens                                          !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          do i=1,Nobs
+             aa = 0.0d0
+             do k=1,Nens
+                aa = aa + bdata_obs(i,k)
+             enddo
+             Mbdata(i) = aa/real(Nens)
+          enddo
+!         obs_p(:,:)=bdata_obs(:,:) 
+!write(*,*) ' obs_point =',  bdata_obs         
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! compute CH' and save it as Cov_measft                                !
+!                           [ Nsta x Nobs ]                            !
+!         C is the corvariance matrix (cov)                            !
+!         H is measurement function   (measft)                         !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+call cpu_time(start)
+write (*,*) "Stage of CH Computation" 
+      do ii=1,Nobs
+         do  jj=1,Nsta 
+            sum=0.d0 
+            do iens =1,Nens 
+               sum = sum + bdata_obs(ii,iens)*old_ens(jj,iens) 
+            enddo
+            mean2=Mbdata(ii)*ens_mean(jj) 
+            Cov_measft(jj,ii) = sum*Nensd - mean2 
+         enddo
+       enddo
+call cpu_time(finish)
+write (*,*) "Duation Time ", finish-start
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!     Correct the Covariance Function; get rid of
+!     false correlation at long distance
+!     Bk=Bk*HBHT;
+!     See Houtekamer and Mitchell, MWR 2001, P123
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+call cpu_time(start)
+write (*,*) "Stage of BK"
+             do i=1,Nobs
+                  do k=1,Nsta 
+                  delt=distst_Ph(i,k)
+               if(delt .gt. cinf2) then
+                       HBHT = 0.
+               elseif(delt .gt. cinf) then
+                       HBHT = 1./12.*(delt/cinf)**5 &
+                              -1./2.*(delt/cinf)**4 &
+                              +5./8.*(delt/cinf)**3 &
+                              +5./3.*(delt/cinf)**2 &
+                              -5.*(delt/cinf) &
+                              +4. -2./3.*(cinf/delt)
+                else
+                        HBHT = -1./4.*(delt/cinf)**5 &
+                               +1./2.*(delt/cinf)**4 &
+                               +5./8.*(delt/cinf)**3 &
+                               -5./3.*(delt/cinf)**2 &
+                               +1
+                 endif
+                 Cov_measft(k,i)=Cov_measft(k,i)*HBHT
+                 if(abs(HBHT).gt.1.0)then
+                    write(*,*) k,i, HBHT,Cov_measft(k,i)
+                 endif
+             enddo
+      enddo
+call cpu_time(finish)
+write (*,*) "Duation Time ", finish-start
+
+write(*,*) 'finished CH`'
+call cpu_time(start)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+! compute HCH'                                                         !  
+! (Nobs x Nobs matrix)                                                 !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      do ii=1,Nobs
+       do jj=1,Nobs
+         sum=0.d0 
+         do iens=1,Nens 
+         sum=sum+bdata_obs(ii,iens)*bdata_obs(jj,iens)
+         enddo 
+        mean2=Mbdata(ii)*Mbdata(jj) 
+        mft_cov_mft(ii,jj)=sum*Nensd - mean2 
+        delt=distst_hPh(ii,jj)
+        
+        if(delt .gt. cinf2) then
+              HBHT = 0.
+             elseif(delt .gt. cinf) then
+              HBHT = 1./12.*(delt/cinf)**5 &
+                    -1./2.*(delt/cinf)**4 &
+                    +5./8.*(delt/cinf)**3 &
+                    +5./3.*(delt/cinf)**2 &
+                    -5.*(delt/cinf) &
+                    +4. -2./3.*(cinf/delt)
+          else
+              HBHT = -1./4.*(delt/cinf)**5 &
+                     +1./2.*(delt/cinf)**4 &
+                     +5./8.*(delt/cinf)**3 &
+                     -5./3.*(delt/cinf)**2 &
+                     +1
+             endif
+          mft_cov_mft(ii,jj)=mft_cov_mft(ii,jj)*HBHT
+         enddo
+     enddo
+!     do ii=1,Nobs 
+!         do jj=1,Nobs 
+!            kkk=obs_index(,) 
+!            mft_cov_mft(ii,jj)= Cov_measft(kkk,ii) 
+!         enddo 
+!      enddo
+      write(*,*) 'finished HCH`'
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!  Get the Observation error Covariance Matrix:                        !
+!                         err_covar [ Nobs * Nobs ]                    !   
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         err_covar=0.0 
+!         do I=1, Nobs
+!           new_wx(1) = depth_obs(I)
+!           if (new_wx(1) < 1000) then
+!            call splint(ori_wx,ori_wy,wcoef,ori_wN,new_wx,new_wy,new_wN)
+!                 err_covar(I,I)=new_wy(1)**2
+!           else
+!                 err_covar(I,I) = 0.05**2
+!           endif
+           ! write(*,*) 'depth_obs = ', new_wx(1), 'err_covar = ', new_wy(1)
+           ! Wk(I,I) = 1.0 ** 2
+!         enddo
+         do ii=1,Nobs 
+            err_covar(ii,ii)=obserr(ii)*obserr(ii)
+            !write(*,*) 'obs_err = ', err_covar
+         enddo 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!                 LHS= mft_cov_mft+ err_covar                      !
+!                    =HCH'+R                                        !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+      do i=1,Nobs
+          do j=1,Nobs
+              LHS(i,j)=mft_cov_mft(i,j)+err_covar(i,j)
+          enddo
+      enddo
+     
+      do ii=1,Nobs 
+         do jj=1,Nobs 
+            aorig(ii,jj)=LHS(ii,jj)
+         enddo 
+      enddo 
+
+      do i=1,Nobs
+         Dummy(i)=0.0d0
+      enddo
+
+      call gaussj(LHS,Nobs,Nobs,Dummy,1,1)
+      write(*,*) 'Invere Finished '  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!     subroutine gaussj will output inverse matrix of LHS          !
+!     provide a seed number to a random number generator           !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+       
+      If (istep .eq. 1) then
+        IDobs=-31.00
+      else
+        open (78, file='IDobstmp.dat')
+        read(78, *) IDobs
+        !print *, 'IDobs= ', IDobs
+        close(78)
+      endif   
+        write(411,*) IDobs 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!     starting  do loop 100                              !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!            
+      do 100 iens=1, Nens 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!     generate random numbers with Gaussian distribution           ! 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        do ii = 1, Nobs 
+           gauss_rand(ii) = gasdev(IDobs)
+        enddo
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! set RHS = observation data + gauss_rand  - measurement            !
+!      i.e. this the invovation vector                              ! 
+!      observation: really observed data from real ocean            !
+!      measurement: calculated values from numberical model         !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!     ( HCH' + R )^{-1} *( y   -  y   )  =  unknown                !  
+!                           0      f                               !
+!                                                                  !
+!         LHS^{-1}      *   RHS         =   X                      !
+!                                                                  !
+!         LHS X = RHS                                              !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        do ii = 1, Nobs 
+           std = dsqrt( err_covar(ii,ii) ) 
+           RHS(ii) = obsdata(ii) + std*gauss_rand(ii) - bdata_obs(ii,iens)
+       enddo 
+ 
+        do ii=1,Nobs 
+           borig(ii)=RHS(ii) 
+        enddo 
+
+          do j=1,Nobs
+            aa=0.0d0
+            do k=1,Nobs
+              aa=aa+LHS(j,k)*RHS(k)
+            enddo
+            sol(iens,j)=aa
+          enddo
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Save the solution X: sol(iens,:)=X(:)                        !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+       do ii=1,Nobs
+        x(ii)=  sol(iens,ii)
+       enddo      
+       
+       do ii=1,Nobs 
+          aa = 0.0d0 
+          do jj=1,Nobs 
+           aa = aa + aorig(ii,jj)*x(jj) 
+          enddo 
+          check(ii) = aa 
+          diff(ii)  = dabs(check(ii) - borig(ii)) 
+       enddo 
+ 
+       do ii=1,Nobs 
+           if ( diff(ii) .gt. eps ) then 
+            write(*,*) 'check accuracy at', ii ,'iens=', iens
+            write(*,*) diff(ii)
+            pause 
+           endif 
+       enddo 
+100 enddo
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! end do loop 100                                           !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    do iens=1,Nens
+      do ii=1,Nsta 
+        Kgain_inov = 0.0d0
+        do jj = 1, Nobs 
+          Kgain_inov =Kgain_inov+Cov_measft(ii,jj)*sol(iens,jj) 
+        enddo
+        old_ens(ii,iens) = old_ens(ii,iens) + Kgain_inov 
+      enddo
+    enddo
+call cpu_time(finish)
+    write(*,*) 'finish new ensenble' 
+    write(*,*), finish-start
+    deallocate (LHS,err_covar,mft_cov_mft,aorig,Cov_measft,sol,Mbdata)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!  save_bg   will read his_ens(iens)_out.nc and save them onto bg_(istep)step.nc !
+!  save_anal will save new_ens(ista,iens) onto ocean_rst_ens_step(istep).nc      !
+!                                          and his_ens(iens)_in.nc               !
+!  save_bg1  will tar and zip ocean_rst_ens_step(istep).nc                       !  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
+          write(*,*)"1"
+!          call save_bg
+!          write(*,*)"2"
+          call save_anal
+!          write(*,*)"3"
+!observation deallocate
+    deallocate(lon_obs,lat_obs,depth_obs,obsdata,obserr,ind_obs)
+!background deallocate
+    deallocate(cs_r,cs_w,s_rho,lon_rho,lat_rho,lon_u,lat_u,lon_v,lat_v,hdepth,zeta_r)
+    deallocate(index_back,old_ens,bdata_obs)
+!main deallocate
+    deallocate(RHS,borig,diag,x,check,diff,gauss_rand,Dummy)
+    deallocate(errvec,ens_mean,work4)
+!	else
+!deallocate(lon_obs,lat_obs,depth_obs,obsdata,ind_obs)
+!	endif 
+write(*,*) '--------------- > Go go next loof < ----------------------'
+enddo
+deallocate(iloof)
+          !call save_ens
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
+!                 Calculate the Ensemble Mean                  !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!            do I=1,Nsta
+!              aa=0.0d0
+!              do K=1,Nens
+!                aa=aa+old_ens(I,K)
+!              enddo           
+!              ens_mean(I)=aa*Nensd
+!              do K=1,Nens
+!                old_ens(I,K)=old_ens(I,K)-ens_mean(I)
+!              enddo
+!            enddo
+            
+!            Calculate the Spread among ensembles             !
+!            bb=0.0d0
+!            do  I=1,Nsta
+!              aa=0.0d0
+!              do K=1, Nens
+!                 aa=aa+old_ens(I,K)**2.0
+!              enddo
+!              ens_mean(I)=aa/real(Nens-1)
+!              bb=bb+ens_mean(I)
+!            enddo
+!
+!            aa=sqrt(bb/real(Nsta))
+            
+!            write(401,'(i20,5d16.7)') aa,infl1,infl2,inflold,inflation
+!            write(403,'(i10,6d12.4)') fctobserr,fctrmserr,anlobserr, &
+!              anlrmserr,avgrmserr,anlrmserr/avgrmserr
+     
+
+            open(98, file='IDobstmp.dat')
+            write(98, *) IDobs
+            close(98)
+        !    print *, 'IDobs= ', IDobs
+        !  close(401)
+
+        open(11,file='kalman.par',status='unknown')
+        write(11,'(A)') '------Ensemble Kalman Filter Parameters-----'
+        write(11,'(A15,I2)') ' time step :   ', istep+1
+        !write(11,'(A15,I2)') ' loof_num  :   ', iloof
+        close(11)
+
+!!!!!!!!!!!!!!!!!!!!!!! NTIME UPDATA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
+!            NTIMES = NTIME+NHIS                                  !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+       
+        call update_metafile
+        write(*,*) 'NEXTSTEP'
+
+        call system('rm -f *_out.nc')
+        call system('rm -f after*')
+        call system('rm -f before*')
+    end program enkf
+
+!================   subrutine   =============================================cc
+
+      real(kind=8) function distst_Ph(iobs,iback)
+
+      use kalman, only      : cinf,hinf
+      use background, only  : index_back,hdepth,cs_r,zeta_r,lon_rho,lat_rho, &
+                              lon_u,lat_u,lon_v,lat_v,iu,iv,itemp,isalt,izeta,s_rho,hc
+      use observation, only : lon_obs,lat_obs,depth_obs
+
+      implicit none
+
+      integer, intent(in) :: iobs,iback
+      real(kind=8) :: angle,sigma,rdepth,hdiff,lon_back,lat_back
+
+      if(index_back(iback,1) == iu) then
+        lon_back = lon_u(index_back(iback,2),index_back(iback,3))
+        lat_back = lat_u(index_back(iback,2),index_back(iback,3))
+      else if(index_back(iback,1) == iv) then
+        lon_back = lon_v(index_back(iback,2),index_back(iback,3))
+        lat_back = lat_v(index_back(iback,2),index_back(iback,3))
+      else
+        lon_back = lon_rho(index_back(iback,2),index_back(iback,3))
+        lat_back = lat_rho(index_back(iback,2),index_back(iback,3))
+      endif
+
+      call distance(distst_Ph,angle,lat_obs(iobs),lon_obs(iobs)&
+              ,lat_back,lon_back)
+      if (lat_obs(iobs).eq.lat_back .and. lon_obs(iobs).eq.lon_back)then
+      distst_Ph=0.0
+      endif
+      
+      sigma = - cs_r(index_back(iback,4))
+      rdepth = zeta_r(index_back(iback,2),index_back(iback,3))*(1+s_rho(index_back(iback,4))&
+              - hc*s_rho(index_back(iback,4)) - hdepth(index_back(iback,2),index_back(iback,3))-hc)*cs_r(index_back(iback,4)) 
+      hdiff = abs(depth_obs(iobs)-rdepth)
+
+      distst_Ph = sqrt(distst_Ph**2+(hdiff*cinf/hinf)**2)
+      return
+      end function distst_Ph
+!=======================================================cc
+       real(kind=8) function distst_hPh(iobs,jobs)
+
+      use kalman, only      : cinf,hinf
+      use observation, only : lon_obs,lat_obs,depth_obs
+      
+      implicit none
+
+      integer, intent(in) :: iobs,jobs
+      real(kind=8) :: angle,sigma,rdepth,hdiff
+
+      call distance(distst_hPh,angle,lat_obs(iobs),lon_obs(iobs)&
+              ,lat_obs(jobs),lon_obs(jobs))
+     
+     if (lat_obs(iobs).eq.lat_obs(jobs) .and. lon_obs(iobs).eq.lon_obs(jobs))then
+     distst_hPh=0.0
+     endif
+
+     hdiff = abs(depth_obs(iobs)-depth_obs(jobs))
+     distst_hPh = sqrt(distst_hPh**2+(hdiff*cinf/hinf)**2)
+     return
+      end function distst_hPh
+!=======================================================cc
+      subroutine gr2st !(st_out)
+      use background, only : index_back,Nsta
+      implicit none
+!      real(kind=8) :: st_out(Nsta)
+      integer :: i,j,k
+
+      k=0
+
+      return
+      end subroutine gr2st
+
+! *******************************************************************
+
+      subroutine st2gr!(st_in,q2_out)
+      implicit none
+!      real(kind=8) :: q2_out(0:nx,0:ny),st_in(Nsta)
+      integer :: i,j,k
+
+!      k=0
+!      do j=0,ny
+!        do i=0,nx
+!          k=k+1
+!          q2_out(i,j)=st_in(k)
+!        enddo
+!      enddo
+
+      return
+      end subroutine st2gr
+ 
+!********************************************************************
+
+
+       subroutine gaussj(a,n,np,b,m,mp)
+       implicit none
+       integer :: m,mp,n,np
+       real(kind = 8) :: a(np,np),b(np,mp)
+       integer, parameter :: NMAX=100
+       integer :: i,icol,irow,j,k,l,ll,indxc(NMAX),indxr(NMAX),ipiv(NMAX)
+       real(kind=8) :: big,dum,pivinv
+
+       do j=1,n
+         ipiv(j)=0
+       enddo
+       
+       do i=1,n
+         big=0.
+         do j=1,n
+          if(ipiv(j).ne.1)then
+            do k=1,n
+              if (ipiv(k).eq.0) then
+                if (abs(a(j,k)).ge.big)then
+                  big=abs(a(j,k))
+                  irow=j
+                  icol=k
+                endif
+
+              else if (ipiv(k).gt.1) then
+              write(*,*)'AAA', ipiv(k) ,k
+	      pause 'singular matrix in gaussj'
+              endif
+            enddo
+          endif
+         enddo
+        ipiv(icol)=ipiv(icol)+1
+        if (irow.ne.icol) then
+          do l=1,n
+            dum=a(irow,l)
+            a(irow,l)=a(icol,l)
+            a(icol,l)=dum
+          enddo
+          do l=1,m
+            dum=b(irow,l)
+            b(irow,l)=b(icol,l)
+            b(icol,l)=dum
+          enddo
+        endif
+        indxr(i)=irow
+        indxc(i)=icol
+        
+	if (a(icol,icol).eq.0.) then
+	write(*,*) 'BBB' ,icol,a(icol,icol) 
+	pause 'singular matrix in gaussj'
+        endif
+	
+        pivinv=1./a(icol,icol)
+        a(icol,icol)=1.
+        do l=1,n
+          a(icol,l)=a(icol,l)*pivinv
+        enddo
+        do l=1,m
+          b(icol,l)=b(icol,l)*pivinv
+        enddo
+        do ll=1,n
+          if(ll.ne.icol)then
+            dum=a(ll,icol)
+            a(ll,icol)=0.
+            do l=1,n
+              a(ll,l)=a(ll,l)-a(icol,l)*dum
+            enddo
+            do l=1,m
+              b(ll,l)=b(ll,l)-b(icol,l)*dum
+            enddo
+          endif
+         enddo
+        enddo
+      do l=n,1,-1
+        if(indxr(l).ne.indxc(l))then
+          do k=1,n
+            dum=a(k,indxr(l))
+            a(k,indxr(l))=a(k,indxc(l))
+            a(k,indxc(l))=dum
+          enddo
+        endif
+      enddo
+      return
+      end subroutine gaussj
+
+!-------------------------------------------------------------------
+    
+      real function gasdev(idum)
+      implicit none
+      integer, intent(in) :: idum
+      integer,save :: iset
+      real, save :: gset
+      real :: fac,rsq,v1,v2,ran2
+      DATA iset/0/
+      if (iset.eq.0) then
+
+       ! do
+       !   v1=2.*ran2(idum)-1.
+       !   v2=2.*ran2(idum)-1.
+       !   rsq=v1**2+v2**2
+       !   if(rsq<1. .and. rsq /=0.) exit
+       ! enddo
+1        v1=2.*ran2(idum)-1.
+        v2=2.*ran2(idum)-1.
+        rsq=v1**2+v2**2
+        if(rsq.ge.1. .or. rsq.eq.0.)goto 1
+
+        fac=sqrt(-2.*log(rsq)/rsq)
+        gset=v1*fac
+        gasdev=v2*fac
+        iset=1
+      else
+        gasdev=gset
+        iset=0
+      endif
+      return
+      end function gasdev
+
+      real function ran2(idum)
+      implicit none
+      integer, intent(inout)  :: idum
+      integer, parameter :: IM1=2147483563,IM2=2147483399, IMM1=IM1-1, &
+         IA1=40014,IA2=40692,IQ1=53668,IQ2=52774,IR1=12211,IR2=3791, &
+         NTAB=32,NDIV=1+IMM1/NTAB
+      real, parameter     :: AM=1./IM1, EPS=1.2e-7,RNMX=1.-EPS
+      integer, save :: iv(NTAB), iy, idum2
+      integer           :: j,k
+      data idum2/123456789/, iv/NTAB*0/, iy/0/
+      if (idum.le.0) then
+        idum=max(-idum,1)
+        idum2=idum
+        do j=NTAB+8,1,-1
+          k=idum/IQ1
+          idum=IA1*(idum-k*IQ1)-k*IR1
+          if (idum.lt.0) idum=idum+IM1
+          if (j.le.NTAB) iv(j)=idum
+         enddo
+        iy=iv(1)
+      endif
+      k=idum/IQ1
+      idum=IA1*(idum-k*IQ1)-k*IR1
+      if (idum.lt.0) idum=idum+IM1
+      k=idum2/IQ2
+      idum2=IA2*(idum2-k*IQ2)-k*IR2
+      if (idum2.lt.0) idum2=idum2+IM2
+      j=1+iy/NDIV
+      iy=iv(j)-idum2
+      iv(j)=idum
+      if(iy.lt.1)iy=iy+IMM1
+      ran2=min(AM*iy,RNMX)
+      return
+      end function ran2
+
+!***********************************************************
+! this subroutine accesses the TRUTH run, generally shouldn't
+! be available during an experiment (without cheating)
+!      subroutine readref2(index,stin)
+      subroutine readref2(index)
+
+      use netcdf
+
+      implicit none
+
+      integer :: index,i,j,rcode
+!      real(kind=8) :: stin(Nsta),q2gr(0:nx,0:ny),wrk(L,M)
+!      integer :: start(3),count(3)
+!      integer :: status,ncrefid2,varrefid2
+!      character(48) :: fnam
+
+!      fnam ='ref2.cdf'
+
+!      status=nf_open(fnam,NF_NOWRITE,ncrefid2)
+!      status=nf_inq_varid(ncrefid2,'q1',varrefid2)
+
+!      start(1)=1
+!      count(1)=L
+!      start(2)=1
+!      count(2)=M
+!      start(3)=index
+!      count(3)=1
+!      rcode=nf_get_vara_double(ncrefid2,varrefid2, &
+!                             start,count,wrk)
+!      do j=0,ny
+!        do i=0,nx
+!          q2gr(i,j)=wrk(i+1,j+1)
+!        enddo
+!      enddo
+!      call gr2st(q2gr,stin)
+!      rcode=nf_close(ncrefid)
+
+
+      return
+      end subroutine readref2
+
+!***********************************************************
+
+!      subroutine plotstate_cdf(filename,stin)
+      subroutine plotstate_cdf(filename)
+
+      use netcdf
+
+      implicit none
+
+      integer :: i,ii,rcode,start(3),count(3),dims(3)
+      character(80) :: filename
+!      real(kind=8) :: stin(Nsta),q2gr(0:nx,0:ny)
+!
+! Output state in cdf file
+!
+!      call st2gr(stin,q2gr)
+      start(1)=1
+      start(2)=1
+!      count(1)= nx+1
+!      count(2)= ny+1
+!      ii =  nccre(filename,NCCLOB,rcode)
+!      dims(1) = ncddef(ii,'x',nx+1,rcode)
+!      dims(2) = ncddef(ii,'y',ny+1,rcode)
+!      i = ncvdef(ii,'q1',NCDOUBLE,2,dims,rcode)
+!      CALL ncendf(ii,rcode)
+!      CALL ncvpt(ii,i, start, count, q2gr, rcode)
+!      CALL ncclos(ii,rcode)
+
+      return
+      end subroutine plotstate_cdf
+
+
+
+!***********************************************************
+
+      subroutine print_err(errvec,ndim,text,err2)
+
+      implicit none
+      integer :: ndim,k
+      real(kind=8) :: err1,err2,err3,errvec(ndim)
+      character(20) :: text
+
+      err1 = 0.0
+      err2 = 0.0
+      err3 = 0.0
+      do k = 1, ndim
+        if (abs(errvec(k)) .gt. err1) then
+          err1 = abs(errvec(k))
+        endif
+        err2 = err2 + errvec(k) * errvec(k)
+        err3 = err3 + abs(errvec(k))
+      enddo
+      err2 = sqrt(err2/ndim)
+      err3 = err3 / ndim
+      write (6,*) text,' max error=', err1, ' rms error=', &
+                  err2,' mean error=', err3
+
+      return
+      end subroutine print_err
+
+! *******************************************************************
+
+      subroutine subst(st_in1,st_in2,st_out)
+ 
+      use background, only : Nsta
+      implicit none
+
+      real(kind=8), allocatable, dimension(:) :: st_in1,st_in2,st_out
+      integer :: i
+
+      if(.not.allocated(st_in1)) &
+        allocate(st_in1(Nsta),st_in2(Nsta),st_out(Nsta))
+      do i=1,Nsta
+          st_out(i)=st_in1(i)-st_in2(i)
+      enddo
+
+      return
+      end subroutine subst
+

@@ -1,0 +1,11 @@
+pgf90  -Mfreeform -O -I/usr/local/netcdf/432_pgi1510/include -c copy_nc.F
+pgf90  -Mfreeform -O -I/usr/local/netcdf/432_pgi1510/include -c kalman.F
+pgf90  -Mfreeform -O -I/usr/local/netcdf/432_pgi1510/include -c get_observation_all.F
+pgf90  -Mfreeform -O -I/usr/local/netcdf/432_pgi1510/include -c get_background_new.F
+pgf90  -Mfreeform -O -I/usr/local/netcdf/432_pgi1510/include -c distance.F
+pgf90  -Mfreeform -O -I/usr/local/netcdf/432_pgi1510/include -c save_anal.F
+pgf90  -Mfreeform -O -I/usr/local/netcdf/432_pgi1510/include -c main_all.F
+pgf90  -Mfreeform -O -I/usr/local/netcdf/432_pgi1510/include -c update_init.F
+pgf90  -Mfreeform -O -I/usr/local/netcdf/432_pgi1510/include -c cubic_spline.F
+pgf90  -Mfreeform -O -I/usr/local/netcdf/432_pgi1510/include -c save_ini.F
+pgf90  -O -o enkf_10km_ana copy_nc.o kalman.o get_observation_all.o get_background_new.o  distance.o  save_anal.o main_all.o update_init.o  cubic_spline.o save_ini.o -L/usr/local/netcdf/432_pgi1510/lib  -lnetcdff 
