@@ -1,0 +1,35 @@
+#!/bin/bash
+
+year=$1
+(( !(year % 4) && ( year % 100 || !(year % 400) ) )) &&
+leapindex=1 || leapindex=0
+
+if [ $leapindex == "0" ]
+then
+  echo $year
+  ncra -n 31,4,1 avg_0001.nc monthly_${year}01.nc
+  ncra -n 28,4,1 avg_0032.nc monthly_${year}02.nc
+  ncra -n 31,4,1 avg_0060.nc monthly_${year}03.nc
+  ncra -n 30,4,1 avg_0091.nc monthly_${year}04.nc
+  ncra -n 31,4,1 avg_0121.nc monthly_${year}05.nc
+  ncra -n 30,4,1 avg_0152.nc monthly_${year}06.nc
+  ncra -n 31,4,1 avg_0182.nc monthly_${year}07.nc
+  ncra -n 31,4,1 avg_0213.nc monthly_${year}08.nc
+  ncra -n 30,4,1 avg_0244.nc monthly_${year}09.nc
+  ncra -n 31,4,1 avg_0274.nc monthly_${year}10.nc
+  ncra -n 30,4,1 avg_0305.nc monthly_${year}11.nc
+  ncra -n 31,4,1 avg_0335.nc monthly_${year}12.nc
+else
+  ncra -n 31,4,1 avg_0001.nc monthly_${year}01.nc
+  ncra -n 29,4,1 avg_0032.nc monthly_${year}02.nc
+  ncra -n 31,4,1 avg_0061.nc monthly_${year}03.nc
+  ncra -n 30,4,1 avg_0092.nc monthly_${year}04.nc
+  ncra -n 31,4,1 avg_0122.nc monthly_${year}05.nc
+  ncra -n 30,4,1 avg_0153.nc monthly_${year}06.nc
+  ncra -n 31,4,1 avg_0183.nc monthly_${year}07.nc
+  ncra -n 31,4,1 avg_0214.nc monthly_${year}08.nc
+  ncra -n 30,4,1 avg_0245.nc monthly_${year}09.nc
+  ncra -n 31,4,1 avg_0275.nc monthly_${year}10.nc
+  ncra -n 30,4,1 avg_0306.nc monthly_${year}11.nc
+  ncra -n 31,4,1 avg_0336.nc monthly_${year}12.nc
+fi
