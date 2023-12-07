@@ -1,0 +1,8 @@
+Country: China
+Station: Datong
+River: Changjiang
+Elevation: 19 m
+Upstream Area: 1705383 km^2
+Longitude: 117.61
+Latitude: 30.76
+Point ID: 00903

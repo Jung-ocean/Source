@@ -1,0 +1,8 @@
+Country: China
+Station: Yichang
+River: Changjiang
+Elevation: -9999 m
+Upstream Area: 1010000 km^2
+Longitude: 111.23
+Latitude: 30.66
+Point ID: 01350

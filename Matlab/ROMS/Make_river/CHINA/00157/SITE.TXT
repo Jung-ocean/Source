@@ -1,0 +1,8 @@
+Country: China
+Station: Chi-chi
+River: Cho-Shui
+Elevation: 196 m
+Upstream Area: 2311 km^2
+Longitude: 120.75
+Latitude: 23.83
+Point ID: 00157

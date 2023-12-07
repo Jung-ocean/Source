@@ -1,0 +1,8 @@
+Country: China
+Station: Jian
+River: Ganjiang
+Elevation: -9999 m
+Upstream Area: 56200 km^2
+Longitude: 114.98
+Latitude: 27.10
+Point ID: 01351

@@ -1,0 +1,8 @@
+Country: China
+Station: Heishiguan
+River: Yiluo
+Elevation: -9999 m
+Upstream Area: 18600 km^2
+Longitude: 112.93
+Latitude: 34.71
+Point ID: 01348

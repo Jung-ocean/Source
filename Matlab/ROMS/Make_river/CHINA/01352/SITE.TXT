@@ -1,0 +1,8 @@
+Country: China
+Station: Nanning
+River: Yujiang
+Elevation: -9999 m
+Upstream Area: 75500 km^2
+Longitude: 108.36
+Latitude: 22.80
+Point ID: 01352

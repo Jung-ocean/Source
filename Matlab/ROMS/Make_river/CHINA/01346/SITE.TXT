@@ -1,0 +1,8 @@
+Country: China
+Station: Zhangjiashan
+River: Jinghe
+Elevation: -9999 m
+Upstream Area: 43200 km^2
+Longitude: 108.60
+Latitude: 34.63
+Point ID: 01346

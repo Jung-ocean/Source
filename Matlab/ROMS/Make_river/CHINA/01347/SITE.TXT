@@ -1,0 +1,8 @@
+Country: China
+Station: Ankang
+River: Hanjiang
+Elevation: -9999 m
+Upstream Area: 41400 km^2
+Longitude: 109.01
+Latitude: 32.68
+Point ID: 01347

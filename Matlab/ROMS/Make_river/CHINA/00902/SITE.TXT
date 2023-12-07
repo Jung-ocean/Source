@@ -1,0 +1,8 @@
+Country: China
+Station: Hankou
+River: Changjiang
+Elevation: 28 m
+Upstream Area: 1488036 km^2
+Longitude: 114.28
+Latitude: 30.58
+Point ID: 00902

@@ -1,0 +1,8 @@
+Country: China
+Station: Jilin
+River: Songhua
+Elevation: -9999 m
+Upstream Area: 44100 km^2
+Longitude: 126.53
+Latitude: 43.83
+Point ID: 01343

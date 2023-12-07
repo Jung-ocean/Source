@@ -1,0 +1,8 @@
+Country: China
+Station: Hengshi
+River: Beijiang
+Elevation: 27 m
+Upstream Area: 34013 km^2
+Longitude: 113.26
+Latitude: 23.85
+Point ID: 00899

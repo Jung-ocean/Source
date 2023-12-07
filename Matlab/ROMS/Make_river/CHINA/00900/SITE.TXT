@@ -1,0 +1,8 @@
+Country: China
+Station: Boluo
+River: Dongjiang
+Elevation: 7 m
+Upstream Area: 25325 km^2
+Longitude: 114.30
+Latitude: 23.16
+Point ID: 00900

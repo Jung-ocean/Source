@@ -1,0 +1,8 @@
+Country: China
+Station: Sanmenxia
+River: Huanghe
+Elevation: 280 m
+Upstream Area: 688421 km^2
+Longitude: 111.36
+Latitude: 34.81
+Point ID: 00901

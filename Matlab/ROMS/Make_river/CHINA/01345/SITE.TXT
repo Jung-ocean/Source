@@ -1,0 +1,8 @@
+Country: China
+Station: Guanting
+River: Yonding
+Elevation: -9999 m
+Upstream Area: 42500 km^2
+Longitude: 115.60
+Latitude: 40.23
+Point ID: 01345

@@ -1,0 +1,8 @@
+Country: China
+Station: Gongtan
+River: Wujiang
+Elevation: -9999 m
+Upstream Area: 58300 km^2
+Longitude: 108.35
+Latitude: 28.90
+Point ID: 01349

@@ -1,0 +1,8 @@
+Country: China
+Station: Haerbin
+River: Songhuajiang
+Elevation: 120 m
+Upstream Area: 390526 km^2
+Longitude: 126.58
+Latitude: 45.76
+Point ID: 00924

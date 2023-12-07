@@ -1,0 +1,8 @@
+Country: China
+Station: Bengbu
+River: Huaihe
+Elevation: 25 m
+Upstream Area: 121330 km^2
+Longitude: 117.38
+Latitude: 32.93
+Point ID: 00904

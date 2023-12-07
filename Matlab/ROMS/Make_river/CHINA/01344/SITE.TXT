@@ -1,0 +1,8 @@
+Country: China
+Station: Luanxian
+River: Luanhe
+Elevation: -9999 m
+Upstream Area: 44100 km^2
+Longitude: 118.75
+Latitude: 39.73
+Point ID: 01344
