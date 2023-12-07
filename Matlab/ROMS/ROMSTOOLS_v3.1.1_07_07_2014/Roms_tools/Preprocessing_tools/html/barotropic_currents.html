@@ -1,0 +1,296 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>barotropic_currents</title><meta name="generator" content="MATLAB 9.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-04-04"><meta name="DC.source" content="barotropic_currents.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="keyword">function</span> barotropic_currents(clmname,grdname,obc)
+<span class="comment">%</span>
+<span class="comment">% Pierrick 2003</span>
+<span class="comment">%</span>
+<span class="comment">% Get the barotropic velocities from the baroclinic currents</span>
+<span class="comment">% Enforce mass conservation</span>
+<span class="comment">%</span>
+conserv=1;
+<span class="comment">%</span>
+<span class="comment">%  grid parameters</span>
+<span class="comment">%</span>
+disp(<span class="string">' Read grid parameters ...'</span>);
+nc=netcdf(grdname);
+pm=nc{<span class="string">'pm'</span>}(:);
+pn=nc{<span class="string">'pn'</span>}(:);
+h=nc{<span class="string">'h'</span>}(:);
+lon=nc{<span class="string">'lon_rho'</span>}(:);
+lat=nc{<span class="string">'lat_rho'</span>}(:);
+rmask=nc{<span class="string">'mask_rho'</span>}(:);
+umask=nc{<span class="string">'mask_u'</span>}(:);
+vmask=nc{<span class="string">'mask_v'</span>}(:);
+[M,L]=size(rmask);
+close(nc)
+<span class="comment">%</span>
+<span class="comment">%  Model grid vertical levels</span>
+<span class="comment">%</span>
+nc=netcdf(clmname,<span class="string">'write'</span>);
+theta_s = nc{<span class="string">'theta_s'</span>}(:);
+theta_b =  nc{<span class="string">'theta_b'</span>}(:);
+hc  =  nc{<span class="string">'hc'</span>}(:);
+vtransform = nc{<span class="string">'Vtransform'</span>}(:);
+<span class="keyword">if</span>  ~exist(<span class="string">'vtransform'</span>)
+    vtransform=1; <span class="comment">%Old Vtransform</span>
+    disp([<span class="string">' NO VTRANSFORM parameter found'</span>])
+    disp([<span class="string">' USE TRANSFORM default value vtransform = 1'</span>])
+<span class="keyword">end</span>
+N =  length(nc(<span class="string">'s_rho'</span>));
+tlen = length(nc(<span class="string">'uclm_time'</span>));
+<span class="comment">%</span>
+<span class="comment">%  Barotropic velocities</span>
+<span class="comment">%</span>
+<span class="keyword">for</span> l=1:tlen
+  disp([<span class="string">'time index: '</span>,num2str(l),<span class="string">' of total: '</span>,num2str(tlen)])
+  zeta=squeeze(nc{<span class="string">'zeta'</span>}(l,:,:));
+  u=squeeze(nc{<span class="string">'u'</span>}(l,:,:,:));
+  v=squeeze(nc{<span class="string">'v'</span>}(l,:,:,:));
+  zw=zlevs(h,zeta,theta_s,theta_b,hc,N,<span class="string">'w'</span>,vtransform);
+  dz=zw(2:end,:,:)-zw(1:end-1,:,:);
+  dzu=0.5*(dz(:,:,1:end-1)+dz(:,:,2:end));
+  dzv=0.5*(dz(:,1:end-1,:)+dz(:,2:end,:));
+  hu(:,:)=sum(dzu.*u);
+  hv(:,:)=sum(dzv.*v);
+  D_u(:,:)=sum(dzu);
+  D_v(:,:)=sum(dzv);
+  ubar(:,:)=hu./D_u;
+  vbar(:,:)=hv./D_v;
+  u=u-tridim(ubar,N);
+  v=v-tridim(vbar,N);
+<span class="comment">%</span>
+<span class="comment">% Mass conservation</span>
+<span class="comment">%</span>
+  <span class="keyword">if</span> conserv==1
+    disp(<span class="string">'Volume conservation enforcement ...'</span>)
+    [hu,hv]=get_obcvolcons(hu,hv,pm,pn,rmask,obc);
+<span class="comment">%</span>
+<span class="comment">% Get the stream function</span>
+<span class="comment">%</span>
+    psi=get_psi(hu,hv,pm,pn,rmask);
+    hu(2:end-1,1:end)=-0.5*umask(2:end-1,1:end).*<span class="keyword">...</span>
+                      (psi(2:end,1:end)-psi(1:end-1,1:end)).*<span class="keyword">...</span>
+                      (pn(2:end-1,2:end)+pn(2:end-1,1:end-1));
+    hv(1:end,2:end-1)=0.5*vmask(1:end,2:end-1).*<span class="keyword">...</span>
+                     (psi(1:end,2:end)-psi(1:end,1:end-1)).*<span class="keyword">...</span>
+                     (pm(2:end,2:end-1)+pm(1:end-1,2:end-1));
+    [hu,hv]=get_obcvolcons(hu,hv,pm,pn,rmask,obc);
+    ubar(:,:)=hu./D_u;
+    vbar(:,:)=hv./D_v;
+  <span class="keyword">end</span>
+  u=u+tridim(ubar,N);
+  v=v+tridim(vbar,N);
+<span class="comment">%</span>
+<span class="comment">% corners</span>
+<span class="comment">%</span>
+  ubar(1,1)=0.5*(ubar(1,2)+ubar(2,1));
+  ubar(end,1)=0.5*(ubar(end,2)+ubar(end-1,1));
+  ubar(1,end)=0.5*(ubar(1,end-1)+ubar(2,end));
+  ubar(end,end)=0.5*(ubar(end,end-1)+ubar(end-1,end));
+  vbar(1,1)=0.5*(vbar(1,2)+vbar(2,1));
+  vbar(end,1)=0.5*(vbar(end,2)+vbar(end-1,1));
+  vbar(1,end)=0.5*(vbar(1,end-1)+vbar(2,end));
+  vbar(end,end)=0.5*(vbar(end,end-1)+vbar(end-1,end));
+  u(:,1,1)=0.5*(u(:,1,2)+u(:,2,1));
+  u(:,end,1)=0.5*(u(:,end,2)+u(:,end-1,1));
+  u(:,1,end)=0.5*(u(:,1,end-1)+u(:,2,end));
+  u(:,end,end)=0.5*(u(:,end,end-1)+u(:,end-1,end));
+  v(:,1,1)=0.5*(v(:,1,2)+v(:,2,1));
+  v(:,end,1)=0.5*(v(:,end,2)+v(:,end-1,1));
+  v(:,1,end)=0.5*(v(:,1,end-1)+v(:,2,end));
+  v(:,end,end)=0.5*(v(:,end,end-1)+v(:,end-1,end));
+<span class="comment">%</span>
+<span class="comment">%  Write into file</span>
+<span class="comment">%</span>
+  disp(<span class="string">'Writes into climatology file ...'</span>)
+  nc{<span class="string">'u'</span>}(l,:,:,:)=u;
+  nc{<span class="string">'v'</span>}(l,:,:,:)=v;
+  nc{<span class="string">'ubar'</span>}(l,:,:)=ubar;
+  nc{<span class="string">'vbar'</span>}(l,:,:)=vbar;
+<span class="keyword">end</span>
+close(nc)
+</pre><pre class="codeoutput"> Read grid parameters ...
+</pre><pre class="codeoutput error">Not enough input arguments.
+
+Error in barotropic_currents (line 13)
+nc=netcdf(grdname);
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function barotropic_currents(clmname,grdname,obc)
+%
+% Pierrick 2003
+%
+% Get the barotropic velocities from the baroclinic currents
+% Enforce mass conservation
+%
+conserv=1;
+%
+%  grid parameters
+%
+disp(' Read grid parameters ...');
+nc=netcdf(grdname);
+pm=nc{'pm'}(:);
+pn=nc{'pn'}(:);
+h=nc{'h'}(:);
+lon=nc{'lon_rho'}(:);
+lat=nc{'lat_rho'}(:);
+rmask=nc{'mask_rho'}(:);
+umask=nc{'mask_u'}(:);
+vmask=nc{'mask_v'}(:);
+[M,L]=size(rmask);
+close(nc)
+%
+%  Model grid vertical levels
+%
+nc=netcdf(clmname,'write');
+theta_s = nc{'theta_s'}(:);
+theta_b =  nc{'theta_b'}(:);
+hc  =  nc{'hc'}(:);
+vtransform = nc{'Vtransform'}(:);
+if  ~exist('vtransform')
+    vtransform=1; %Old Vtransform
+    disp([' NO VTRANSFORM parameter found'])
+    disp([' USE TRANSFORM default value vtransform = 1'])
+end
+N =  length(nc('s_rho'));
+tlen = length(nc('uclm_time'));
+%
+%  Barotropic velocities
+%
+for l=1:tlen
+  disp(['time index: ',num2str(l),' of total: ',num2str(tlen)])
+  zeta=squeeze(nc{'zeta'}(l,:,:));
+  u=squeeze(nc{'u'}(l,:,:,:));
+  v=squeeze(nc{'v'}(l,:,:,:));
+  zw=zlevs(h,zeta,theta_s,theta_b,hc,N,'w',vtransform);
+  dz=zw(2:end,:,:)-zw(1:end-1,:,:);
+  dzu=0.5*(dz(:,:,1:end-1)+dz(:,:,2:end));
+  dzv=0.5*(dz(:,1:end-1,:)+dz(:,2:end,:));
+  hu(:,:)=sum(dzu.*u);
+  hv(:,:)=sum(dzv.*v);
+  D_u(:,:)=sum(dzu);
+  D_v(:,:)=sum(dzv);
+  ubar(:,:)=hu./D_u;
+  vbar(:,:)=hv./D_v;
+  u=u-tridim(ubar,N);
+  v=v-tridim(vbar,N);
+%
+% Mass conservation
+%
+  if conserv==1
+    disp('Volume conservation enforcement ...')
+    [hu,hv]=get_obcvolcons(hu,hv,pm,pn,rmask,obc);
+%
+% Get the stream function
+%
+    psi=get_psi(hu,hv,pm,pn,rmask); 
+    hu(2:end-1,1:end)=-0.5*umask(2:end-1,1:end).*...
+                      (psi(2:end,1:end)-psi(1:end-1,1:end)).*...
+                      (pn(2:end-1,2:end)+pn(2:end-1,1:end-1));
+    hv(1:end,2:end-1)=0.5*vmask(1:end,2:end-1).*...
+                     (psi(1:end,2:end)-psi(1:end,1:end-1)).*...
+                     (pm(2:end,2:end-1)+pm(1:end-1,2:end-1));
+    [hu,hv]=get_obcvolcons(hu,hv,pm,pn,rmask,obc);
+    ubar(:,:)=hu./D_u;
+    vbar(:,:)=hv./D_v;
+  end
+  u=u+tridim(ubar,N);
+  v=v+tridim(vbar,N);
+%
+% corners
+%
+  ubar(1,1)=0.5*(ubar(1,2)+ubar(2,1)); 
+  ubar(end,1)=0.5*(ubar(end,2)+ubar(end-1,1)); 
+  ubar(1,end)=0.5*(ubar(1,end-1)+ubar(2,end)); 
+  ubar(end,end)=0.5*(ubar(end,end-1)+ubar(end-1,end)); 
+  vbar(1,1)=0.5*(vbar(1,2)+vbar(2,1)); 
+  vbar(end,1)=0.5*(vbar(end,2)+vbar(end-1,1)); 
+  vbar(1,end)=0.5*(vbar(1,end-1)+vbar(2,end)); 
+  vbar(end,end)=0.5*(vbar(end,end-1)+vbar(end-1,end)); 
+  u(:,1,1)=0.5*(u(:,1,2)+u(:,2,1)); 
+  u(:,end,1)=0.5*(u(:,end,2)+u(:,end-1,1)); 
+  u(:,1,end)=0.5*(u(:,1,end-1)+u(:,2,end)); 
+  u(:,end,end)=0.5*(u(:,end,end-1)+u(:,end-1,end)); 
+  v(:,1,1)=0.5*(v(:,1,2)+v(:,2,1)); 
+  v(:,end,1)=0.5*(v(:,end,2)+v(:,end-1,1)); 
+  v(:,1,end)=0.5*(v(:,1,end-1)+v(:,2,end)); 
+  v(:,end,end)=0.5*(v(:,end,end-1)+v(:,end-1,end)); 
+%
+%  Write into file
+%
+  disp('Writes into climatology file ...')
+  nc{'u'}(l,:,:,:)=u;
+  nc{'v'}(l,:,:,:)=v;
+  nc{'ubar'}(l,:,:)=ubar;
+  nc{'vbar'}(l,:,:)=vbar;
+end
+close(nc)
+
+##### SOURCE END #####
+--></body></html>
