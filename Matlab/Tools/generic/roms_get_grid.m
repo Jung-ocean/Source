@@ -1,4 +1,4 @@
-function grd = roms_get_grid(grd_file,scoord,tindex,calc_zuv, Vtransform)
+function grd = roms_get_grid(grd_file,scoord,tindex,Vtransform)
 % grd = roms_get_grid(grd_file,scoord,tindex,calc_zuv);
 %
 % Gets the lon,lat,mask,depth [and z coordinates] from netcdf grd_file
@@ -26,10 +26,9 @@ function grd = roms_get_grid(grd_file,scoord,tindex,calc_zuv, Vtransform)
 % Updated (Sept 2002) to correct scoordinate formulation and optionally
 % include zeta in the calculation
 
-if nargin > 2 && ~isempty(Vtransform)
+if Vtransform == 1
     Vstretching = 1;
 else
-    Vtransform = 2;
     Vstretching = 4;
 end
 
