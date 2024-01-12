@@ -1,0 +1,4 @@
+ERROR - 2024-01-11T22:42:07Z - Lock exception: [Errno 9] Bad file descriptor:
+change the "fpath" in line 122 of envs/cmc-beta/lib/python3.9/site-packages/cachier/pickle_core.py
+Note that, fpath should be a file not a directory
+ex) fpath=/home/cache_CMT.txt
