@@ -1,0 +1,19 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Make monthly ROMS outputs using daily files
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc
+
+yyyy_all = 2018:2018;
+
+for yi = 1:length(yyyy_all)
+    yyyy = yyyy_all(yi);
+
+filepath_daily = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm_1rnoff/';
+filepath_monthly = './';
+datenum_ref = datenum(1968,05,23);
+
+filenames_all = dir([filepath_daily, '*avg*']);

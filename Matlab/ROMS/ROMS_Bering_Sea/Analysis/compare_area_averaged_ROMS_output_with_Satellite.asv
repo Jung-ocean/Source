@@ -15,8 +15,7 @@ layer = 45;
 
 switch vari_str
     case 'salt'
-        ylimit_shelf = [30.5 33.5];
-        ylimit_basin = [32 33.7];
+        ylimit = [31 33.5];
         climit = [31.5 33.5];
         unit = 'g/kg';
     case 'temp'
@@ -109,7 +108,7 @@ for fi = 1:length(filenum_all)
     % Figure
     if fi == 1
         h1 = figure; hold on;
-        set(gcf, 'Position', [1 1 1500 600])
+        set(gcf, 'Position', [1 1 1900 600])
         t = tiledlayout(2,3);
     else
         delete(ttitle);
@@ -165,10 +164,8 @@ for fi = 1:length(filenum_all)
 
     % Tile
     if si < 2
-        nexttile(si);
-    else
-        nexttile(si+1);
-    end
+    nexttile(si);
+    e
     if fi == 1
         plot_map('Bering', 'mercator', 'l')
         hold on;
@@ -231,7 +228,7 @@ end
 xticks(xtic_list);
 datetick('x', 'mmm dd, yyyy', 'keepticks')
 xlim([timenum_all(1)-1 timenum_all(end)])
-ylim(ylimit_shelf);
+ylim(ylimit);
 ylabel(unit)
 title(['Shelf area averaged (< ', num2str(depth_target), ' m)'])
 l = legend([T1p1, T1p2, T1ps], [case_control, case_exp, titles_sat], 'Interpreter', 'none');
@@ -253,7 +250,7 @@ end
 xticks(xtic_list);
 datetick('x', 'mmm dd, yyyy', 'keepticks')
 xlim([timenum_all(1)-1 timenum_all(end)])
-ylim(ylimit_basin);
+ylim(ylimit);
 ylabel(unit)
 title(['Basin area averaged (> ', num2str(depth_target), ' m)'])
 %l = legend([T2p1, T2p2, T2ps], [case_control, case_exp, titles_sat], 'Interpreter', 'none');
