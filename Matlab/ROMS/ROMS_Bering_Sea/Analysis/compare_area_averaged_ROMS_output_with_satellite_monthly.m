@@ -47,6 +47,7 @@ mask_Bering_Sea = mask_Bering_Sea_struct.mask_Bering_Sea;
 h = g.h;
 dx = 1./g.pm; dy = 1./g.pn;
 area = dx.*dy.*mask.*mask_Bering_Sea;
+mask = mask.*mask_Bering_Sea;
 
 index_shelf = find(h < depth_shelf);
 index_basin = find(h > depth_shelf);

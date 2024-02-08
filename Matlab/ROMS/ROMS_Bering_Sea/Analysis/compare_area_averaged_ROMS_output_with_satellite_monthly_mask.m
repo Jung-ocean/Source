@@ -1,6 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % Compare two ROMS outputs through area-averaged with Satellite
+% by applying mask
 %
 % J. Jung
 %
@@ -14,10 +15,13 @@ depth_shelf = 200; % m
 layer = 45;
 num_sat = 5;
 
+isice = 0;
+aice_value = 0.4;
+
 switch vari_str
     case 'salt'
-        ylimit_shelf = [30.5 33.5];
-        ylimit_basin = [32 33.7];
+        ylimit_shelf = [30.5 34.5];
+        ylimit_basin = [32.2 34.0];
         climit = [31.5 33.5];
         unit = 'g/kg';
     case 'temp'
@@ -46,7 +50,12 @@ mask_Bering_Sea_struct = load('mask_Bering_Sea.mat', 'mask_Bering_Sea');
 mask_Bering_Sea = mask_Bering_Sea_struct.mask_Bering_Sea;
 h = g.h;
 dx = 1./g.pm; dy = 1./g.pn;
+mask = mask.*mask_Bering_Sea;
 area = dx.*dy.*mask.*mask_Bering_Sea;
+
+mask_RSS_70km_Aug = load('mask_RSS_70km_Aug.mat');
+mask = mask.*mask_RSS_70km_Aug.mask_sat_model;
+area = area.*mask_RSS_70km_Aug.mask_sat_model;
 
 index_shelf = find(h < depth_shelf);
 index_basin = find(h > depth_shelf);
@@ -95,8 +104,25 @@ for mi = 1:length(mm_all)
     file_control = [filepath_control, filename_control.name];
 
     vari_control = ncread(file_control,vari_str,[1 1 layer 1],[Inf Inf 1 1])';
-    vari_control_shelf(12*(yi-1) + mi) = sum(vari_control(index_shelf).*area(index_shelf), 'omitnan')./sum(area(index_shelf), 'omitnan');
-    vari_control_basin(12*(yi-1) + mi) = sum(vari_control(index_basin).*area(index_basin), 'omitnan')./sum(area(index_basin), 'omitnan');
+    if isice == 1
+        try 
+            aice_mask = ncread(file_control,'aice')';
+            aice_mask(aice_mask >= aice_value) = NaN;
+            aice_mask(aice_mask < aice_value) = 1;
+            mask_with_ice = mask.*aice_mask;
+            area_with_ice = area.*aice_mask;
+
+            vari_control_shelf(12*(yi-1) + mi) = sum(vari_control(index_shelf).*area_with_ice(index_shelf), 'omitnan')./sum(area_with_ice(index_shelf), 'omitnan');
+            vari_control_basin(12*(yi-1) + mi) = sum(vari_control(index_basin).*area_with_ice(index_basin), 'omitnan')./sum(area_with_ice(index_basin), 'omitnan');
+        catch
+            vari_control_shelf(12*(yi-1) + mi) = sum(vari_control(index_shelf).*area(index_shelf), 'omitnan')./sum(area(index_shelf), 'omitnan');
+            vari_control_basin(12*(yi-1) + mi) = sum(vari_control(index_basin).*area(index_basin), 'omitnan')./sum(area(index_basin), 'omitnan');
+        end
+    else
+        vari_control_shelf(12*(yi-1) + mi) = sum(vari_control(index_shelf).*area(index_shelf), 'omitnan')./sum(area(index_shelf), 'omitnan');
+        vari_control_basin(12*(yi-1) + mi) = sum(vari_control(index_basin).*area(index_basin), 'omitnan')./sum(area(index_basin), 'omitnan');
+    end % isice
+
     else
         vari_control = NaN;
         vari_control_shelf(12*(yi-1) + mi) = NaN;
@@ -119,7 +145,16 @@ for mi = 1:length(mm_all)
     else
         delete(T(1));
     end
-    T(1) = pcolorm(lat,lon,vari_control.*mask);
+
+    if isice == 1
+        try 
+            T(1) = pcolorm(lat,lon,vari_control.*mask_with_ice);
+        catch
+            T(1) = pcolorm(lat,lon,vari_control.*mask);
+        end
+    else
+        T(1) = pcolorm(lat,lon,vari_control.*mask);
+    end % isice
     caxis(climit)
     title('ROMS Dsm_1rnoff', 'Interpreter', 'None')
 
@@ -148,6 +183,15 @@ for mi = 1:length(mm_all)
         vari_sat = [vari_sat(:,index1) vari_sat(:,index2)];
     end
     lon_sat = lon_sat - lons_360ind(si);
+
+    if isice == 1 && si == 5
+        aice_mask_sat = ncread(file_sat, 'sea_ice_fraction')';
+        
+        aice_mask_sat(aice_mask_sat >= aice_value) = NaN;
+        aice_mask_sat(aice_mask_sat < aice_value) = 1;
+            
+        vari_sat = vari_sat.*aice_mask_sat;
+    end
 
     index_lon = find(lon_sat < max(max(lon))+1 & lon_sat > min(min(lon))-1);
     index_lat = find(lat_sat < max(max(lat))+1 & lat_sat > min(min(lat))-1);
@@ -184,7 +228,7 @@ for mi = 1:length(mm_all)
     title(titles_sat{si}, 'Interpreter', 'None')
 
     pause(1)
-    %print(strcat('Compare_surface_', vari_str, '_' , time_filename),'-dpng');
+    print(strcat('compare_surface_', vari_str, '_satellite_monthly_', datestr(timenum, 'yyyymm')),'-dpng');
     end
 
     % Make gif
@@ -199,7 +243,7 @@ for mi = 1:length(mm_all)
         imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
     end
 
-    disp([mstr, ' / ', num2str(mm_all(end), '%02i'), '...'])
+    disp([ystr, mstr, '...'])
 end % mi
 end % yi
 timevec = datevec(timenum_all);
@@ -207,7 +251,8 @@ timevec = datevec(timenum_all);
 
 % Plot
 h1 = figure; hold on; grid on;
-set(gcf, 'Position', [1 1 1500 400])
+%set(gcf, 'Position', [1 1 1500 400])
+set(gcf, 'Position', [1 1 1900 500])
 t = tiledlayout(1,2);
 
 %ttitle = annotation('textbox', [.44 .85 .1 .1], 'String', ['Area-averaged ', vari_str]);
@@ -216,8 +261,7 @@ t = tiledlayout(1,2);
 
 % Tile 1
 nexttile(1); hold on; grid on
-T1p1 = plot(timenum_all, vari_control_shelf, '-or', 'LineWidth', 2);
-T1p2 = plot(timenum_all, vari_exp_shelf, '--ob', 'LineWidth', 2);
+T1p1 = plot(timenum_all, vari_control_shelf, '-ok', 'LineWidth', 2);
 for si = 1:num_sat
     T1ps(si) = plot(timenum_all, vari_sat_shelf(si,:), '-o', 'LineWidth', 2);
 end
@@ -226,14 +270,14 @@ datetick('x', 'mmm, yyyy', 'keepticks')
 ylim(ylimit_shelf);
 ylabel(unit)
 title(['Shelf area averaged (< ', num2str(depth_shelf), ' m)'])
-l = legend([T1p1, T1p2, T1ps], [case_control, case_exp, titles_sat], 'Interpreter', 'none');
+l = legend([T1p1, T1ps], [case_control, titles_sat], 'Interpreter', 'none');
+l.NumColumns = 2; 
 l.Location = 'Northwest';
 %l.FontSize = 15;
 
 % Tile 2
 nexttile(2); hold on; grid on
-T2p1 = plot(timenum_all, vari_control_basin, '-or', 'LineWidth', 2);
-T2p2 = plot(timenum_all, vari_exp_basin, '--ob', 'LineWidth', 2);
+T2p1 = plot(timenum_all, vari_control_basin, '-ok', 'LineWidth', 2);
 for si = 1:num_sat
     T2ps(si) = plot(timenum_all, vari_sat_basin(si,:), '-o', 'LineWidth', 2);
 end

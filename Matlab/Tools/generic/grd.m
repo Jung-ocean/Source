@@ -6,6 +6,17 @@ function grd = gg(location)
 %    scoord = [5 0.4 50 20];
 
 switch location
+    case 'BSf'
+        grd_file = '/data/sdurski/ROMS_Setups/Grids/Bering_Sea/BeringSea_Dsm_grid.nc';
+        scoord = [2 0 50 45]; % theta_s theta_b hc N
+
+        disp(' ')
+        disp([ 'Loading ROMS grd for application: ' location])
+        disp([ 'using grid file ' grd_file])
+        disp(' ')
+        Vtransform = 2;
+        grd = roms_get_grid(grd_file,scoord,0,Vtransform);
+
     case 'Lab'
         grd_file = 'G:\내 드라이브\Model\ROMS\Case\Lab\roms_grd.nc' ;
         scoord = [5 0.4 4 20]; % theta_s theta_b hc N
