@@ -38,7 +38,7 @@ check_schism_hydrostatic(Mobj);
 
 %
 h1 = figure('Color', 'w');
-set(gcf, 'Position', [1 300 900 600])
+set(gcf, 'Position', [1 1 900 600])  
 for oi = 1:2
     oistr = num2str(oi);
     file_output = ['outputs/out2d_', oistr, '.nc'];
@@ -52,6 +52,9 @@ for oi = 1:2
             p.FaceVertexCData = elevation;
         end
 
+        set(gcf, 'Position', [1 300 900 600])  
+        set(gca, 'Position', [0.1196 0.1100 0.7133 0.8150])  
+        pause(1)
         % Make gif
         gifname = ['test_schism_elevation.gif'];
 

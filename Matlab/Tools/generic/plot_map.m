@@ -35,6 +35,8 @@ switch casename
         lon = [-185 -155]; lat = [45 85];
     case 'Bering'
         lon = [-205.9832 -156.8640]; lat = [49.1090 66.3040];
+    case 'Eastern_Bering'
+        lon = [-185 -156.8640]; lat = [49.1090 66.3040];
 end
 
 end % function load_domain
