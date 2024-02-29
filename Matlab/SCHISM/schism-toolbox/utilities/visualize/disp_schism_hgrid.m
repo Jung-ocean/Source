@@ -98,6 +98,6 @@ end
 %     s.DataTipTemplate.DataTipRows(end+1) = row;
 % end
 
-axis image
+% axis image
 %hold off
 end

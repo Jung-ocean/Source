@@ -1,30 +1,30 @@
 clear; clc
 
-Mobj.time = (datetime(2018,6,1):hours(1):datetime(2018,6,3))';
-Mobj.rundays = days(Mobj.time(end)-Mobj.time(1));
+% Mobj.time = (datetime(2018,6,1):hours(1):datetime(2018,6,3))';
+% Mobj.rundays = days(Mobj.time(end)-Mobj.time(1));
 Mobj.dt = 150;
 Mobj.coord = 'geographic';
 
-hgrid_file = '/data/jungjih/Models/SCHISM/test_schism/hgrid.gr3';
-vgrid_file = '/data/jungjih/Models/SCHISM/test_schism/vgrid.in';
+hgrid_file = './hgrid.gr3';
+% vgrid_file = '/data/jungjih/Models/SCHISM/test_schism/vgrid.in';
 
 Mobj = read_schism_hgrid(Mobj, hgrid_file);
-Mobj = read_schism_vgrid(Mobj, vgrid_file, 'v5.10');
+% Mobj = read_schism_vgrid(Mobj, vgrid_file, 'v5.10');
 
 % Horizontal grids
 figure('Color', 'w')
 disp_schism_hgrid(Mobj, [1 1])
 %axis image
-set(gcf, 'Position', [50 300 1800 900])  
-
-colormap(gray(25))
-title('Locally refined mesh grid for the Columbia River Estuary')
-
+% set(gcf, 'Position', [50 300 1800 900])  
+% colormap(gray(25))
+dfdfdf
+set(gcf, 'Position', [1 1 1800 900])  
 print('grid_info','-dpng');
 
 % check the invese CFL constraints
 figure('Color', 'w')
-set(gcf, 'Position', [1 1 1500 600])  
+%set(gcf, 'Position', [1 1 1500 600])  
+set(gcf, 'Position', [1 1 1800 900])  
 
 check_schism_metrics(Mobj);
 

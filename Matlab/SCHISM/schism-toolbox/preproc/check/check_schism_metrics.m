@@ -58,21 +58,21 @@ cmap = jet(15);
 % nexttile
 subplot(221)
 disp_schism_var(Mobj, dx/1000)
-axis image
+% axis image
 box on
 title('Actual grid resolutions (km)')
 
 % nexttile
 subplot(222)
 disp_schism_var(Mobj, dx0/1000)
-axis image
+% axis image
 box on
 title('Acceptable coarsest grid resolutions(km)')
 
 % nexttile
 subplot(223)
 disp_schism_var(Mobj, CFL_val)
-axis image
+% axis image
 box on
 caxis([0 1])
 title('CFL numbers')
@@ -81,7 +81,7 @@ title('CFL numbers')
 subplot(224)
 %disp_schism_var(Mobj, dx_diff/1000, 'EdgeColor', 'k')
 disp_schism_var(Mobj, dx_diff/1000, 'EdgeColor', 'none')
-axis image
+% axis image
 box on
 colormap(cmap)
 title('Excessive resolutions (km)')
