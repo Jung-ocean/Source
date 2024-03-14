@@ -7,8 +7,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc
 
-yyyy_all = 2020:2020; % some missing 201906, 202011
-month_avg = [11:11];
+yyyy_all = 2019:2019; % some missing 201906, 202011
+month_avg = [1:3];
 year_start = 2018;
 month_start = 7;
 filename_header = 'Dsm_1rnoff_';
@@ -19,10 +19,9 @@ for yi = 1:length(yyyy_all)
     filepath_daily = ['/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm1_rnoff/'];
     datenum_ref = datenum(1968,05,23);
 
-    eomdays = eomday(yyyy,1:12);
-    
     for mi = 1:length(month_avg)
         mm = month_avg(mi); mstr = num2str(mm, '%02i');
+        eomdays = eomday(yyyy,mm);
         filenumbers = [datenum(yyyy,mm,1):datenum(yyyy,mm+1,1)-1] - datenum(year_start,month_start,1) + 1;
         for fi = 1:length(filenumbers)
             filenumber = filenumbers(fi); fstr = num2str(filenumber, '%04i');
@@ -35,7 +34,7 @@ for yi = 1:length(yyyy_all)
         
         command = ['ls *avg* | wc -l'];
         [status, nfile] = system(command);
-        if str2num(nfile) == eomdays(mi)
+        if str2num(nfile) == eomdays
             command = ['ncra *avg* ', filename_header, ystr, mstr, '.nc'];
             system(command)
         end

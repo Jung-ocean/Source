@@ -1,0 +1,79 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Plot sea ice extent using the sea ice index .shp file from NSIDC
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc
+
+yyyy_all = 2010:2020;
+mm_all = 1:12;
+
+filepath_monthly = '/data/jungjih/Observations/Sea_ice/NSIDC/shp_extent/';
+filepath_median = '/data/jungjih/Observations/Sea_ice/NSIDC/shp_median/';
+
+grd_file = '/data/sdurski/ROMS_Setups/Grids/Bering_Sea/BeringSea_Dsm_grid.nc';
+theta_s = 2;
+theta_b = 0;
+Tcline = 50;
+N = 45;
+scoord = [theta_s theta_b Tcline N];
+Vtransform = 2;
+g = roms_get_grid(grd_file,scoord,0,Vtransform);
+lat = g.lat_rho;
+lon = g.lon_rho;
+h = g.h;
+
+h1 = figure; hold on;
+set(gcf, 'Position', [1 200 1400 900])
+plot_map('Bering', 'mercator', 'l');
+contourm(lat, lon, h, [50 200], 'k');
+
+for yi = 1:length(yyyy_all)
+    yyyy = yyyy_all(yi); ystr = num2str(yyyy);
+
+    for mi = 1:length(mm_all)
+        mm = mm_all(mi); mstr = num2str(mm, '%02i');
+
+        filename_monthly = [filepath_monthly, 'extent_N_', ystr, mstr, '_polygon_v3.0'];
+        filename_median = [filepath_median, 'median_extent_N_', mstr, '_1981-2010_polyline_v3.0'];
+
+        s = shaperead(filename_median);
+        x1 = [s.X];
+        y1 = [s.Y];
+        info = shapeinfo(filename_median);
+        p1 = info.CoordinateReferenceSystem;
+        [lat_median,lon_median] = projinv(p1,x1,y1);
+
+        p = plotm(lat_median, lon_median, 'm', 'LineWidth', 2);
+        uistack(p,'bottom');
+
+        l = legend(p, 'Median ice edge 1981-2010');
+        l.FontSize = 15;
+        l.Location = 'NorthWest';
+
+        s = shaperead(filename_monthly);
+        x1 = [s.X];
+        y1 = [s.Y];
+        info = shapeinfo(filename_monthly);
+        p1 = info.CoordinateReferenceSystem;
+        [lat_monthly,lon_monthly] = projinv(p1,x1,y1);
+
+        f = fillm(lat_monthly, lon_monthly, [0.0588 1.0000 1.0000]);
+        uistack(f,'bottom');
+
+        % Make gif
+        gifname = ['sea_ice_extent_monthly_', num2str(yyyy_all(1)), '_', num2str(yyyy_all(end)),'.gif'];
+
+        frame = getframe(h1);
+        im = frame2im(frame);
+        [imind,cm] = rgb2ind(im,256);
+        if yi == 1 && mi == 1
+            imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+        else
+            imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+        end
+    
+    end
+end

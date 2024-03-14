@@ -17,8 +17,8 @@ disp_schism_hgrid(Mobj, [1 1])
 %axis image
 % set(gcf, 'Position', [50 300 1800 900])  
 % colormap(gray(25))
-dfdfdf
 set(gcf, 'Position', [1 1 1800 900])  
+asdf
 print('grid_info','-dpng');
 
 % check the invese CFL constraints
@@ -29,7 +29,7 @@ set(gcf, 'Position', [1 1 1800 900])
 check_schism_metrics(Mobj);
 
 print('grid_check','-dpng')
-
+tt
 % display the Max. acceptable resolutions as a function of water depth 
 calc_schism_CFL(Mobj)
 

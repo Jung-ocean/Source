@@ -15,14 +15,14 @@ depth_shelf = 200; % m
 layer = 45;
 num_sat = 5;
 
-isice = 1;
+isice = 0;
 aice_value = 0.4;
 
 switch vari_str
     case 'salt'
         ylimit_shelf = [30.5 34.5];
         ylimit_basin = [32.2 34.0];
-        climit = [31.5 33.5];
+        climit = [32.5 34.5];
         unit = 'g/kg';
     case 'temp'
         climit = [0 20];
@@ -50,14 +50,14 @@ dx = 1./g.pm; dy = 1./g.pn;
 mask = g.mask_rho./g.mask_rho;
 area = dx.*dy.*mask;
 
-mask_Bering_Sea_struct = load('mask_Bering_Sea.mat', 'mask_Bering_Sea');
-mask_Bering_Sea = mask_Bering_Sea_struct.mask_Bering_Sea;
-mask = mask.*mask_Bering_Sea;
-area = dx.*dy.*mask.*mask_Bering_Sea;
-
-mask_RSS_70km_Aug = load('mask_RSS_70km_Aug.mat');
-mask = mask.*mask_RSS_70km_Aug.mask_sat_model;
-area = area.*mask_RSS_70km_Aug.mask_sat_model;
+% mask_Bering_Sea_struct = load('mask_Bering_Sea.mat', 'mask_Bering_Sea');
+% mask_Bering_Sea = mask_Bering_Sea_struct.mask_Bering_Sea;
+% mask = mask.*mask_Bering_Sea;
+% area = dx.*dy.*mask.*mask_Bering_Sea;
+% 
+% mask_RSS_70km_Aug = load('mask_RSS_70km_Aug.mat');
+% mask = mask.*mask_RSS_70km_Aug.mask_sat_model;
+% area = area.*mask_RSS_70km_Aug.mask_sat_model;
 
 index_shelf = find(h < depth_shelf);
 index_basin = find(h > depth_shelf);
@@ -242,9 +242,10 @@ for mi = 1:length(mm_all)
 
     title(titles_sat{si}, 'Interpreter', 'None')
 
+    end
+
     pause(1)
     print(strcat('compare_surface_', vari_str, '_satellite_monthly_', datestr(timenum, 'yyyymm')),'-dpng');
-    end
 
     % Make gif
     gifname = ['compare_surface_', vari_str, '_satellite_monthly.gif'];
@@ -263,7 +264,7 @@ end % mi
 end % yi
 timevec = datevec(timenum_all);
 %xtic_list = datenum(unique(timevec(:,1)), unique(timevec(:,2)), 15);
-
+dddd
 % Plot
 h1 = figure; hold on; grid on;
 %set(gcf, 'Position', [1 1 1500 400])

@@ -1,14 +1,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % Compare ROMS output through area-averaged with Satellite
-% by applying Scott's mask
 %
 % J. Jung
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
-
-map = 'Eastern_Bering';
 
 vari_str = 'salt';
 yyyy_all = 2018:2020;
@@ -17,13 +14,7 @@ depth_shelf = 200; % m
 layer = 45;
 num_sat = 5;
 
-region = 'eoshelf';
-mask_Scott = load('/data/sdurski/ROMS_Setups/Initial/Bering_Sea/BSf_region_polygons.mat');
-indmask = eval(['mask_Scott.ind', region]);
-[row,col] = ind2sub([1460, 957], indmask);
-indmask = sub2ind([957, 1460], col, row); % transpose
-
-isice = 1;
+isice = 0;
 aice_value = 0.4;
 
 switch vari_str
@@ -55,23 +46,17 @@ lon = g.lon_rho;
 lat = g.lat_rho;
 h = g.h;
 dx = 1./g.pm; dy = 1./g.pn;
-
 mask = g.mask_rho./g.mask_rho;
 area = dx.*dy.*mask;
 
 % mask_Bering_Sea_struct = load('mask_Bering_Sea.mat', 'mask_Bering_Sea');
 % mask_Bering_Sea = mask_Bering_Sea_struct.mask_Bering_Sea;
 % mask = mask.*mask_Bering_Sea;
-% area = area.*mask_Bering_Sea;
-
+% area = dx.*dy.*mask.*mask_Bering_Sea;
+% 
 % mask_RSS_70km_Aug = load('mask_RSS_70km_Aug.mat');
 % mask = mask.*mask_RSS_70km_Aug.mask_sat_model;
 % area = area.*mask_RSS_70km_Aug.mask_sat_model;
-
-mask_ind = NaN(size(mask));
-mask_ind(indmask) = 1;
-mask = mask.*mask_ind;
-area = area.*mask_ind;
 
 index_shelf = find(h < depth_shelf);
 index_basin = find(h > depth_shelf);
@@ -116,8 +101,7 @@ for mi = 1:length(mm_all)
     % Figure
     if yi == 1 && mi == 1
         h1 = figure; hold on;
-        %set(gcf, 'Position', [1 200 1500 750])
-        set(gcf, 'Position', [1 200 1400 900])
+        set(gcf, 'Position', [1 200 1500 750])
         t = tiledlayout(2,3);
     else
         delete(ttitle);
@@ -165,7 +149,7 @@ for mi = 1:length(mm_all)
 
     nexttile(1)
     if yi == 1 && mi == 1
-        plot_map(map, 'mercator', 'l')
+        plot_map('Bering', 'mercator', 'l')
         hold on;
         contourm(lat, lon, h, [50 200], 'k');
     else
@@ -230,7 +214,7 @@ for mi = 1:length(mm_all)
 
     vari_sat_interp = griddata(lon_sat2, lat_sat2, vari_sat_part, lon,lat);
     mask_sat = ~isnan(vari_sat_interp);
-    mask_sat_model = (mask_sat./mask_sat).*mask;
+    %mask_sat_model = (mask_sat./mask_sat).*mask;
     area_sat = area.*mask_sat_model;
     vari_sat_shelf(si,12*(yi-1) + mi) = sum(vari_sat_interp(index_shelf).*area_sat(index_shelf), 'omitnan')./sum(area_sat(index_shelf), 'omitnan');
     vari_sat_basin(si,12*(yi-1) + mi) = sum(vari_sat_interp(index_basin).*area_sat(index_basin), 'omitnan')./sum(area_sat(index_basin), 'omitnan');
@@ -240,7 +224,7 @@ for mi = 1:length(mm_all)
     nexttile(si+1);
 
     if yi == 1 && mi == 1
-        plot_map(map, 'mercator', 'l')
+        plot_map('Bering', 'mercator', 'l')
         hold on;
         contourm(lat, lon, h, [50 200], 'k');
     else
@@ -257,10 +241,9 @@ for mi = 1:length(mm_all)
 
     title(titles_sat{si}, 'Interpreter', 'None')
 
-    end
-
     pause(1)
     print(strcat('compare_surface_', vari_str, '_satellite_monthly_', datestr(timenum, 'yyyymm')),'-dpng');
+    end
 
     % Make gif
     gifname = ['compare_surface_', vari_str, '_satellite_monthly.gif'];
@@ -279,12 +262,12 @@ end % mi
 end % yi
 timevec = datevec(timenum_all);
 %xtic_list = datenum(unique(timevec(:,1)), unique(timevec(:,2)), 15);
-
+dddd
 % Plot
 h1 = figure; hold on; grid on;
 %set(gcf, 'Position', [1 1 1500 400])
-set(gcf, 'Position', [1 1 850 500])
-t = tiledlayout(1,1);
+set(gcf, 'Position', [1 1 1900 500])
+t = tiledlayout(1,2);
 
 %ttitle = annotation('textbox', [.44 .85 .1 .1], 'String', ['Area-averaged ', vari_str]);
 %ttitle.FontSize = 25;
@@ -301,27 +284,27 @@ xlim([timenum_all(7) timenum_all(end-1)])
 datetick('x', 'mmm, yyyy', 'keepticks', 'keeplimits')
 ylim(ylimit_shelf);
 ylabel(unit)
-title(['Outer shelf area averaged (50 - ', num2str(depth_shelf), ' m)'])
-%title(['Shelf area averaged (< ', num2str(depth_shelf), ' m)'])
+title(['Shelf area averaged (< ', num2str(depth_shelf), ' m)'])
 l = legend([T1p1, T1ps], [case_control, titles_sat], 'Interpreter', 'none');
 l.NumColumns = 2; 
 l.Location = 'Northwest';
 %l.FontSize = 15;
 
-% % Tile 2
-% nexttile(2); hold on; grid on
-% T2p1 = plot(timenum_all, vari_control_basin, '-ok', 'LineWidth', 2);
-% for si = 1:num_sat
-%     T2ps(si) = plot(timenum_all, vari_sat_basin(si,:), '-o', 'LineWidth', 2);
-% end
-% xticks(timenum_all);
-% datetick('x', 'mmm, yyyy', 'keepticks')
-% ylim(ylimit_basin);
-% ylabel(unit)
-% title(['Basin area averaged (> ', num2str(depth_shelf), ' m)'])
-% %l = legend([T2p1, T2p2, T2ps], [case_control, case_exp, titles_sat], 'Interpreter', 'none');
-% %l.Location = 'SouthWest';
-% %l.FontSize = 15;
+% Tile 2
+nexttile(2); hold on; grid on
+T2p1 = plot(timenum_all, vari_control_basin, '-ok', 'LineWidth', 2);
+for si = 1:num_sat
+    T2ps(si) = plot(timenum_all, vari_sat_basin(si,:), '-o', 'LineWidth', 2);
+end
+xticks(timenum_all);
+xlim([timenum_all(7) timenum_all(end-1)])
+datetick('x', 'mmm, yyyy', 'keepticks', 'keeplimits')
+ylim(ylimit_basin);
+ylabel(unit)
+title(['Basin area averaged (> ', num2str(depth_shelf), ' m)'])
+%l = legend([T2p1, T2p2, T2ps], [case_control, case_exp, titles_sat], 'Interpreter', 'none');
+%l.Location = 'SouthWest';
+%l.FontSize = 15;
 
 pause(1)
 print(strcat('compare_area_averaged_', vari_str, '_with_Satellite_monthly'),'-dpng');
