@@ -1,0 +1,29 @@
+#
+F90	= pgf90
+# for Sparc and Ultrasparc
+DBG	=  -O
+LDFLAGS = ${DBG}
+CFLAGS = ${DBG} -I/opt/netcdf-4.7.4/include
+#
+KLMOBJS   = schism_geometry.o extract_mod.o compute_zcor.o pt_in_poly_test.o stripesearch_unstr.o gen_3Dth_from_hycom.o
+#
+#IBM
+llibs=  -L/opt/netcdf-4.7.4/lib -lnetcdff -lnetcdf
+#
+.SUFFIXES: .o .f .F .f90
+#
+.f.o: 
+	${F90} -c ${CFLAGS} $*.f
+#
+.F.o:
+	${F90} ${CFLAGS} -c $<
+#
+.f90.o:
+	${F90} -Mfreeform ${CFLAGS} -c $<
+#
+main: ${KLMOBJS}
+	${F90} ${LDFLAGS} -o gen_3Dth_from_hycom ${KLMOBJS} $(llibs) 
+#
+clean: 
+	rm -f *.o *.mod *~
+

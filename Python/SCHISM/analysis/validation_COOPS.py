@@ -13,7 +13,7 @@ os.environ['USE_PYGEOS'] = '0'
 import geopandas as gpd
 
 from pathlib import Path 
-from datetime import datetime,timedelta
+from datetime import datetime,timedelta, date
 from matplotlib.dates import DateFormatter
 from cartopy.feature import NaturalEarthFeature
 from searvey.coops import coops_product_within_region, coops_stations_within_region
@@ -278,14 +278,19 @@ def calc_stats(obs,sim,mid_date):
         df_stats = pd.concat([df_stats,df_temp], axis=0, ignore_index=True)
     return df_stats
 
+def Ordinal2Datetime(ordinal):
+    plaindate = date.fromordinal(int(ordinal))
+    date_time = datetime.combine(plaindate, datetime.min.time())
+    return date_time + timedelta(days=ordinal-int(ordinal))
+
 #### user defined
 gdf_countries = gpd.GeoSeries(NaturalEarthFeature(category='physical', scale='10m', name='land').geometries(), crs=4326)
 
-exp_name = 'v1_SMS'
+exp_name = 'v1_SMS_5m'
 exp_year = 2018
 
 hgrid_path = Path('../hgrid.gr3')
-num_output = 30
+num_output = 365
 output_path = '../outputs/'
 schism_labels = ['SCHISM']
 
@@ -293,14 +298,40 @@ Bering_Sea = shapely.geometry.box(-205.9832, 49.1090, -156.8640, 66.3040)
 Bering_Sea_stations = coops_stations_within_region(region=Bering_Sea)
 Bering_Sea_stations
 
-water_levels = coops_product_within_region(
-    'water_level',
-    region=Bering_Sea,
-    start_date=datetime(2018, 7, 1, 0),
-    end_date=datetime(2018, 7, 31, 23),
-    datum='MSL',
-    interval='h',
-)
+
+start_date=datetime(2019, 6, 1, 1)
+end_date=datetime(2019, 7, 1, 0)
+
+dt = date.toordinal(end_date) - date.toordinal(start_date)
+if dt > 30:
+    
+    t1 = pd.date_range(start_date, end_date, freq='30d')
+    t2 = pd.date_range(t1[-1], end_date, freq='1h')
+    t = t1.append(t2)
+        
+    water_levels_all = []
+    for i in range(0,len(t)-1):
+        water_levels = coops_product_within_region(
+            'water_level',
+            region=Bering_Sea,
+            start_date=t[i],
+            end_date=t[i+1],
+            datum='MSL',
+            interval='h',
+            )
+        water_levels_all.append(water_levels)
+        
+    water_levels_all = pd.concat(water_levels_all)
+        
+else:
+    water_levels = coops_product_within_region(
+        'water_level',
+        region=Bering_Sea,
+        start_date=start_date,
+        end_date=end_date,
+        datum='MSL',
+        interval='h',
+        )
 
 water_levels = water_levels.drop_vars(['f','s','q'])  # Remove unwanted/NaN variables
 
@@ -329,7 +360,7 @@ stations_indices = find_stations_indices(stations_coordinates, hgrid)
 
 # Read SCHISM outputs
 df_schism_all = []
-for i in range(1,num_output+1):
+for i in range(335,num_output+1):
     ds_schism = xr.open_dataset(output_path+'out2d_'+str(i)+'.nc')
     df_schism = get_schism_elevation_df(ds_schism, stations_indices, station_ids)
     df_schism_all.append(df_schism)
@@ -341,8 +372,10 @@ common_dates = get_common_dates(df_coops, df_schism_all)
 df_coops = df_coops.loc[common_dates]
 df_schism_all = df_schism_all.loc[common_dates]
 
-from_date = datetime(2018,7,1,1)
-to_date = datetime(2018,7,31,0)
+# from_date = datetime(2018,7,1,1)
+# to_date = datetime(2019,7,1,0)
+from_date = start_date
+to_date = end_date
 
 plot_timeseries(df_coops=df_coops, 
                 df_schism_1=df_schism_all, 

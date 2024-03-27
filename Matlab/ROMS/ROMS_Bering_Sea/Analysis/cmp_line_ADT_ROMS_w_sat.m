@@ -1,0 +1,135 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Compare ROMS output along-track ADT with Satellite
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+map = 'Bering';
+lines = 1:13;
+
+JFM = 1:3;
+AMJ = 4:6;
+JAS = 7:9;
+OND = 10:12;
+
+date.month = [JFM; AMJ; JAS; OND];
+date.label = {'JFM', 'AMJ', 'JAS', 'OND'};
+date.color = {'b', [0 0.4471 0.7412], 'r', [0.8510 0.3255 0.0980]};
+
+% Model
+filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
+case_control = 'Dsm1_rnoff';
+filepath_control = [filepath_all, case_control, '/monthly/'];
+
+% Load grid information
+g = grd('BSf');
+
+% Satellite
+filepath_sat = ['/data/jungjih/Observations/Satellite_SSH/Merged_MMv5.1_podaac/'];
+
+% DTU15 data
+% DTU15 = load('/data/jungjih/Observations/Satellite_SSH/DTU15/DTU15_1min_Bering_Sea.mat');
+% lon_DTU15 = DTU15.lon_DTU15_Bering_Sea;
+% lat_DTU15 = DTU15.lat_DTU15_Bering_Sea;
+% mss_DTU15 = DTU15.mss_DTU15_Bering_Sea;
+% mdt_DTU15 = DTU15.mdt_DTU15_Bering_Sea;
+
+h1 = figure; hold on;
+set(gcf, 'Position', [1 1 1800 500])
+t = tiledlayout(2,2);
+
+for li = 1:length(lines)
+    line = lines(li); lstr = num2str(line);
+    load([filepath_sat, 'ADT_line_', lstr, '.mat']);
+    timevec_all = datevec(timenum_all);
+
+    ADT_mean = [];
+    zeta_mean = [];
+    zeta_line_all = [];
+    for mi = 1:size(date.month,1)
+
+        index = find(ismember(timevec_all(:,2), date.month(mi,:)) == 1);
+        ADT_mean = mean(ADT_all(index,:),1, 'omitnan');
+        ADT_std = std(ADT_all(index,:),1, 'omitnan');
+
+        mm = date.month(mi,:);
+        filename_all = [];
+        for mmi = 1:length(mm)
+            mstr = num2str(mm(mmi), '%02i');
+            filename_all = [filename_all; dir([filepath_control, '*', mstr, '.nc*'])];
+        end
+
+        for fi = 1:length(filename_all)
+            filename = filename_all(fi).name;
+            file = [filepath_control, filename];
+            zeta = ncread(file, 'zeta')';
+            zeta_line = griddata(g.lon_rho, g.lat_rho, zeta, lon_line, lat_line);
+            zeta_line_all(fi,:) = zeta_line;
+        end
+        zeta_mean = mean(zeta_line_all,1);
+        zeta_std = std(zeta_line_all,1);
+
+        % Figure
+        nexttile(1, [2 1])
+        if li == 1 && mi == 1
+            plot_map('Bering', 'mercator', 'l');
+            [C,h] = contourm(g.lat_rho, g.lon_rho, g.h, [50 200], 'Color', [.7 .7 .7]);
+            %         cl = clabelm(C,h); set(cl, 'BackgroundColor', 'none');
+            pm = plotm(lat_line, lon_line, '-k', 'LineWidth', 2);
+        else
+            delete(pm)
+            pm = plotm(lat_line, lon_line, '-k', 'LineWidth', 2);
+        end
+
+        nexttile(2); 
+        if mi == 1
+            cla; hold on; grid on
+        end
+        p(mi) = plot(lon_line, 100*ADT_mean, 'Color', date.color{mi});
+        ylim([10 70])
+
+        xlabel('Longitude')
+        ylabel('cm')
+
+        title('Satellite L2')
+
+        nexttile(4); 
+        if mi == 1
+            cla; hold on; grid on
+        end
+%         up = (zeta_mean + zeta_std);
+%         down = (zeta_mean - zeta_std);
+% 
+%         lon_line2 = [lon_line', fliplr(lon_line')];
+%         shading = [up fliplr(down)];
+
+        plot(lon_line, 100*zeta_mean, 'Color', date.color{mi});
+        %     errorbar(lon_line, 100*zeta_mean, 100*zeta_std, 'Color', date.color{mi});
+
+        ylim([-40 20])
+
+        xlabel('Longitude')
+        ylabel('cm')
+
+        title('ROMS')
+    end
+
+    l = legend(p, date.label);
+    l.Location = 'NorthWest';
+
+    % Make gif
+    gifname = ['cmp_line_ADT_sat_seasonally.gif'];
+
+    frame = getframe(h1);
+    im = frame2im(frame);
+    [imind,cm] = rgb2ind(im,256);
+    if li == 1
+        imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+    else
+        imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+    end
+
+end

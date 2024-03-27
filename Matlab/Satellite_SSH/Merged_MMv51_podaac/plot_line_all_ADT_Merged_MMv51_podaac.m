@@ -1,7 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Calculate geostrophic currents along the specific line 
-% using the Merged_MMv5.1_podaac data
+% Plot ADT along specific line using the Merged_MMv5.1_podaac data
 %
 % J. Jung
 %
@@ -49,8 +48,7 @@ t = tiledlayout(1,2);
 for li = 1:length(indices_pline_Bering_Sea_slope)
     index_pline = indices_pline_Bering_Sea_slope{li};
     
-    timenum_all = [];
-    ADT_all = [];
+    timevec_line = [];
 for fi = 1:length(filenum_all)
     filenum = filenum_all(fi); fstr = num2str(filenum, '%04i');
     file_target = dir([filepath, '*', fstr, '*.nc']);
@@ -83,58 +81,40 @@ for fi = 1:length(filenum_all)
     ssha = ncread(file, 'ssha').*1e-3; % units = mm to m
     ssha = ssha(val);
     adt = mdt + ssha;
-    adt_line = adt(index_pline);
     
-    timenum_all = [timenum_all; time(1)];
+    timevec_line = [timevec_line; timevec(index_pline,:)];
     lat_line = lat(index_pline);
     lon_line = lon(index_pline);
-    
+    adt_line = adt(index_pline);
+
     if fi == 1
         nexttile(1)
         if li == 1
             plot_map('Bering', 'mercator', 'l');
-            [C,h] = contourm(g.lat_rho, g.lon_rho, g.h, [50 200], 'Color', [.7 .7 .7]);
+            [C,h] = contourm(g.lat_rho, g.lon_rho, g.h.*mask, [200 200], 'Color', [.7 .7 .7]);
             cl = clabelm(C,h); set(cl, 'BackgroundColor', 'none');
             p = plotm(lat_line, lon_line, '-k', 'LineWidth', 2);
         else
             delete(p)
             p = plotm(lat_line, lon_line, '-k', 'LineWidth', 2);
         end
+        nexttile(2); cla; hold on; grid on
     end
 
-    ADT_all = [ADT_all; adt_line'];
-end % fi
+    plot(lon_line, adt_line, '-');
+    ylim([-0.5 1])
+    ylabel('ADT (m)')
 
-nexttile(2); cla; hold on; grid on
-%pcolor(lon_mid, timenum_all, geostrophic_all*100); shading interp
-pcolor(lon_line, timenum_all, ADT_all*100); shading interp
-ax = gca;
-colormap(ax, 'parula')
-
-xlim([lon_line(1)-0.1 lon_line(end)+0.1])
-ylim([timenum_all(1)-10 timenum_all(end)+10])
-datetick('y', 'mmm dd, yyyy', 'keeplimits')
-
-caxis([20 60])
-c = colorbar;
-c.Title.String = 'cm';
-
-xlabel('Longitude')
-
-title(['Line ', num2str(li)])
-
-% Make gif
-gifname = ['Line_ADT_Merged_MMv5.1_podaac.gif'];
-
-frame = getframe(h1);
-im = frame2im(frame);
-[imind,cm] = rgb2ind(im,256);
-if li == 1
-    imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
-else
-    imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
 end
+    % Make gif
+    gifname = ['Line_all_ADT_Merged_MMv5.1_podaac.gif'];
 
-save(['ADT_line_', num2str(li), '.mat'], 'lon_line', 'lat_line', 'timenum_all', 'ADT_all')
-
-end % li
+    frame = getframe(h1);
+    im = frame2im(frame);
+    [imind,cm] = rgb2ind(im,256);
+    if li == 1
+        imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+    else
+        imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+    end
+end

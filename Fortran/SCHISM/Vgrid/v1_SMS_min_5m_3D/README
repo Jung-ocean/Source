@@ -1,0 +1,4 @@
+You need both schism_geometry.f90 and schism_geometry.txt
+
+ifort -c schism_geometry.f90
+ifort -O2 -mcmodel=medium -CB -o gen_vqs gen_vqs.f90 schism_geometry.f90 

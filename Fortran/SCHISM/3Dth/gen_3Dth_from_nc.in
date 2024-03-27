@@ -1,0 +1,5 @@
+20 34 !T,S values for pts outside bg grid in nc
+86400. !time step in .nc [sec]
+2 1 2 !# of open bnds that need *3D.th; list of IDs
+153 ! # of days needed
+153 ! # of HYCOM stacks
