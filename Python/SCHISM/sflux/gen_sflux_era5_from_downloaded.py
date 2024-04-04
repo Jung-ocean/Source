@@ -74,6 +74,7 @@ if __name__ == '__main__':
             )
             
         nx_grid, ny_grid = inventory.xy_grid()
+        nx_grid = nx_grid + 360
             
         ds=Dataset(era5file)
         time1=ds['time']

@@ -31,9 +31,13 @@ switch varName
         varRaw_b = reshape(varBtm_raw2d, size(varRaw, [1 2]));
         varRaw_s = squeeze(varRaw(:,:, min(iDep, numel(D.depth))));
 
-        ind_btm = sum(~isnan(Mobj.depLayers));
+%         ind_btm = sum(~isnan(Mobj.depLayers));
+        ind_btm = sum(isnan(Mobj.depLayers))+1;
+%         varNew_b = arrayfun(@(x) varNew(x, ind_btm(x)), 1:Mobj.nNodes);
+%         varNew_s = varNew(:, min(iDep, Mobj.maxLev));
         varNew_b = arrayfun(@(x) varNew(x, ind_btm(x)), 1:Mobj.nNodes);
-        varNew_s = varNew(:, min(iDep, Mobj.maxLev));
+        varNew_s = varNew(:, Mobj.maxLev);
+
 end
 %% Display
 cmap = jet(25);
@@ -57,7 +61,7 @@ title('SCHISM (surface)', 'FontWeight','bold')
 
 % nexttile
 subplot(222)
-pcolor(D.lon, D.lat, varRaw_s')
+pcolor(D.lon, D.lat, varRaw_s)
 shading flat
 hold on
 plot_schism_bnds(Mobj, [1 1], 'Color', 'k')
@@ -88,7 +92,7 @@ title('SCHISM (bottom)', 'FontWeight','bold')
 
 % nexttile
 subplot(224)
-pcolor(D.lon, D.lat, varRaw_b')
+pcolor(D.lon, D.lat, varRaw_b)
 shading flat
 hold on
 plot_schism_bnds(Mobj, [1 1], 'Color', 'k')
@@ -105,7 +109,3 @@ title('Raw Data (bottom)', 'FontWeight','bold')
 % auto_center
 
 end
-
-
-
-

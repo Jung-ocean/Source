@@ -1,6 +1,6 @@
 clear; clc
 
-Mobj.dt = 150;
+Mobj.dt = 120;
 Mobj.coord = 'geographic';
 hgrid_file = './hgrid.gr3';
 Mobj = read_schism_hgrid(Mobj, hgrid_file);
@@ -27,4 +27,4 @@ for li = 1:length(lon)
 end
 fclose(fileID);
 
-print('transect', '-dpng')
+% print('transect', '-dpng')

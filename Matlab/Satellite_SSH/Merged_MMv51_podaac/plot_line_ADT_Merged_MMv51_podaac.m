@@ -23,31 +23,17 @@ geoid_DTU15 = DTU15.geoid_DTU15_Bering_Sea;
 
 % Load grid information
 g = grd('BSf');
-mask = g.mask_rho./g.mask_rho;
 
-% Line indices perpendiculart to the Bering Sea slope from the north
-indices_pline_Bering_Sea_slope = {9440:9498;
-    13330:13685;
-    3680:4145;
-    7810:8255;
-    11820:12270;
-    2200:2630;
-    6310:6680;
-    10360:10690;
-    770:1070;
-    4910:5190;
-    8930:9200;
-    12960:13210;
-    3410:3645};
-
-%
+% Line numbers
+line_numbers = 1:13;
 
 h1 = figure; hold on;
 set(gcf, 'Position', [1 1 1800 500])
 t = tiledlayout(1,2);
 
-for li = 1:length(indices_pline_Bering_Sea_slope)
-    index_pline = indices_pline_Bering_Sea_slope{li};
+for li = 1:length(line_numbers)
+
+    [lon_target, lat_target] = indices_pline_Bering_Sea_slope(li);
     
     timenum_all = [];
     ADT_all = [];
@@ -70,19 +56,23 @@ for fi = 1:length(filenum_all)
     time = time(val)/60/60/24 + datenum(1992,1,1);
     timevec = datevec(time);
 
+    index_pline = find(ismember(lon, lon_target) == 1 & ismember(lat, lat_target) == 1);
+
     %mssh = ncread(file, 'mssh').*1e-3; % units = mm to m
     %mssh = mssh(val);
     %geoid = geoidheight(lat,lon); % units = m, EGM96 Geopotential Model
     %mdt = mssh - geoid;
-    if li == 1 && fi == 1
-        mdt = griddata(lon_DTU15, lat_DTU15, mdt_DTU15, lon, lat);
-    end
-    if length(mdt) ~= length(lon)
-        mdt = griddata(lon_DTU15, lat_DTU15, mdt_DTU15, lon, lat);
-    end
+    
+%   mdt = griddata(lon_DTU15, lat_DTU15, mdt_DTU15, lon, lat);
+    load(['mdt_', num2str(length(lon)), '.mat']);
+    
     ssha = ncread(file, 'ssha').*1e-3; % units = mm to m
     ssha = ssha(val);
-    adt = mdt + ssha;
+    nanind = find(isnan(ssha) == 1);
+    
+    ssha_filter = smoothdata(ssha, 'gaussian', 4);
+    ssha_filter(nanind) = NaN;
+    adt = mdt + ssha_filter;
     adt_line = adt(index_pline);
     
     timenum_all = [timenum_all; time(1)];
@@ -94,7 +84,7 @@ for fi = 1:length(filenum_all)
         if li == 1
             plot_map('Bering', 'mercator', 'l');
             [C,h] = contourm(g.lat_rho, g.lon_rho, g.h, [50 200], 'Color', [.7 .7 .7]);
-            cl = clabelm(C,h); set(cl, 'BackgroundColor', 'none');
+%             cl = clabelm(C,h); set(cl, 'BackgroundColor', 'none');
             p = plotm(lat_line, lon_line, '-k', 'LineWidth', 2);
         else
             delete(p)
@@ -105,13 +95,15 @@ for fi = 1:length(filenum_all)
     ADT_all = [ADT_all; adt_line'];
 end % fi
 
+lon_plot = lon_line+360;
+
 nexttile(2); cla; hold on; grid on
 %pcolor(lon_mid, timenum_all, geostrophic_all*100); shading interp
-pcolor(lon_line, timenum_all, ADT_all*100); shading interp
+pcolor(lon_plot, timenum_all, ADT_all*100); shading interp
 ax = gca;
 colormap(ax, 'parula')
 
-xlim([lon_line(1)-0.1 lon_line(end)+0.1])
+xlim([lon_plot(1)-0.1 lon_plot(end)+0.1])
 ylim([timenum_all(1)-10 timenum_all(end)+10])
 datetick('y', 'mmm dd, yyyy', 'keeplimits')
 

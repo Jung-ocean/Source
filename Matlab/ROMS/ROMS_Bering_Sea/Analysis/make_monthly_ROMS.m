@@ -7,16 +7,17 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc
 
-yyyy_all = 2019:2019; % some missing 201906, 202011
-month_avg = [1:3];
+yyyy_all = 2020:2020;
+month_avg = [11];
 year_start = 2018;
 month_start = 7;
-filename_header = 'Dsm_1rnoff_';
+exp = 'Dsm2_spng';
+filename_header = 'Dsm2_spng_';
 
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
-    filepath_daily = ['/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm1_rnoff/'];
+    filepath_daily = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
     datenum_ref = datenum(1968,05,23);
 
     for mi = 1:length(month_avg)

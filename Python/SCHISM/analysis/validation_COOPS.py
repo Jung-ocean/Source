@@ -286,11 +286,11 @@ def Ordinal2Datetime(ordinal):
 #### user defined
 gdf_countries = gpd.GeoSeries(NaturalEarthFeature(category='physical', scale='10m', name='land').geometries(), crs=4326)
 
-exp_name = 'v1_SMS_5m'
+exp_name = 'v1_SMS_5m_3D'
 exp_year = 2018
 
 hgrid_path = Path('../hgrid.gr3')
-num_output = 365
+num_output = 62
 output_path = '../outputs/'
 schism_labels = ['SCHISM']
 
@@ -299,8 +299,8 @@ Bering_Sea_stations = coops_stations_within_region(region=Bering_Sea)
 Bering_Sea_stations
 
 
-start_date=datetime(2019, 6, 1, 1)
-end_date=datetime(2019, 7, 1, 0)
+start_date=datetime(2018, 8, 1, 1)
+end_date=datetime(2018, 8, 31, 0)
 
 dt = date.toordinal(end_date) - date.toordinal(start_date)
 if dt > 30:
@@ -360,7 +360,7 @@ stations_indices = find_stations_indices(stations_coordinates, hgrid)
 
 # Read SCHISM outputs
 df_schism_all = []
-for i in range(335,num_output+1):
+for i in range(32,num_output+1):
     ds_schism = xr.open_dataset(output_path+'out2d_'+str(i)+'.nc')
     df_schism = get_schism_elevation_df(ds_schism, stations_indices, station_ids)
     df_schism_all.append(df_schism)

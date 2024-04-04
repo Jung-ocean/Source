@@ -37,7 +37,8 @@ varData = double(varData(:));
 %% Display
 p = tripcolor(Mobj.tri, Mobj.lon, Mobj.lat, varData, varargin{:});
 colorbar
-colormap(jet(25))
+%colormap(jet(25))
+% colormap jet
 hold on; box on
 xlabel('Longitude (°E)', 'FontWeight','bold')
 ylabel('Latitude (°N)', 'FontWeight','bold')

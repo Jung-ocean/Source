@@ -58,7 +58,7 @@ cmap = jet(15);
 % nexttile
 subplot(221)
 disp_schism_var(Mobj, dx/1000)
-caxis([0 2])
+caxis([0 3])
 % axis image
 box on
 title('Actual grid resolutions (km)')

@@ -17,18 +17,18 @@ OND = 10:12;
 
 date.month = [JFM; AMJ; JAS; OND];
 date.label = {'JFM', 'AMJ', 'JAS', 'OND'};
-date.color = {'r', 'g', 'b', 'm'};
+date.color = {'b', [0 0.4471 0.7412], 'r', [0.8510 0.3255 0.0980]};
 
 % Model
 filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
-case_control = 'Dsm1_rnoff';
+case_control = 'Dsm2_spng';
 filepath_control = [filepath_all, case_control, '/monthly/'];
 
 % Load grid information
 g = grd('BSf');
 
 % Satellite
-filepath_sat = ['/data/jungjih/Observations/Satellite_SSH/Merged_MMv5.1_podaac/'];
+filepath_sat = ['/data/jungjih/Observations/Satellite_SSH/Merged_MMv5.1_podaac/ADT_line_no_filter/'];
 
 % DTU15 data
 % DTU15 = load('/data/jungjih/Observations/Satellite_SSH/DTU15/DTU15_1min_Bering_Sea.mat');
@@ -66,7 +66,8 @@ for li = 1:length(lines)
             filename = filename_all(fi).name;
             file = [filepath_control, filename];
             zeta = ncread(file, 'zeta')';
-            zeta_line = griddata(g.lon_rho, g.lat_rho, zeta, lon_line, lat_line);
+%             zeta_line = griddata(g.lon_rho, g.lat_rho, zeta, lon_line, lat_line);
+            zeta_line = interp2(g.lon_rho, g.lat_rho, zeta, lon_line, lat_line);
             zeta_line_all(fi,:) = zeta_line;
         end
         zeta_mean = mean(zeta_line_all,1);
@@ -74,7 +75,7 @@ for li = 1:length(lines)
 
         % Figure
         nexttile(1, [2 1])
-        if li == 1
+        if li == 1 && mi == 1
             plot_map('Bering', 'mercator', 'l');
             [C,h] = contourm(g.lat_rho, g.lon_rho, g.h, [50 200], 'Color', [.7 .7 .7]);
             %         cl = clabelm(C,h); set(cl, 'BackgroundColor', 'none');
@@ -84,8 +85,12 @@ for li = 1:length(lines)
             pm = plotm(lat_line, lon_line, '-k', 'LineWidth', 2);
         end
 
-        nexttile(2); cla; hold on; grid on
-        p(mi) = plot(lon_line, 100*ADT_mean, 'Color', date.color{mi});
+        nexttile(2); 
+        if mi == 1
+            cla; hold on; grid on
+        end
+        lon_plot = lon_line + 360;
+        p(mi) = plot(lon_plot, 100*ADT_mean, 'Color', date.color{mi});
         ylim([10 70])
 
         xlabel('Longitude')
@@ -93,15 +98,17 @@ for li = 1:length(lines)
 
         title('Satellite L2')
 
-        nexttile(4); cla; hold on; grid on
+        nexttile(4); 
+        if mi == 1
+            cla; hold on; grid on
+        end
+%         up = (zeta_mean + zeta_std);
+%         down = (zeta_mean - zeta_std);
+% 
+%         lon_line2 = [lon_line', fliplr(lon_line')];
+%         shading = [up fliplr(down)];
 
-        up = (zeta_mean + zeta_std);
-        down = (zeta_mean - zeta_std);
-
-        lon_line2 = [lon_line', fliplr(lon_line')];
-        shading = [up fliplr(down)];
-
-        plot(lon_line, 100*zeta_mean, 'Color', date.color{mi});
+        plot(lon_plot, 100*zeta_mean, 'Color', date.color{mi});
         %     errorbar(lon_line, 100*zeta_mean, 100*zeta_std, 'Color', date.color{mi});
 
         ylim([-40 20])
@@ -116,7 +123,7 @@ for li = 1:length(lines)
     l.Location = 'NorthWest';
 
     % Make gif
-    gifname = ['cmp_line_ADT_sat_seasonally.gif'];
+    gifname = ['cmp_line_ADT_L2_seasonally.gif'];
 
     frame = getframe(h1);
     im = frame2im(frame);

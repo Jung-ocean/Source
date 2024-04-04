@@ -29,11 +29,11 @@ end
 
 % Model
 filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
-case_control = 'Dsm1_rnoff';
+case_control = 'Dsm2_spng';
 filepath_control = [filepath_all, case_control, '/seasonally/'];
 
 % Satellite SSH Merged L2
-filepath_Merged = ['/data/jungjih/Observations/Satellite_SSH/Merged_MMv5.1_podaac/'];
+filepath_Merged = ['/data/jungjih/Observations/Satellite_SSH/Merged_MMv5.1_podaac/ADT_line_no_filter/'];
 load([filepath_Merged, 'ADT_monthly.mat'])
 
 % Load grid information
@@ -44,7 +44,7 @@ for mi = 1:length(month_all)
     month_str = month_all{mi};
     month = eval(month_str);
 
-    filename = ['Dsm_1rnoff_', month_str, '.nc'];
+    filename = [case_control, '_', month_str, '.nc'];
     file = [filepath_control, filename];
     zeta = ncread(file, 'zeta')';
 
@@ -78,7 +78,7 @@ for mi = 1:length(month_all)
         c = colorbar;
         c.Title.String = unit;
     end
-    title('ROMS Dsm_1rnoff', 'Interpreter', 'None')
+    title(['ROMS ', case_control], 'Interpreter', 'None')
 
     % Satellite
     adt = mean(ADT_monthly(month,:));
@@ -108,7 +108,7 @@ for mi = 1:length(month_all)
     %     print(strcat('compare_surface_', vari_str, '_satellite_monthly_', datestr(timenum, 'yyyymm')),'-dpng');
 
     % Make gif
-    gifname = ['compare_', vari_str, '_satellite_seasonally.gif'];
+    gifname = ['compare_', vari_str, '_L2_seasonally.gif'];
 
     frame = getframe(h1);
     im = frame2im(frame);

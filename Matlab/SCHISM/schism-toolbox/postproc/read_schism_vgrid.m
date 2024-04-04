@@ -90,6 +90,10 @@ switch ivcor
 
         Mobj.depLayers = bsxfun(@times, Mobj.depth', vgrids);
         Mobj.vgrids = vgrids;
+
+        % Modified by J. Jung, 20240328
+        Mobj.depLayers = flipud(Mobj.depLayers);
+        Mobj.vgrids = flipud(Mobj.vgrids);
     case 2
         disp('read vgird.in (SZ)')
         warning('Not work now')

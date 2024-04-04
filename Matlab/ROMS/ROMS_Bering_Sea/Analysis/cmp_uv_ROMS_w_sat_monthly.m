@@ -25,7 +25,7 @@ aice_value = 0.4;
 
 % Model
 filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
-case_control = 'Dsm1_rnoff';
+case_control = 'Dsm2_spng';
 filepath_control = [filepath_all, case_control, '/monthly/'];
 
 % Load grid information
@@ -136,7 +136,7 @@ for yi = 1:length(yyyy_all)
             %         c.Layout.Tile = 'east';
             c.Title.String = 'm/s';
         end
-        title('ROMS Dsm_1rnoff', 'Interpreter', 'None')
+        title(['ROMS ', case_control], 'Interpreter', 'None')
 
         % Satellite
         filepath_sat = filepath_CMEMS;
