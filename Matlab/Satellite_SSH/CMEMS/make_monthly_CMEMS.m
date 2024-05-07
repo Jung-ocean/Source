@@ -7,7 +7,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc
 
-yyyy_all = 2018:2020;
+yyyy_all = 1993:2017;
 month_avg = [1:12];
 filename_header = 'dt_global_allsat_phy_l4_';
 filename_footer = '';

@@ -48,7 +48,8 @@ opts_def = {'EdgeColor', 'k','Linewidth',0.0125,'EdgeAlpha', 0.05};
 varargin = [opts_def(:)', varargin(:)'];
 
 %% Bathymetry
-cmap = jet(25);
+% cmap = jet(25);
+cmap = 'jet';
 
 switch dep_flag
     case 0 % none color
@@ -56,13 +57,15 @@ switch dep_flag
     case 1 % interpolated
         patch('Faces', Mobj.tri,'Vertices', [Mobj.lon(:) Mobj.lat(:)], 'FaceVertexCData', -Mobj.depth(:), 'FaceColor','interp', varargin{:});
         cbar = colorbar;
-        cbar.Label.String = 'depth (m)';
+%         cbar.Label.String = 'depth (m)';
+        cbar.Title.String = 'm';
         colormap(cmap)
     case 2 % color on the mesh
         trimesh(Mobj.tri, Mobj.lon(:), Mobj.lat(:), -Mobj.depth(:));
         view(0, 90)
         cbar = colorbar;
-        cbar.Label.String = 'depth (m)';
+%         cbar.Label.String = 'depth (m)';
+        cbar.Title.String = 'm';
         colormap(cmap)
 end
 box on;

@@ -1,11 +1,12 @@
 clear; clc; close all
 
 variable = 'temperature';
+expname = 'noshapiro_dt60';
 depth_ind = 45;
 depth_ind_HYCOM = 1;
 start_date = datenum(2018,7,1);
-%day_all = [1 7 14 21 28 35 42 49 56 63];
-day_all = [1 6];
+% day_all = [1 7 14 21 28 35 42 49 56 63];
+day_all = [49];
 
 % Read ROMS grid
 g = grd('BSf');
@@ -62,7 +63,7 @@ for di = 1:length(day_all)
     vari_ROMS = squeeze(vari_ROMS(:,:,depth_ind))';
 
     % SCHISM
-    SCHISM_filepath = '../outputs_dt240/';
+    SCHISM_filepath = ['../outputs_', expname, '/'];
     SCHISM_filename = [vari_str_SCHISM, '_', num2str(day), '.nc'];
     SCHISM_file = [SCHISM_filepath, SCHISM_filename];
     vari_SCHISM = squeeze(ncread(SCHISM_file, vari_str_SCHISM, [depth_ind, 1, 1], [1, Inf, Inf]));

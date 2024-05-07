@@ -11,7 +11,7 @@ clear; clc; close all
 map = 'Bering';
 
 vari_str = 'salt';
-yyyy_all = 2015:2023;
+yyyy_all = 2018:2022;
 mm_all = 1:12;
 depth_shelf = 200; % m
 layer = 45;

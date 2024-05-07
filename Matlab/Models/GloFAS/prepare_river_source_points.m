@@ -10,7 +10,7 @@ clear; clc; close all
 
 % User defined variables
 yyyy = 9999;
-filepath_all = '/data/jungjih/Model/GloFAS/';
+filepath_all = '/data/jungjih/Models/GloFAS/';
 filename_out = 'river_source_points.mat'; 
 % If filename_out exists, filename_out will be new_filename_out 
 %

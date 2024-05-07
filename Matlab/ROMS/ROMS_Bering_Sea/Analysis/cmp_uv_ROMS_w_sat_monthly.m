@@ -9,7 +9,7 @@
 clear; clc; close all
 
 vari_str = 'uv';
-yyyy_all = 2018:2020;
+yyyy_all = 2018:2021;
 mm_all = 1:12;
 depth_shelf = 200; % m
 layer = 45;

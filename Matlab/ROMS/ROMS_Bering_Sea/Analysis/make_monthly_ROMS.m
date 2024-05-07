@@ -7,8 +7,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc
 
-yyyy_all = 2020:2020;
-month_avg = [11];
+yyyy_all = 2022:2022;
+month_avg = [6:6];
 year_start = 2018;
 month_start = 7;
 exp = 'Dsm2_spng';

@@ -7,7 +7,8 @@ function grd = gg(location)
 
 switch location
     case 'BSf'
-        grd_file = '/data/sdurski/ROMS_Setups/Grids/Bering_Sea/BeringSea_Dsm_grid.nc';
+        grd_file = '/data/sdurski/ROMS_Setups/Grids/Bering_Sea/BeringSea_DsmV2_grid.nc';
+        % grd_file = '/data/sdurski/ROMS_Setups/Grids/Bering_Sea/BeringSea_Dsm_grid.nc';
         scoord = [2 0 50 45]; % theta_s theta_b hc N
 
         disp(' ')

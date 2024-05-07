@@ -12,10 +12,10 @@ vgrid_file = './vgrid.in';
 Mobj = read_schism_hgrid(Mobj, hgrid_file);
 Mobj = read_schism_vgrid(Mobj, vgrid_file, 'v5.10');
 %
-iTime = 2;
+iTime = 1;
 yyyymmdd = datestr(start_date + (iTime-1), 'yyyymmdd');
 
-bndy_filepath = '../';
+bndy_filepath = './';
 bndy_filename = 'TEM_3D.th.nc';
 bndy_file = [bndy_filepath, bndy_filename];
 var = ncread(bndy_file, 'time_series');
@@ -47,11 +47,11 @@ distRaw =  repmat(1:nNodes_obc, nDeps_raw, 1);
 depRaw = -abs(depRaw);
 depNew = -abs(depNew);
 
-figure('Color', 'w')
+figure;
 subplot(211)
 pcolor(distNew, depNew, varNew)
 shading flat
-colormap(jet(25))
+colormap jet
 colorbar
 varLim = caxis;
 yvarLim = ylim;
@@ -62,7 +62,7 @@ title(['SCHISM (', datestr(Mobj.time(iTime), 'yyyy-mm-dd'), ')'])
 subplot(212)
 pcolor(distRaw, depRaw, varRaw)
 shading flat
-colormap(jet(25))
+colormap jet
 colorbar
 caxis(varLim)
 ylim(yvarLim)

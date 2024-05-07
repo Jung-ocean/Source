@@ -9,7 +9,7 @@
 clear; clc; close all
 
 vari_str = 'zeta';
-yyyy_all = 2018:2020;
+yyyy_all = 2018:2021;
 mm_all = 1:12;
 depth_shelf = 200; % m
 
@@ -18,7 +18,7 @@ aice_value = 0.4;
 
 switch vari_str
     case 'zeta'
-        climit_model = [-.2 .2];
+        climit_model = [-.3 .1];
         climit_sat = [.2 .6];
         unit = 'm';
 end

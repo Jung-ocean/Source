@@ -7,13 +7,12 @@ Mobj.dt = 120;
 Mobj.coord = 'geographic';
 
 hgrid_file = './hgrid.gr3';
-vgrid_file = './vgrid.in';
+vgrid_file = '../vgrid.in';
 
-Mobj = read_schism_hgrid(Mobj, hgrid_file);
-Mobj = read_schism_vgrid(Mobj, vgrid_file, 'v5.10');
+bMobj = read_schism_vgrid(Mobj, vgrid_file, 'v5.10');
 
 % Horizontal grids
-figure('Color', 'w')
+figure;
 disp_schism_hgrid(Mobj, [1 0])
 %axis image
 % set(gcf, 'Position', [50 300 1800 900])  
@@ -46,38 +45,26 @@ calc_schism_CFL(Mobj)
 % check the hydrostatic assumption
 check_schism_hydrostatic(Mobj);
 
-% Plot
-figure;
-p = disp_schism_var(Mobj, temp_surf, 'EdgeColor', 'none');
-figure;
-p = disp_schism_var(Mobj, temp_bot, 'EdgeColor', 'none');
 
-% %
-% h1 = figure('Color', 'w');
-% set(gcf, 'Position', [1 300 900 600])
-% for oi = 1:2
-%     oistr = num2str(oi);
-%     file_output = ['outputs/out2d_', oistr, '.nc'];
-%     for ti = 1:24
-%         elevation = ncread(file_output, 'elevation', [1 ti], [Inf 1]);
-%         
-%         if oi == 1 && ti == 1
-%             p = disp_schism_var(Mobj, elevation, 'EdgeColor', 'none');
-%             caxis([-2 2])
-%         else
-%             p.FaceVertexCData = elevation;
-%         end
-% 
-%         % Make gif
-%         gifname = ['test_schism_elevation.gif'];
-% 
-%         frame = getframe(h1);
-%         im = frame2im(frame);
-%         [imind,cm] = rgb2ind(im,256);
-%         if oi == 1 && ti == 1
-%             imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
-%         else
-%             imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
-%         end
-%     end
-% end
+% grid_depth_resolution
+figure; hold on;
+set(gcf, 'Position', [1 1 1800 500])  
+subplot(121)
+disp_schism_hgrid(Mobj, [1 0], 'EdgeColor', 'None')
+caxis([-500 0])
+title('Depth')
+
+% resolution
+CFL_limit = 0.4;
+g = 9.80665;
+ua = 0;
+h = abs(Mobj.depth);
+R = calc_schism_cradius(Mobj);      % use the circumradius
+dx = R(:);
+
+subplot(122)
+disp_schism_var(Mobj, dx/1000)
+caxis([0 3])
+title('Actual grid resolutions (km)')
+
+print('grid_depth_resolution', '-dpng')

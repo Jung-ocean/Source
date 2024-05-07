@@ -37,12 +37,21 @@ switch varName
 %         varNew_s = varNew(:, min(iDep, Mobj.maxLev));
         varNew_b = arrayfun(@(x) varNew(x, ind_btm(x)), 1:Mobj.nNodes);
         varNew_s = varNew(:, Mobj.maxLev);
+end
 
+switch varName
+    case 'temp'
+        climit = [0 20];
+        title_str = '^oC';
+    case 'salt'
+        climit = [31.5 33.5];
+        title_str = 'g/kg';
 end
 %% Display
-cmap = jet(25);
+% cmap = jet(25);
+cmap = 'jet';
 
-figure('Color', 'w')
+figure;
 % tiledlayout(2,2,'TileSpacing','tight')  % better alternatives for advanced MATLAB version
 % nexttile
 
@@ -54,8 +63,10 @@ axis image
 box on
 xlim(Mobj.region(1:2))
 ylim(Mobj.region(3:4))
-colorbar
+c = colorbar;
+c.Title.String = title_str;
 colormap(cmap)
+caxis(climit)
 varLim = caxis;
 title('SCHISM (surface)', 'FontWeight','bold')
 
@@ -69,7 +80,8 @@ axis image
 box on
 xlim(Mobj.region(1:2))
 ylim(Mobj.region(3:4))
-colorbar
+c = colorbar;
+c.Title.String = title_str;
 colormap(cmap)
 caxis(varLim)
 xlabel('Longitude (°E)', 'FontWeight','bold')
@@ -85,8 +97,10 @@ axis image
 box on
 xlim(Mobj.region(1:2))
 ylim(Mobj.region(3:4))
-colorbar
+c = colorbar;
+c.Title.String = title_str;
 colormap(cmap)
+caxis(climit)
 varLim = caxis;
 title('SCHISM (bottom)', 'FontWeight','bold')
 
@@ -100,7 +114,8 @@ axis image
 box on
 xlim(Mobj.region(1:2))
 ylim(Mobj.region(3:4))
-colorbar
+c = colorbar;
+c.Title.String = title_str;
 colormap(cmap)
 caxis(varLim)
 xlabel('Longitude (°E)', 'FontWeight','bold')

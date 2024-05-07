@@ -1,6 +1,7 @@
-clear; clc
+clear; clc; close all
 
 variable = 'elevation';
+expname = 'nosflux_noshapiro';
 start_date = datenum(2018,7,1);
 yyyymm_all = [datenum(2018,8,15)];
 
@@ -12,7 +13,7 @@ g = grd('BSf');
 % Mobj.rundays = days(Mobj.time(end)-Mobj.time(1));
 Mobj.dt = 120;
 Mobj.coord = 'geographic';
-hgrid_file = './hgrid.gr3';
+hgrid_file = '../hgrid.gr3';
 Mobj = read_schism_hgrid(Mobj, hgrid_file);
 Mobj.lon = Mobj.lon - 360;
 % vgrid_file = '/data/jungjih/Models/SCHISM/test_schism/vgrid.in';
@@ -49,7 +50,7 @@ for yi = 1:length(yyyymm_all)
     vari_ROMS = ncread(ROMS_file, vari_str_ROMS)';
 
     % SCHISM
-    SCHISM_filepath = '../outputs/';
+    SCHISM_filepath = ['../outputs_', expname, '/'];
     SCHISM_filename = ['out2d_', datestr(yyyymmdd, 'yyyymm'), '.nc'];
     SCHISM_file = [SCHISM_filepath, SCHISM_filename];
     vari_SCHISM = squeeze(ncread(SCHISM_file, vari_str_SCHISM));
