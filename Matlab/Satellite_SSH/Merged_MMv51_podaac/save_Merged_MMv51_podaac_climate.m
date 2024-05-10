@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Save Merged_MMv5.1_podaac monthly
+% Save Merged_MMv5.1_podaac climate
 %
 % J. Jung
 %
@@ -40,10 +40,8 @@ switch vari_str
         gifname_header = 'SLA';
 end
 
-timenum_all = [datenum(2018, 1:12, 15), datenum(2019, 1:12, 15), datenum(2020, 1:12, 15)];
-timevec_all = datevec(timenum_all);
-ADT_month_sum = zeros(length(timenum_all),13687);
-num_data = zeros(length(timenum_all),13687);
+ADT_month_sum = zeros(12,13687);
+num_data = zeros(12,13687);
 for fi = 1:length(filenum_all)
     filenum = filenum_all(fi); fstr = num2str(filenum, '%04i');
     file_target = dir([filepath, '*', fstr, '*.nc']);
@@ -84,21 +82,22 @@ for fi = 1:length(filenum_all)
     end
     adt = mdt + ssha;
 
-    for ti = 1:length(timenum_all)
-        index = find(timevec(:,1) == timevec_all(ti,1) & timevec(:,2) == timevec_all(ti,2));
+    for mi = 1:12
+        index = find(timevec(:,2) == mi);
         lon_tmp = lon(index);
         lat_tmp = lat(index);
         if ~isempty(index)
             adt_tmp = adt(index);
-            nanind = isnan(adt_tmp);
+            nanind = isnan(adt_tmp) == 1;
             adt_tmp(isnan(adt_tmp) == 1) = 0;
 
-            ADT_month_sum(ti,index) = ADT_month_sum(ti,index)+adt_tmp';
-            num_data(ti,index) = num_data(ti,index) + (~nanind)';
+            index2 = find(timevec(:,2) == mi & ismember(lon,lon_tmp)==1 & ismember(lat,lat_tmp)==1);
+            ADT_month_sum(mi,index2) = ADT_month_sum(mi,index2)+adt_tmp';
+            num_data(mi,index2) = num_data(mi,index2) + (~nanind)';
         end
     end
 end
 
 ADT_monthly = ADT_month_sum./num_data;
 
-save ADT_monthly.mat timenum_all timevec_all ADT_monthly ADT_month_sum num_data lon_ref lat_ref
+save ADT_climate.mat ADT_monthly ADT_month_sum num_data lon_ref lat_ref

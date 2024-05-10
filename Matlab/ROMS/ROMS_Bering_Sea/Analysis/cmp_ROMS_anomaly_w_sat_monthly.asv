@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Compare ROMS output through area-averaged with Satellite
+% Compare ROMS output anomaly through area-averaged with Satellite
 % by applying mask
 %
 % J. Jung
@@ -33,6 +33,7 @@ end
 filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
 case_control = 'Dsm2_spng';
 filepath_control = [filepath_all, case_control, '/monthly/'];
+filepath_climate = [filepath_all, case_control, '/climate/'];
 
 % Load grid information
 g = grd('BSf');
@@ -61,16 +62,22 @@ for yi = 1:length(yyyy_all)
     % Satellite SSS
     % RSS SMAP v5.3 (https://catalog.data.gov/dataset/rss-smap-level-3-sea-surface-salinity-standard-mapped-image-8-day-running-mean-v5-0-valida-ce1a1)
     filepath_RSS_70 = ['/data/jungjih/Observations/Satellite_SSS/Global/RSS/v5.3/monthly/', ystr, '/'];
+    filepath_RSS_70_climate = ['/data/jungjih/Observations/Satellite_SSS/Global/RSS/v5.3/climate/'];
     filepath_RSS_40 = filepath_RSS_70;
+    filepath_RSS_40_climate = filepath_RSS_70_climate;
     % JPL SMAP v5.0 (https://podaac.jpl.nasa.gov/dataset/SMAP_JPL_L3_SSS_CAP_8DAY-RUNNINGMEAN_V5)
     %filepath_JPL = ['/data/jungjih/Observations/Satellite_SSS/BS/JPL/monthly/'];
     % CEC SMOS v9.0
     filepath_CEC = ['/data/jungjih/Observations/Satellite_SSS/Global/CEC/v9/monthly/'];
+    filepath_CEC_climate = ['/data/jungjih/Observations/Satellite_SSS/Global/CEC/v9/climate/'];
     % OISSS L4 v2.0 (https://podaac.jpl.nasa.gov/dataset/OISSS_L4_multimission_7day_v2)
     filepath_OISSS = ['/data/jungjih/Observations/Satellite_SSS/OISSS_v2/monthly/'];
+    filepath_OISSS_climate = ['/data/jungjih/Observations/Satellite_SSS/OISSS_v2/climate/'];
     % CMEMS Multi Observation Global Ocean SSS (https://data.marine.copernicus.eu/product/MULTIOBS_GLO_PHY_S_SURFACE_MYNRT_015_013/description)
     filepath_CMEMS = ['/data/jungjih/Observations/Satellite_SSS/Global/CMEMS/monthly/', ystr, '/'];
+    filepath_CMEMS_climate = ['/data/jungjih/Observations/Satellite_SSS/Global/CMEMS/climate/'];
     filepaths_sat = {filepath_RSS_70, filepath_RSS_40, filepath_CEC, filepath_OISSS, filepath_CMEMS};
+    filepaths_sat_climate = {filepath_RSS_70_climate, filepath_RSS_40_climate, filepath_CEC_climate, filepath_OISSS_climate, filepath_CMEMS_climate};
 
     % lons_sat = {'lon', 'lon', 'longitude', 'longitude', 'lon'};
     % lons_360ind = [360, 360, 0, 180, 360];
@@ -103,12 +110,17 @@ for yi = 1:length(yyyy_all)
             vari_control = NaN;
         end
 
+        filepattern_climate = fullfile(filepath_climate,(['*climatology_',mstr,'*.nc']));
+        filename_climate = dir(filepattern_climate);
+        file_control = [filepath_climate, filename_climate.name];
+        vari_climate = ncread(file_control,vari_str,[1 1 layer 1],[Inf Inf 1 1])';
+
         timenum = datenum(yyyy,mm,15);
         time_title = datestr(timenum, 'mmm, yyyy');
         timenum_all(12*(yi-1) + mi) = timenum;
 
         % Figure title
-        title(t, ['SSS (', time_title, ')'], 'FontSize', 25)
+        title(t, time_title, 'FontSize', 25)
 
         nexttile(1)
         if yi == 1 && mi == 1
@@ -119,7 +131,7 @@ for yi = 1:length(yyyy_all)
             delete(T(1));
         end
 
-        T(1) = pcolorm(lat,lon,vari_control.*mask);
+        T(1) = pcolorm(lat,lon,(vari_control-vari_climate).*mask);
         uistack(T(1),'bottom')
         caxis(climit)
         title('ROMS Dsm2_spng', 'Interpreter', 'None')
@@ -135,6 +147,10 @@ for yi = 1:length(yyyy_all)
                 filename_sat = dir(filepattern2_sat);
             end
 
+            filepath_sat_climate = filepaths_sat_climate{si};
+            filepattern_sat_climate = fullfile(filepath_sat_climate, (['*climatology_', mstr, '*.nc']));
+            filename_sat_climate = dir(filepattern_sat_climate);
+
             if isempty(filename_sat)
                 vari_sat_interp = NaN;
             else
@@ -142,9 +158,13 @@ for yi = 1:length(yyyy_all)
                 lon_sat = double(ncread(file_sat,lons_sat{si}));
                 lat_sat = double(ncread(file_sat,lats_sat{si}));
                 vari_sat = double(squeeze(ncread(file_sat,varis_sat{si}))');
+
+                file_sat_climate = [filepath_sat_climate, filename_sat_climate.name];
+                vari_sat_climate = double(squeeze(ncread(file_sat_climate,varis_sat{si}))');
                 if si == 3 || si == 4
                     index1 = find(lon_sat > 0); index2 = find(lon_sat < 0);
                     vari_sat = [vari_sat(:,index1) vari_sat(:,index2)];
+                    vari_sat_climate = [vari_sat_climate(:,index1) vari_sat_climate(:,index2)];
                 end
                 lon_sat = lon_sat - lons_360ind(si);
 
@@ -152,10 +172,12 @@ for yi = 1:length(yyyy_all)
                 index_lat = find(lat_sat < max(max(lat))+1 & lat_sat > min(min(lat))-1);
 
                 vari_sat_part = vari_sat(index_lat,index_lon);
+                vari_sat_climate_part = vari_sat_climate(index_lat,index_lon);
 
                 [lon_sat2, lat_sat2] = meshgrid(lon_sat(index_lon), lat_sat(index_lat));
 
                 vari_sat_interp = griddata(lon_sat2, lat_sat2, vari_sat_part, lon,lat);
+                vari_sat_climate_interp = griddata(lon_sat2, lat_sat2, vari_sat_climate_part, lon,lat);
             end
 
             % Tile
@@ -168,7 +190,7 @@ for yi = 1:length(yyyy_all)
             else
                 delete(T(si+1));
             end
-            T(si+1) = pcolorm(lat,lon,vari_sat_interp);
+            T(si+1) = pcolorm(lat,lon,vari_sat_interp - vari_sat_climate_interp);
             uistack(T(si+1),'bottom')
             caxis(climit)
             if yi == 1 && mi == 1 && si == num_sat
@@ -185,10 +207,10 @@ for yi = 1:length(yyyy_all)
         t.Padding = 'compact';
 
         pause(1)
-        print(strcat('compare_surface_', vari_str, '_satellite_monthly_', datestr(timenum, 'yyyymm')),'-dpng');
+        print(strcat('compare_surface_', vari_str, '_anomaly_satellite_monthly_', datestr(timenum, 'yyyymm')),'-dpng');
 
         % Make gif
-        gifname = ['compare_surface_', vari_str, '_satellite_monthly.gif'];
+        gifname = ['compare_surface_', vari_str, '_anomaly_satellite_monthly.gif'];
 
         frame = getframe(h1);
         im = frame2im(frame);

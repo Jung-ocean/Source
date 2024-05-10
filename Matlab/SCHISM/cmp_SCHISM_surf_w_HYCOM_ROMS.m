@@ -1,12 +1,13 @@
 clear; clc; close all
 
 variable = 'temperature';
-expname = 'noshapiro_dt60';
+expname = 'control';
+issurf = 1;
 depth_ind = 45;
 depth_ind_HYCOM = 1;
 start_date = datenum(2018,7,1);
-% day_all = [1 7 14 21 28 35 42 49 56 63];
-day_all = [49];
+day_all = [1 7 14 21 28 35 42 49 56 63];
+%day_all = [1 7 14 21];
 
 % Read ROMS grid
 g = grd('BSf');
@@ -14,7 +15,7 @@ g = grd('BSf');
 % Read SCHISM grid
 % Mobj.time = (datetime(2018,7,1):hours(1):datetime(2018,6,3))';
 % Mobj.rundays = days(Mobj.time(end)-Mobj.time(1));
-Mobj.dt = 120;
+Mobj.dt = 60;
 Mobj.coord = 'geographic';
 hgrid_file = '../hgrid.gr3';
 Mobj = read_schism_hgrid(Mobj, hgrid_file);
@@ -64,9 +65,15 @@ for di = 1:length(day_all)
 
     % SCHISM
     SCHISM_filepath = ['../outputs_', expname, '/'];
-    SCHISM_filename = [vari_str_SCHISM, '_', num2str(day), '.nc'];
-    SCHISM_file = [SCHISM_filepath, SCHISM_filename];
-    vari_SCHISM = squeeze(ncread(SCHISM_file, vari_str_SCHISM, [depth_ind, 1, 1], [1, Inf, Inf]));
+    if issurf == 1
+        SCHISM_filename = [vari_str_SCHISM, '_surf_', num2str(day), '.nc'];
+        SCHISM_file = [SCHISM_filepath, SCHISM_filename];
+        vari_SCHISM = squeeze(ncread(SCHISM_file, vari_str_SCHISM));
+    else
+        SCHISM_filename = [vari_str_SCHISM, '_', num2str(day), '.nc'];
+        SCHISM_file = [SCHISM_filepath, SCHISM_filename];
+        vari_SCHISM = squeeze(ncread(SCHISM_file, vari_str_SCHISM, [depth_ind, 1, 1], [1, Inf, Inf]));
+    end
     vari_SCHISM = mean(vari_SCHISM,2);
 
     % Plot

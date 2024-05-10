@@ -23,6 +23,11 @@ indmask = eval(['mask_Scott.ind', region]);
 [row,col] = ind2sub([1460, 957], indmask);
 indmask = sub2ind([957, 1460], col, row); % transpose
 
+% mask = g.mask_rho;
+% mask(indmask) = 2;
+% figure;
+% pcolor(g.lon_rho, g.lat_rho, mask); shading interp
+
 isice = 0;
 aice_value = 0.4;
 
@@ -39,19 +44,12 @@ end
 
 % Model
 filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
-case_control = 'Dsm1_rnoff';
+case_control = 'Dsm2_spng';
 filepath_control = [filepath_all, case_control, '/monthly/'];
 filepath_climatology = [filepath_all, case_control, '/climatology/'];
 
 % Load grid information
-grd_file = '/data/sdurski/ROMS_Setups/Grids/Bering_Sea/BeringSea_Dsm_grid.nc';
-theta_s = 2;
-theta_b = 0;
-Tcline = 50;
-N = 45;
-scoord = [theta_s theta_b Tcline N];
-Vtransform = 2;
-g = roms_get_grid(grd_file,scoord,0,Vtransform);
+g = grd('BSf');
 lon = g.lon_rho;
 lat = g.lat_rho;
 h = g.h;
@@ -107,7 +105,7 @@ for yi = 1:length(yyyy_all)
     lons_360ind = [360, 360, 180, 180, 360];
     lats_sat = {'lat', 'lat', 'lat', 'latitude', 'lat'};
     varis_sat = {'sss_smap', 'sss_smap_40km', 'SSS', 'sss', 'sos'};
-    titles_sat = {'RSS SMAP L3 SSS v5.3 8-day MA (70 km)', 'RSS SMAP L3 SSS v5.3 8-day MA (40 km)', 'CEC SMOS L3 SSS v8.0 9-day MA', 'OISSS L4 v2.0 7-day decorr time scale', 'CMEMS Multi Observation L4 SSS'};
+    titles_sat = {'RSS SMAP L3 SSS v5.3 (70 km)', 'RSS SMAP L3 SSS v5.3 (40 km)', 'CEC SMOS L3 SSS v9.0', 'ESR OISSS L4 v2.0', 'CMEMS Multi Observation L4 SSS'};
 
     for mi = 1:length(mm_all)
         mm = mm_all(mi); mstr = num2str(mm, '%02i');
