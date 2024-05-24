@@ -9,8 +9,8 @@ clear; clc; close all
 
 % User defined variables
 filepath = '/data/sdurski/Observations/SSH/Merged_MMv5.1_podaac/';
-%filenum_all = 949:1087;
-filenum_all = 949:1039;
+filenum_all = 949:1087;
+% filenum_all = 949:1039;
 lon_range = [-205.9832 -156.8640]; lat_range = [49.1090 66.3040]; % Bering Sea
 vari_str = 'adt'; % adt or ssha
 
@@ -40,7 +40,7 @@ switch vari_str
         gifname_header = 'SLA';
 end
 
-timenum_all = [datenum(2018, 1:12, 15), datenum(2019, 1:12, 15), datenum(2020, 1:12, 15)];
+timenum_all = [datenum(2018, 1:12, 15), datenum(2019, 1:12, 15), datenum(2020, 1:12, 15) datenum(2021, 1:12, 15) datenum(2022, 1:12, 15)];
 timevec_all = datevec(timenum_all);
 ADT_month_sum = zeros(length(timenum_all),13687);
 num_data = zeros(length(timenum_all),13687);

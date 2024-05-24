@@ -1,7 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Compare ROMS output through area-averaged with Satellite
-% by applying mask
+% Compare ROMS uv to Satellite L4
 %
 % J. Jung
 %
@@ -9,16 +8,16 @@
 clear; clc; close all
 
 vari_str = 'uv';
-yyyy_all = 2018:2021;
+yyyy_all = 2018:2022;
 mm_all = 1:12;
 depth_shelf = 200; % m
 layer = 45;
 
 interval_model = 20;
 scale_model = 5;
-
-interval_sat = 1;
-scale_sat = 1;
+% interval_sat = 1;
+% scale_sat = 1;
+climit = [0 0.5];
 
 isice = 0;
 aice_value = 0.4;
@@ -118,7 +117,7 @@ for yi = 1:length(yyyy_all)
         else
             p = pcolorm(lat, lon, speed_model);
             colormap(flipud(pink))
-            caxis([0 .5])
+            caxis(climit)
 
             q = quiverm(latred(1:interval_model:end, 1:interval_model:end), ...
                 lonred(1:interval_model:end, 1:interval_model:end), ...
@@ -128,15 +127,17 @@ for yi = 1:length(yyyy_all)
         end % isice
         uistack(q,'bottom')
         uistack(p,'bottom')
-        q(1).Color = [.3 .3 .3];
-        q(2).Color = [.3 .3 .3];
+%         q(1).Color = [.3 .3 .3];
+%         q(2).Color = [.3 .3 .3];
+        q(1).Color = 'k';
+        q(2).Color = 'k';
 
         if yi == 1 && mi == 1
             c = colorbar;
-            %         c.Layout.Tile = 'east';
             c.Title.String = 'm/s';
+            c.Ticks = climit(1):0.1:climit(end);
         end
-        title(['ROMS ', case_control], 'Interpreter', 'None')
+        title(['ROMS'], 'Interpreter', 'None')
 
         % Satellite
         filepath_sat = filepath_CMEMS;
@@ -199,7 +200,7 @@ for yi = 1:length(yyyy_all)
         end
         p2 = pcolorm(lat, lon, speed_sat);
         colormap(flipud(pink))
-        caxis([0 .5])
+        caxis(climit)
 
         q2 = quiverm(latred(1:interval_model:end, 1:interval_model:end), ...
             lonred(1:interval_model:end, 1:interval_model:end), ...
@@ -209,16 +210,21 @@ for yi = 1:length(yyyy_all)
  
         uistack(q2,'bottom')
         uistack(p2,'bottom')
-        q2(1).Color = [.3 .3 .3];
-        q2(2).Color = [.3 .3 .3];
+%         q2(1).Color = [.3 .3 .3];
+%         q2(2).Color = [.3 .3 .3];
+        q2(1).Color = 'k';
+        q2(2).Color = 'k';
 
         if yi == 1 && mi == 1
             c = colorbar;
-            %         c.Layout.Tile = 'east';
             c.Title.String = 'm/s';
+            c.Ticks = climit(1):0.1:climit(end);
         end
 
-        title('CMEMS L4', 'Interpreter', 'None')
+        title('Satellite L4 (CMEMS)', 'Interpreter', 'None')
+
+        t.TileSpacing = 'compact';
+        t.Padding = 'compact';
 
         pause(1)
         %     print(strcat('compare_surface_', vari_str, '_satellite_monthly_', datestr(timenum, 'yyyymm')),'-dpng');

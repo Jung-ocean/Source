@@ -1,12 +1,22 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Calculate geostrophic currents along the specific line 
-% using the Merged_MMv5.1_podaac data
+% Plot ADT along the specific line using the Merged_MMv5.1_podaac data
 %
 % J. Jung
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
+
+% Line numbers
+direction = 'a';
+if strcmp(direction, 'p')
+    lines = 1:16; % pline
+else
+    lines = 1:29; % aline
+end
+
+isfilter = 0;
+filter_window = 8; % 1 ~ 5.75 km
 
 % User defined variables
 filepath = '/data/sdurski/Observations/SSH/Merged_MMv5.1_podaac/';
@@ -24,16 +34,14 @@ geoid_DTU15 = DTU15.geoid_DTU15_Bering_Sea;
 % Load grid information
 g = grd('BSf');
 
-% Line numbers
-line_numbers = 1:13;
-
 h1 = figure; hold on;
 set(gcf, 'Position', [1 1 1800 500])
 t = tiledlayout(1,2);
 
-for li = 1:length(line_numbers)
+for li = 1:length(lines)
 
-    [lon_target, lat_target] = indices_pline_Bering_Sea_slope(li);
+    lstr = num2str(li, '%02i');
+    [lon_target, lat_target] = indices_lines_Bering_Sea_slope(direction, li);
     
     timenum_all = [];
     ADT_all = [];
@@ -56,7 +64,7 @@ for fi = 1:length(filenum_all)
     time = time(val)/60/60/24 + datenum(1992,1,1);
     timevec = datevec(time);
 
-    index_pline = find(ismember(lon, lon_target) == 1 & ismember(lat, lat_target) == 1);
+    index_lines = find(ismember(lon, lon_target) == 1 & ismember(lat, lat_target) == 1);
 
     %mssh = ncread(file, 'mssh').*1e-3; % units = mm to m
     %mssh = mssh(val);
@@ -70,15 +78,19 @@ for fi = 1:length(filenum_all)
     ssha = ssha(val);
     nanind = find(isnan(ssha) == 1);
     
-    ssha_filter = smoothdata(ssha, 'gaussian', 4);
-    ssha_filter(nanind) = NaN;
-    adt = mdt + ssha_filter;
-    adt_line = adt(index_pline);
+    if isfilter == 1
+        ssha = smoothdata(ssha, 'gaussian', filter_window);
+        ssha(nanind) = NaN;
+    end
+    adt = mdt + ssha;
+    adt_line = adt(index_lines);
     
-    timenum_all = [timenum_all; time(1)];
-    lat_line = lat(index_pline);
-    lon_line = lon(index_pline);
+    time_line = time(index_lines);
+    lat_line = lat(index_lines);
+    lon_line = lon(index_lines);
     
+    timenum_all = [timenum_all; time_line(1)];
+
     if fi == 1
         nexttile(1)
         if li == 1
@@ -103,7 +115,8 @@ pcolor(lon_plot, timenum_all, ADT_all*100); shading interp
 ax = gca;
 colormap(ax, 'parula')
 
-xlim([lon_plot(1)-0.1 lon_plot(end)+0.1])
+%xlim([lon_plot(1)-0.1 lon_plot(end)+0.1])
+xlim([154 203])
 ylim([timenum_all(1)-10 timenum_all(end)+10])
 datetick('y', 'mmm dd, yyyy', 'keeplimits')
 
@@ -113,10 +126,16 @@ c.Title.String = 'cm';
 
 xlabel('Longitude')
 
-title(['Line ', num2str(li)])
+title([direction, 'line ', num2str(li, '%02i')])
+
+t.TileSpacing = 'compact';
+t.Padding = 'compact';
+
+pause(1)
+saveas(gcf, [direction, 'line_', lstr, '_ADT_Merged_MMv5.1_podaac.png']);
 
 % Make gif
-gifname = ['Line_ADT_Merged_MMv5.1_podaac.gif'];
+gifname = [direction, 'line_ADT_Merged_MMv5.1_podaac.gif'];
 
 frame = getframe(h1);
 im = frame2im(frame);
@@ -127,6 +146,6 @@ else
     imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
 end
 
-save(['ADT_line_', num2str(li), '.mat'], 'lon_line', 'lat_line', 'timenum_all', 'ADT_all')
+save(['ADT_', direction, 'line_', lstr, '.mat'], 'lon_line', 'lat_line', 'timenum_all', 'ADT_all')
 
 end % li

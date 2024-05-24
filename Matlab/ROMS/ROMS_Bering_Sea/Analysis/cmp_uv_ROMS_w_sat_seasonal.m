@@ -1,7 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Compare ROMS output through area-averaged with Satellite
-% by applying mask
+% Compare ROMS uv to Satellite L4
 %
 % J. Jung
 %
@@ -9,8 +8,8 @@
 clear; clc; close all
 
 vari_str = 'uv';
-%yyyy_all = 2018:2022;
-yyyy_all = 2019:2019;
+yyyy_all = 2018:2022;
+% yyyy_all = 2019:2019;
 
 month_all = {'JFM', 'AMJ', 'JAS', 'OND'};
 %month_all = {'JFM', 'JAS'};
@@ -133,7 +132,7 @@ for yi = 1:length(yyyy_all)
             c.Title.String = 'm/s';
             c.Ticks = climit(1):0.1:climit(end);
         end
-        title(['ROMS ', case_control], 'Interpreter', 'None')
+        title(['ROMS'], 'Interpreter', 'None')
 
         % Satellite
         filepath_sat = filepath_CMEMS;
@@ -217,7 +216,7 @@ for yi = 1:length(yyyy_all)
             c.Ticks = climit(1):0.1:climit(end);
         end
 
-        title('CMEMS L4', 'Interpreter', 'None')
+        title('Satellite L4 (CMEMS)', 'Interpreter', 'None')
 
         t.TileSpacing = 'compact';
         t.Padding = 'compact';

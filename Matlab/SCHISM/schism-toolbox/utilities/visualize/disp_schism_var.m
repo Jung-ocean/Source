@@ -40,7 +40,7 @@ colorbar
 %colormap(jet(25))
 % colormap jet
 hold on; box on
-xlabel('Longitude (°E)', 'FontWeight','bold')
-ylabel('Latitude (°N)', 'FontWeight','bold')
+% xlabel('Longitude (°E)', 'FontWeight','bold')
+% ylabel('Latitude (°N)', 'FontWeight','bold')
 
 end

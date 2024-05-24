@@ -233,8 +233,10 @@ t.Padding = 'compact';
 title(t, 'Monthly SSS', 'FontSize', 25)
 
 pause(1)
-print(strcat('compare_area_averaged_', vari_str, '_with_Satellite_monthly'),'-dpng');
 
+savename = ['compare_area_averaged_', vari_str, '_with_Satellite_monthly'];
+print(savename, '-dpng');
+savefig([savename, '.fig'])
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 timevec = datevec(timenum_all);
 year_start = [2019 2019 2019 2019 2019 2019 2018 2018 2018 2018 2018 2018];
@@ -295,8 +297,12 @@ t.TileSpacing = 'compact';
 t.Padding = 'compact';
 
 title(t, '4-year mean SSS', 'FontSize', 25)
-print(strcat('compare_area_averaged_', vari_str, '_with_Satellite_4ymean'),'-dpng');
 
+pause(1)
+
+savename = ['compare_area_averaged_', vari_str, '_with_Satellite_4ymean'];
+print(savename, '-dpng');
+savefig([savename, '.fig'])
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for ti = 1:length(timenum_all)
     month = timevec(ti,2);
@@ -351,8 +357,10 @@ t.Padding = 'compact';
 title(t, 'SSS amomaly', 'FontSize', 25)
 
 pause(1)
-print(strcat('compare_area_averaged_', vari_str, '_with_Satellite_anomaly'),'-dpng');
 
+savename = ['compare_area_averaged_', vari_str, '_with_Satellite_anomaly'];
+print(savename, '-dpng');
+savefig([savename, '.fig'])
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 h1 = figure; hold on;
 set(gcf, 'Position', [1 200 1500 750])
@@ -370,7 +378,7 @@ p(5) = plot(1:12, vari_control_shelf(tindex+48), 'LineWidth', 2);
 xticks(1:12);
 xlim([0 13])
 xlabel('Month')
-% ylim(ylimit_shelf);
+ylim(ylimit_shelf);
 ylabel(unit)
 
 l = legend(p, num2str(timevec(1:12:end,1)));
@@ -391,7 +399,7 @@ for si = 1:num_sat
     xticks(1:12);
     xlim([0 13])
     xlabel('Month')
-%     ylim(ylimit_shelf);
+    ylim(ylimit_shelf);
     ylabel(unit)
 
     title(titles_sat{si}, 'Interpreter', 'None')
@@ -401,8 +409,11 @@ t.TileSpacing = 'compact';
 t.Padding = 'compact';
 title(t, ['Eastern outer shelf area averaged SSS (', num2str(depth_min), ' - ', num2str(depth_shelf), ' m)'])
 
-print(strcat('compare_area_averaged_', vari_str, '_with_Satellite_interannual_shelf'),'-dpng');
+pause(1)
 
+savename = ['compare_area_averaged_', vari_str, '_with_Satellite_interannual_shelf'];
+print(savename, '-dpng');
+savefig([savename, '.fig'])
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 h1 = figure; hold on;
 set(gcf, 'Position', [1 200 1500 750])
@@ -420,7 +431,7 @@ p(5) = plot(1:12, vari_control_basin(tindex+48), 'LineWidth', 2);
 xticks(1:12);
 xlim([0 13])
 xlabel('Month')
-% ylim(ylimit_basin);
+ylim(ylimit_basin);
 ylabel(unit)
 
 l = legend(p, num2str(timevec(1:12:end,1)));
@@ -441,7 +452,7 @@ for si = 1:num_sat
     xticks(1:12);
     xlim([0 13])
     xlabel('Month')
-%     ylim(ylimit_basin);
+    ylim(ylimit_basin);
     ylabel(unit)
 
     title(titles_sat{si}, 'Interpreter', 'None')
@@ -451,7 +462,11 @@ t.TileSpacing = 'compact';
 t.Padding = 'compact';
 title(t, ['Basin area averaged SSS (> ', num2str(depth_shelf), ' m)'])
 
-print(strcat('compare_area_averaged_', vari_str, '_with_Satellite_interannual_basin'),'-dpng');
+pause(1)
+
+savename = ['compare_area_averaged_', vari_str, '_with_Satellite_interannual_basin'];
+print(savename, '-dpng');
+savefig([savename, '.fig'])
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 h1 = figure; hold on;
 set(gcf, 'Position', [1 200 1500 750])
@@ -469,7 +484,7 @@ p(5) = plot(1:12, vari_control_shelf(tindex+48) - vari_control_shelf_mean', 'Lin
 xticks(1:12);
 xlim([0 13])
 xlabel('Month')
-% ylim(ylimit_shelf);
+ylim([-1 1]);
 ylabel(unit)
 
 l = legend(p, num2str(timevec(1:12:end,1)));
@@ -490,7 +505,7 @@ for si = 1:num_sat
     xticks(1:12);
     xlim([0 13])
     xlabel('Month')
-%     ylim(ylimit_shelf);
+    ylim([-1 1]);
     ylabel(unit)
 
     title(titles_sat{si}, 'Interpreter', 'None')
@@ -500,8 +515,11 @@ t.TileSpacing = 'compact';
 t.Padding = 'compact';
 title(t, ['Eastern outer shelf area averaged SSS anomaly (', num2str(depth_min), ' - ', num2str(depth_shelf), ' m)'])
 
-print(strcat('compare_area_averaged_', vari_str, '_with_Satellite_interannual_anomaly_shelf'),'-dpng');
+pause(1)
 
+savename = ['compare_area_averaged_', vari_str, '_with_Satellite_interannual_anomaly_shelf'];
+print(savename, '-dpng');
+savefig([savename, '.fig'])
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 h1 = figure; hold on;
 set(gcf, 'Position', [1 200 1500 750])
@@ -519,7 +537,7 @@ p(5) = plot(1:12, vari_control_basin(tindex+48) - vari_control_basin_mean', 'Lin
 xticks(1:12);
 xlim([0 13])
 xlabel('Month')
-% ylim(ylimit_basin);
+ylim([-.6 .6]);
 ylabel(unit)
 
 l = legend(p, num2str(timevec(1:12:end,1)));
@@ -540,7 +558,7 @@ for si = 1:num_sat
     xticks(1:12);
     xlim([0 13])
     xlabel('Month')
-%     ylim(ylimit_basin);
+    ylim([-.6 .6]);
     ylabel(unit)
 
     title(titles_sat{si}, 'Interpreter', 'None')
@@ -550,4 +568,8 @@ t.TileSpacing = 'compact';
 t.Padding = 'compact';
 title(t, ['Basin area averaged SSS anomaly (> ', num2str(depth_shelf), ' m)'])
 
-print(strcat('compare_area_averaged_', vari_str, '_with_Satellite_interannual_anomaly_basin'),'-dpng');
+pause(1)
+
+savename = ['compare_area_averaged_', vari_str, '_with_Satellite_interannual_anomaly_basin'];
+print(savename, '-dpng');
+savefig([savename, '.fig'])

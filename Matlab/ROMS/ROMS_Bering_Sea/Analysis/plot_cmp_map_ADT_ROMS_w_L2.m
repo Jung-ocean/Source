@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Compare ROMS output seasonal averaged zeta with Satellite
+% Compare ROMS output seasonal averaged zeta with Satellite L2
 %
 % J. Jung
 %
@@ -8,7 +8,7 @@
 clear; clc; close all
 
 vari_str = 'zeta';
-yyyy_all = 2018:2020;
+yyyy_all = 2018:2022;
 
 month_all = {'JFM', 'AMJ', 'JAS', 'OND'};
 
@@ -22,8 +22,8 @@ aice_value = 0.4;
 
 switch vari_str
     case 'zeta'
-        %climit_model = [-40 20];
-        %climit_sat = [10 70];
+        %climit_model = [-20 20];
+        %climit_sat = climit_model;
         climit_model = [-30 10];
         climit_sat = [20 60];
         unit = 'cm';
@@ -58,8 +58,9 @@ for yi = 1:length(yyyy_all)
         if ~exist(file)
             zeta = NaN;
         else
-            zeta = ncread(file, 'zeta')';
+            zeta = mask.*ncread(file, 'zeta')';
         end
+%         zeta = zeta - mean(zeta(:), 'omitnan');
 
         % Figure title
         title(t, [month_str, ', ', ystr], 'FontSize', 25);
@@ -73,7 +74,7 @@ for yi = 1:length(yyyy_all)
             delete(T(1));
         end
 
-        T(1) = pcolorm(g.lat_rho,g.lon_rho,100*zeta.*mask);
+        T(1) = pcolorm(g.lat_rho,g.lon_rho,100*zeta);
         uistack(T(1),'bottom')
         caxis(climit_model)
         if yi == 1 && mi == 1
@@ -81,12 +82,13 @@ for yi = 1:length(yyyy_all)
             c.Title.String = unit;
             c.Ticks = climit_model(1):10:climit_model(end);
         end
-        title(['ROMS ', case_control], 'Interpreter', 'None')
+        title(['ROMS'], 'Interpreter', 'None')
 
         % Satellite
         index = find(timevec_all(:,1) == yyyy & ismember(timevec_all(:,2), month) == 1);
 
         adt = mean(ADT_monthly(index,:));
+%         adt = adt - mean(adt, 'omitnan');
 
         % Tile
         nexttile(2);
@@ -108,13 +110,14 @@ for yi = 1:length(yyyy_all)
             c.Ticks = climit_sat(1):10:climit_sat(end);
         end
 
-        title('MERGED_TP_J1_OSTM_OST_CYCLES_V51', 'Interpreter', 'None')
+%         title('MERGED_TP_J1_OSTM_OST_CYCLES_V51', 'Interpreter', 'None')
+        title('Satellite L2', 'Interpreter', 'None')
 
         t.TileSpacing = 'compact';
         t.Padding = 'compact';
 
         pause(1)
-        print(['compare_', vari_str, '_L2_seasonal_', ystr, '_', num2str(mont(1), '%02i')],'-dpng');
+        print(['compare_', vari_str, '_L2_seasonal_', ystr, '_', num2str(mi, '%02i'), '_', month_str],'-dpng');
 
         % Make gif
         gifname = ['compare_', vari_str, '_L2_seasonal.gif'];

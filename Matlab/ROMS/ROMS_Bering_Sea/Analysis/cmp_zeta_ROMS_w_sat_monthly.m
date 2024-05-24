@@ -1,7 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Compare ROMS output through area-averaged with Satellite
-% by applying mask
+% Compare ROMS zeta to Satellite L4 (CMEMS) data
 %
 % J. Jung
 %
@@ -9,7 +8,7 @@
 clear; clc; close all
 
 vari_str = 'zeta';
-yyyy_all = 2018:2021;
+yyyy_all = 2018:2022;
 mm_all = 1:12;
 depth_shelf = 200; % m
 
@@ -18,8 +17,8 @@ aice_value = 0.4;
 
 switch vari_str
     case 'zeta'
-        climit_model = [-.3 .1];
-        climit_sat = [.2 .6];
+        climit_model = [-30 10];
+        climit_sat = [20 60];
         unit = 'm';
 end
 
@@ -50,8 +49,6 @@ for yi = 1:length(yyyy_all)
             h1 = figure; hold on;
             set(gcf, 'Position', [1 200 1800 650])
             t = tiledlayout(1,2);
-        else
-            delete(ttitle);
         end
 
         filepattern_control = fullfile(filepath_control,(['*',ystr,mstr,'*.nc']));
@@ -78,9 +75,7 @@ for yi = 1:length(yyyy_all)
         time_title = datestr(timenum, 'mmm, yyyy');
 
         % Figure title
-        ttitle = annotation('textbox', [.44 .85 .15 .15], 'String', time_title);
-        ttitle.FontSize = 25;
-        ttitle.EdgeColor = 'None';
+        title(t, time_title, 'FontSize', 25);
 
         nexttile(1)
         if yi == 1 && mi == 1
@@ -93,21 +88,21 @@ for yi = 1:length(yyyy_all)
 
         if isice == 1
             try
-                T(1) = pcolorm(lat,lon,vari_control.*mask_with_ice);
+                T(1) = pcolorm(lat,lon,100*vari_control.*mask_with_ice);
             catch
-                T(1) = pcolorm(lat,lon,vari_control.*mask);
+                T(1) = pcolorm(lat,lon,100*vari_control.*mask);
             end
         else
-            T(1) = pcolorm(lat,lon,vari_control.*mask);
+            T(1) = pcolorm(lat,lon,100*vari_control.*mask);
         end % isice
         uistack(T(1),'bottom')
         caxis(climit_model)
         if yi == 1 && mi == 1
             c = colorbar;
-            %         c.Layout.Tile = 'east';
             c.Title.String = unit;
+            c.Ticks = [climit_model(1):10:climit_model(end)];
         end
-        title(['ROMS ', case_control], 'Interpreter', 'None')
+        title(['ROMS'], 'Interpreter', 'None')
 
         % Satellite
         filepath_sat = filepath_CMEMS;
@@ -159,16 +154,19 @@ for yi = 1:length(yyyy_all)
         else
             delete(T(2));
         end
-        T(2) = pcolorm(lat,lon,vari_sat_interp.*mask_sat_model);
+        T(2) = pcolorm(lat,lon,100*vari_sat_interp.*mask_sat_model);
         uistack(T(2),'bottom')
         caxis(climit_sat)
         if yi == 1 && mi == 1
             c = colorbar;
-            %         c.Layout.Tile = 'east';
             c.Title.String = unit;
+            c.Ticks = [climit_sat(1):10:climit_sat(end)];
         end
 
-        title('CMEMS L4', 'Interpreter', 'None')
+        title('Satellite L4 (CMEMS)', 'Interpreter', 'None')
+
+        t.TileSpacing = 'compact';
+        t.Padding = 'compact';
 
         pause(1)
         %     print(strcat('compare_surface_', vari_str, '_satellite_monthly_', datestr(timenum, 'yyyymm')),'-dpng');

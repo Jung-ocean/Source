@@ -25,6 +25,3 @@ gridm('MlineLocation',2.5,'PLineLocation',2.5);
 %set(gcf,'PaperSize',[8.5 11],'PaperPosition',[0.25 0.25 6 6]);
 
 end
-
-
-

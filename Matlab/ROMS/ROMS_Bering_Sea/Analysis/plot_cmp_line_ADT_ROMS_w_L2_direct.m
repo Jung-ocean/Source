@@ -8,7 +8,14 @@
 clear; clc; close all
 
 map = 'Bering';
-lines = 1:13;
+
+% Line numbers
+direction = 'a';
+if strcmp(direction, 'p')
+    lines = 1:16; % pline
+else
+    lines = 1:29; % aline
+end
 
 isfilter = 1;
 filter_window = 8; % 1 ~ 5.75 km
@@ -29,10 +36,10 @@ date.linewidth = [3, 1, 3, 1];
 g = grd('BSf');
 
 % Load ADT
-ADT = load('ADT_model_obs.mat');
+ADT = load(['ADT_model_obs_', direction, 'line.mat']);
 ADT = ADT.ADT;
-lines = cell2array(ADT.line);
-lines_unique = unique(lines);
+lines_all = cell2array(ADT.line);
+lines_unique = unique(lines_all);
 timenum_all = cell2array(ADT.time);
 
 % f1 = figure; hold on;
@@ -40,8 +47,8 @@ timenum_all = cell2array(ADT.time);
 % plot_map('Bering', 'mercator', 'l');
 % [C,h] = contourm(g.lat_rho, g.lon_rho, g.h, [50 200], 'Color', [.7 .7 .7]);
 
-for li = 1:length(lines_unique)
-    line = lines_unique(li); lstr = num2str(line, '%02i');
+for li = 1:length(lines)
+    line = lines(li); lstr = num2str(line, '%02i');
     lon_line = ADT.lon{li}+360;
     lat_line = ADT.lat{li};
     
@@ -49,6 +56,7 @@ for li = 1:length(lines_unique)
 %     pm = plotm(lat_line, lon_line, '-k', 'LineWidth', 2);
 %     textm(lat_line(end), lon_line(end), lstr, 'FontSize', 12, 'Color', 'r');
 
+    if strcmp(direction, 'p') == 1
     h_interp = interp2(g.lon_rho+360, g.lat_rho, g.h, lon_line, lat_line);
     dist = abs(h_interp - 200);
     hindex = find(dist == min(dist));
@@ -56,6 +64,7 @@ for li = 1:length(lines_unique)
         h_interp(hindex) = 1000;
         dist = abs(h_interp - 200);
         hindex = find(dist == min(dist));
+    end
     end
     
     % Figure
@@ -67,7 +76,7 @@ for li = 1:length(lines_unique)
     
     for yi = 1:length(yyyy_all)
         yyyy = yyyy_all(yi); ystr = num2str(yyyy);
-        title(t, ['Line ', lstr, ' (', ystr, ')'], 'FontSize', 25);
+        title(t, [direction, 'line ', lstr, ' (', ystr, ')'], 'FontSize', 25);
 
         for mi = 1:size(date.month,1)
             nexttile(mi); cla; hold on; grid on
@@ -76,7 +85,7 @@ for li = 1:length(lines_unique)
             time_start = datenum(yyyy,mms(1),1)-1;
             time_end = datenum(yyyy,mms(end)+1,1);
 
-            index = find(lines == line & ...
+            index = find(lines_all == line & ...
                 timenum_all > time_start & ...
                 timenum_all < time_end);
 
@@ -88,8 +97,8 @@ for li = 1:length(lines_unique)
             end
 
             if isempty(ADT_model) == 1
-                ADT_obs_season = NaN(size(lon_line));
-                ADT_model_season = NaN(size(lon_line));
+                ADT_obs_season = NaN(size(lon_line))';
+                ADT_model_season = NaN(size(lon_line))';
             else
                 ADT_obs_season = mean(ADT_obs,1, 'omitnan');
                 ADT_model_season = mean(ADT_model,1, 'omitnan');
@@ -109,12 +118,31 @@ for li = 1:length(lines_unique)
                 ADT_model_season(nanmodel) = NaN;
             end
 
-            if min(dist) < 50
+            if strcmp(direction, 'p') == 1 && min(dist) < 50
                 plot(zeros(1,201)+lon_line(hindex), -100:100, 'Color', [.7 .7 .7], 'LineWidth', 4)
             end
             
-            po = plot(lon_line, 100*(ADT_obs_season-mean(ADT_obs_season, 'omitnan')), 'Color', date.color{mi}, 'LineWidth', 1);
-            pm = plot(lon_line, 100*(ADT_model_season - mean(ADT_model_season, 'omitnan')), 'Color', 'k', 'LineWidth', 1);
+            ADT_obs_adj = 100*(ADT_obs_season-mean(ADT_obs_season, 'omitnan'));
+            ADT_model_adj = 100*(ADT_model_season - mean(ADT_model_season, 'omitnan'));
+
+            jump = find(diff(lon_line) > 0.2);
+            if ~isempty(jump)
+                index = [0];
+                for ii = 1:length(jump)
+                    index = [index; jump(ii)];
+                end
+                index = [index; length(lon_line)];
+                for pi = 1:length(index)-1
+                    po = plot(lon_line(index(pi)+1:index(pi+1)), ADT_obs_adj(index(pi)+1:index(pi+1)), 'Color', date.color{mi}, 'LineWidth', 1);
+                    pm = plot(lon_line(index(pi)+1:index(pi+1)), ADT_model_adj(index(pi)+1:index(pi+1)), 'Color', 'k', 'LineWidth', 1);
+                end
+
+            else
+                po = plot(lon_line, ADT_obs_adj, 'Color', date.color{mi}, 'LineWidth', 1);
+                pm = plot(lon_line, ADT_model_adj, 'Color', 'k', 'LineWidth', 1);
+            end
+
+            R(li,yi,mi) = corr(ADT_obs_adj',ADT_model_adj', 'rows', 'complete');
 
             xlim([154 203])
             ylim([-40 40])
@@ -139,6 +167,6 @@ for li = 1:length(lines_unique)
         %         imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
         %     end
         
-        print(['cmp_line_ADT_L2_direct_line_', lstr, '_', ystr], '-dpng')
+        print(['cmp_line_ADT_L2_direct_', direction, 'line_', lstr, '_', ystr], '-dpng')
     end
 end

@@ -239,3 +239,23 @@ title('Difference (Shelf-Basin), monthly mean ADT')
 set(gcf, 'Position', [1 1 800 900])
 
 print('month_year_diagram_adt_diff', '-dpng')
+
+%
+figure; hold on;
+pcolor(1:13,[yyyy_all 2023], adt_shelf_anomaly_pcolor - adt_basin_anomaly_pcolor)
+colormap redblue
+xlim([1 13])
+ylim([1993 2023])
+xticks(1.5:12.5);
+xticklabels(1:12);
+xlabel('Month')
+yticks(1993.5:2022.5);
+yticklabels(1993:2022);
+ylabel('Year')
+c = colorbar;
+c.Title.String = 'm';
+caxis([-0.2 0.2])
+title('Basin, monthly mean ADT anomaly')
+set(gcf, 'Position', [1 1 800 900])
+
+print('month_year_diagram_basin_adt_anomaly', '-dpng')
