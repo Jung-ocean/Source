@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Compare ROMS output through area-averaged with Satellite
+% Compare ROMS SSS through area-averaged with Satellite
 % by applying mask
 %
 % J. Jung
@@ -122,7 +122,7 @@ for yi = 1:length(yyyy_all)
         T(1) = pcolorm(lat,lon,vari_control.*mask);
         uistack(T(1),'bottom')
         caxis(climit)
-        title('ROMS Dsm2_spng', 'Interpreter', 'None')
+        title('ROMS', 'Interpreter', 'None')
 
         % Satellite
         for si = 1:num_sat

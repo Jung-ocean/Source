@@ -70,7 +70,7 @@ lon_plot = lon_line+360;
 nexttile(2); cla; hold on; grid on
 
 lon_diff = diff(lon_plot);
-index = find(lon_diff > 0.2);
+index = find(lon_diff > 1.5*median(lon_diff));
 if ~isempty(index)
     pindex = [0; index; length(lon_plot)];
     for pi = 1:length(pindex)-1

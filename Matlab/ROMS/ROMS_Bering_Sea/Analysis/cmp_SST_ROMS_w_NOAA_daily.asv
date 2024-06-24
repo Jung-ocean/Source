@@ -1,0 +1,94 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Compare ROMS SST to NOAA station temperature daily
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+yyyymmdd_all = [datenum(2019,1,1):datenum(2019,12,31)];
+climit = [0 15];
+climit_diff = [-3 3];
+
+station_name = 'Village Cove, St Paul Island, AK';
+station_ID = 9464212;
+obs_lat = 57 + 7.5/60;
+obs_lon = -[170 + 17.1/60];
+
+% Model
+model_filepath = '/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm2_spng/';
+g = grd('BSf');
+startdate = datenum(2018,7,1);
+
+obs_SST_all = [];
+model_SST_all = [];
+for di = 1:length(yyyymmdd_all)
+
+    yyyymmdd = yyyymmdd_all(di);
+    yyyymmdd_str = datestr(yyyymmdd, 'yyyymmdd');
+    ystr = datestr(yyyymmdd, 'yyyy');
+    mstr = datestr(yyyymmdd, 'mm');
+
+    % Observation
+    obs_filepath = ['/data/jungjih/Observations/NOAA_phys_oceanography/'];
+    obs_filename = ['CO-OPS_', num2str(station_ID), '_met_', ystr, '.csv'];
+    obs_file = [obs_filepath, obs_filename];
+
+    obs = readtable(obs_file);
+    obs_yyyymmdd = table2array(obs(:,1));
+    obs_HHMM = table2array(obs(:,2));
+    obs_SST = table2array(obs(:,3));
+
+    obs_yyyymmddHHMM = [cell2mat(obs_yyyymmdd) cell2mat(obs_HHMM)];
+    obs_timenum = datenum(obs_yyyymmddHHMM, 'yyyy/mm/ddHH:MM');
+    obs_timevec = datevec(obs_timenum);
+
+    index = find(floor(obs_timenum) == yyyymmdd);
+    obs_SST_all(di) = mean(obs_SST(index));
+
+    % Model
+    filenumber = yyyymmdd - startdate + 1;
+    fstr = num2str(filenumber, '%04i');
+    model_filename = ['Dsm2_spng_avg_', fstr, '.nc'];
+    model_file = [model_filepath, model_filename];
+
+    model_SST = ncread(model_file, 'temp', [1 1 g.N 1], [Inf Inf 1 Inf])';
+
+    dist = sqrt((g.lon_rho - obs_lon).^2 + abs(g.lat_rho - obs_lat).^2);
+    [latind, lonind] = find(dist == min(dist(:)));
+    model_lon = g.lon_rho(latind, lonind);
+    model_lat = g.lat_rho(latind, lonind);
+    model_SST_all(di) = model_SST(latind, lonind);
+
+    disp(datestr(yyyymmdd, 'mmm dd, yyyy'))
+end
+
+% Plot
+f1 = figure;
+set(gcf, 'Position', [1 200 1800 650])
+t = tiledlayout(1,2);
+
+nexttile(1)
+plot_map('Bering', 'mercator', 'l');
+contourm(g.lat_rho, g.lon_rho, g.h, [50 200], 'k');
+
+plotm(obs_lat, obs_lon, '.k', 'MarkerSize', 25);
+plotm(model_lat, model_lon, 'xr', 'MarkerSize', 15, 'LineWidth', 2);
+
+nexttile(2); hold on; grid on;
+title('SST', 'FontSize', 15)
+
+pobs = plot(yyyymmdd_all, obs_SST_all);
+pmodel = plot(yyyymmdd_all, model_SST_all);
+
+Xticks([])
+
+datetick()
+
+l = legend([pobs, pmodel], 'NOAA station', 'ROMS');
+
+t.TileSpacing = 'compact';
+t.Padding = 'compact';
+
+print(['cmp_SST_w_NOAA_', ystr], '-dpng')

@@ -1,17 +1,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Compare ROMS uv to Satellite L4
+% Compare ROMS uvbar to Satellite L4
 %
 % J. Jung
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-vari_str = 'uv';
+vari_str = 'uvbar';
 yyyy_all = 2018:2022;
 mm_all = 1:12;
 depth_shelf = 200; % m
-layer = 45;
 
 interval_model = 20;
 scale_model = 5;
@@ -55,8 +54,8 @@ for yi = 1:length(yyyy_all)
         filename_control = dir(filepattern_control);
         if ~isempty(filename_control)
             file_control = [filepath_control, filename_control.name];
-            u_control = ncread(file_control,'u',[1 1 layer 1],[Inf Inf 1 1])';
-            v_control = ncread(file_control,'v',[1 1 layer 1],[Inf Inf 1 1])';
+            u_control = ncread(file_control,'ubar')';
+            v_control = ncread(file_control,'vbar')';
             if isice == 1
                 try
                     aice_mask = ncread(file_control,'aice')';
@@ -216,10 +215,10 @@ for yi = 1:length(yyyy_all)
         t.Padding = 'compact';
 
         pause(1)
-        print(['compare_surface_', vari_str, '_satellite_monthly_', datestr(timenum, 'yyyymm')],'-dpng');
+        print(['compare_', vari_str, '_satellite_monthly_', datestr(timenum, 'yyyymm')],'-dpng');
 
         % Make gif
-        gifname = ['compare_surface_', vari_str, '_satellite_monthly.gif'];
+        gifname = ['compare_', vari_str, '_satellite_monthly.gif'];
 
         frame = getframe(h1);
         im = frame2im(frame);

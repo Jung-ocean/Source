@@ -3,7 +3,7 @@ import copernicusmarine
 
 dataset_id_target = "METOFFICE-GLO-SST-L4-REP-OBS-SST"
 
-date_range = "*/2018/*"
+date_range = "*/2019/*"
 
 copernicusmarine.get(
 #   dataset_id=dataset_id_target)

@@ -11,6 +11,8 @@ switch casename
         lon = [-185 -156.8640]; lat = [49.1090 66.3040];
     case 'Bristol_Bay'
         lon = [-165 -156.8640]; lat = [57 61];
+    case 'North_Kamchatka'
+        lon = [168 180]; lat = [58 63];
 end
 
 end % function load_domain
