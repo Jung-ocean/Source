@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Compare ROMS output seasonal averaged zeta with Satellite L2
+% Compare ROMS output seasonal averaged zeta to Satellite L2
 %
 % J. Jung
 %

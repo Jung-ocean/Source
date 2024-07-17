@@ -1,29 +1,17 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Compare ROMS aice to Satellite (ASI) data daily
+% Compare ROMS variable to ROMS daily
 %
 % J. Jung
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-vari_str = 'aice';
-yyyy_all = 2022:2022;
-mm_all = 1:3;
+vari_str = 'svstr';
+yyyy_all = 2020:2020;
+mm_all = 1:1;
 % dd_all = 1:28;
 depth_shelf = 200; % m
-
-switch vari_str
-    case 'aice'
-        climit_model = [0 1];
-        climit_sat = climit_model;
-        unit = '';
-end
-
-% Model
-filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
-case_control = 'Dsm2_spng';
-filepath_control = [filepath_all, case_control, '/ncks/'];
 
 % Load grid information
 g = grd('BSf');
@@ -34,9 +22,47 @@ mask = g.mask_rho./g.mask_rho;
 startdate = datenum(2018,7,1,0,0,0);
 reftime = datenum(1968,5,23,0,0,0);
 
-% Satellite SSH
-% ASI
-filepath_ASI = ['/data/jungjih/Observations/Sea_ice/ASI/daily_ROMSgrid/'];
+switch vari_str
+    case 'aice'
+        color = 'parula';
+        climit_model = [0 1];
+        interval = 0.5;
+        climit_sat = climit_model;
+        unit = '';
+
+        lat_plot = lat;
+        lon_plot = lon;
+    case 'zeta'
+        color = 'jet';
+        climit_model = [-1.5 1.5];
+        interval = 0.5;
+        climit_sat = climit_model;
+        unit = 'm';
+
+        lat_plot = lat;
+        lon_plot = lon;
+    case 'svstr'
+        color = 'redblue';
+        climit_model = [-1.5 1.5];
+        interval = 0.5;
+        climit_sat = climit_model;
+        unit = 'N/m^2';
+
+        lat_plot = g.lat_v;
+        lon_plot = g.lon_v;
+        mask = g.mask_v./g.mask_v;
+end
+
+% Model control
+filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
+case_con = 'Dsm2_spng';
+label_con = 'Control';
+filepath_con = [filepath_all, case_con, '/ncks/'];
+
+% Model experiment
+case_exp = 'Dsm2_spng_wo_iwdrag';
+label_exp = 'No ice-ocean drag';
+filepath_exp = [filepath_all, case_exp, '/ncks/'];
 
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
@@ -55,8 +81,10 @@ for yi = 1:length(yyyy_all)
             filenum = datenum(yyyy,mm,dd) - startdate + 1;
             fstr = num2str(filenum, '%04i');
             filename = [vari_str, '_', fstr, '.nc'];
-            file = [filepath_control, filename];
-            vari_control = ncread(file, 'aice')';
+            
+            % ROMS control
+            file = [filepath_con, filename];
+            vari_con = ncread(file, vari_str)';
             ot = ncread(file, 'ocean_time');
 
             timenum = datenum(yyyy,mm,dd);
@@ -74,29 +102,22 @@ for yi = 1:length(yyyy_all)
                 delete(T(1));
             end
 
-            T(1) = pcolorm(lat,lon,vari_control.*mask);
+            T(1) = pcolorm(lat_plot,lon_plot,vari_con.*mask);
+            colormap(color)
             uistack(T(1),'bottom')
             caxis(climit_model)
             if mi == 1 && di == 1
                 c = colorbar;
-                %             c.Title.String = unit;
-                c.Ticks = [climit_model(1):.5:climit_model(end)];
+                c.Title.String = unit;
+                c.Ticks = [climit_model(1):interval:climit_model(end)];
             end
-            title(['ROMS'], 'Interpreter', 'None')
+            title([label_con], 'Interpreter', 'None')
 
-            % Satellite
-            filepath_sat = filepath_ASI;
-            filepattern_sat = fullfile(filepath_sat, (['*', ystr, mstr, dstr, '*.nc']));
-            filename_sat = dir(filepattern_sat);
-
-            file_sat = [filepath_sat, filename_sat.name];
-            lon_sat = double(ncread(file_sat,'longitude'))';
-            lat_sat = double(ncread(file_sat,'latitude'))';
-            vari_sat = double(squeeze(ncread(file_sat,'z'))')/100;
-
-            % Tile
-            nexttile(2);
-
+            % ROMS experiment
+            file = [filepath_exp, filename];
+            vari_exp = ncread(file, vari_str)';
+    
+            nexttile(2)
             if mi == 1 && di == 1
                 plot_map('Bering', 'mercator', 'l')
                 hold on;
@@ -104,25 +125,26 @@ for yi = 1:length(yyyy_all)
             else
                 delete(T(2));
             end
-            T(2) = pcolorm(lat,lon,vari_sat.*mask);
+
+            T(2) = pcolorm(lat_plot,lon_plot,vari_exp.*mask);
+            colormap(color)
             uistack(T(2),'bottom')
-            caxis(climit_sat)
+            caxis(climit_model)
             if mi == 1 && di == 1
                 c = colorbar;
-                %             c.Title.String = unit;
-                c.Ticks = [climit_sat(1):.5:climit_sat(end)];
+                c.Title.String = unit;
+                c.Ticks = [climit_model(1):interval:climit_model(end)];
             end
-
-            title('Satellite (ASI)', 'Interpreter', 'None')
+            title([label_exp], 'Interpreter', 'None')
 
             t.TileSpacing = 'compact';
             t.Padding = 'compact';
 
             pause(1)
-%             print(['cmp_', vari_str, '_satellite_daily_', datestr(timenum, 'yyyymmdd')],'-dpng');
+            print(['cmp_', vari_str, '_ROMS_to_ROMS_daily_', datestr(timenum, 'yyyymmdd')],'-dpng');
 
             % Make gif
-            gifname = ['cmp_', vari_str, '_satellite_daily_', ystr, '.gif'];
+            gifname = ['cmp_', vari_str, '_ROMS_to_ROMS_daily_', ystr, mstr, '.gif'];
 
             frame = getframe(h1);
             im = frame2im(frame);

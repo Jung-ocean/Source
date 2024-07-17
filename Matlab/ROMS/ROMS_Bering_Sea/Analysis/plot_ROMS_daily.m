@@ -7,7 +7,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-vari_str = 'salt';
+vari_str = 'temp';
 layer = 1;
 casename = 'Bering';
 
@@ -21,7 +21,7 @@ ind_gif = 1;
 %     datenum(2022, 3, 27);
 %     datenum(2022, 4, 6);
 %     ];
-timenum_all = datenum(2019,1,1):datenum(2019,4,1);
+timenum_all = datenum(2019,3,1):datenum(2019,4,1);
 
 % Model
 filepath = '/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm2_spng/';

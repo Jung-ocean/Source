@@ -144,8 +144,8 @@ for ti = 1:length(tindex)
     end
 
     ax1 = nexttile(2); hold on
-    plot(ax1, profile(index).salt, -profile(index).pres, 'r');
-    plot(ax1, salt_model, z_model, '--r');
+    plot(ax1, profile(index).salt, -profile(index).pres, 'r', 'LineWidth', 2);
+    plot(ax1, salt_model, z_model, '--r', 'LineWidth', 2);
     ax1.XColor = 'r';
     xlim([31.5 35])
     %ylim([-2500 0])
@@ -162,13 +162,13 @@ for ti = 1:length(tindex)
     l.Location = 'SouthWest';
     l.FontSize = 25;
 
-    t.TileSpacing = 'compact';
-    t.Padding = 'compact';
+%     t.TileSpacing = 'compact';
+%     t.Padding = 'compact';
 
     ax2 = axes('Position',ax1.Position,'XAxisLocation','top','YAxisLocation','right','color','none');
     hold on
-    plot(ax2,profile(index).temp, -profile(index).pres, 'b');
-    plot(ax2, temp_model, z_model, '--b');
+    plot(ax2,profile(index).temp, -profile(index).pres, 'b', 'LineWidth', 2);
+    plot(ax2, temp_model, z_model, '--b', 'LineWidth', 2);
     ax2.XColor = 'b';
     ax2.XAxisLocation = 'top';
     ax2.YTick = [];
@@ -184,7 +184,8 @@ for ti = 1:length(tindex)
     end
 
     % Save figure snapshtop
-    print(['Argo_num_', num2str(Argo_num, '%03i'), '_', datestr(time(index), 'yyyymmdd')], '-dpng')
+%     print(['Argo_num_', num2str(Argo_num, '%03i'), '_', datestr(time(index), 'yyyymmdd')], '-dpng')
+    saveas(gcf, ['Argo_num_', num2str(Argo_num, '%03i'), '_', datestr(time(index), 'yyyymmdd'), '.png'])
 
     % Make gif
     gifname = ['Argo_num_', num2str(Argo_num, '%03i'), '.gif'];

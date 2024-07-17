@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Compare ROMS output anomaly through area-averaged with Satellite
+% Compare ROMS output anomaly through area-averaged to Satellite
 % by applying mask
 %
 % J. Jung
