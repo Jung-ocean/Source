@@ -14,9 +14,9 @@ filenum_all = 517:729;
 timenum_all = [startdate + filenum_all]-1;
 
 filepath_con = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng/ncks/';
-filepath_exp = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng_wo_iwdrag/ncks/';
+filepath_exp = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng_awdrag/ncks/';
 
-filepath_sta = '/data/jungjih/Observations/NOAA_tide_predictions/';
+filepath_sta = '/data/jungjih/Observations/NOAA_stations/';
 
 station_name = {'Nome, Norton Sound, AK', 'Unalakleet, AK'};
 station_ID = [9468756 9468333];
@@ -62,9 +62,34 @@ for si = 1:length(station_name)
         vari_sta_1h = table2array(data(:,5));
         vari_sta_pre_1h = table2array(data(:,3));
 
+        file_sta_atm = [filepath_sta, 'CO-OPS_', idstr, '_met_atm_', ystr, '.csv'];
+        data_atm = readtable(file_sta_atm);
+        vari_baro_1h = table2array(data_atm(:,7));
+        
         index = find(timevec_sta(:,1) == yyyy & timevec_sta(:,2) == mm & timevec_sta(:,3) == dd);
         
-        vari_sta(si,fi) = mean(vari_sta_1h(index));
+        vari_raw = vari_sta_1h(index);
+        vari_baro_tmp = vari_baro_1h(index);
+        if iscell(vari_baro_tmp) == 1
+            vari_baro = NaN(size(vari_baro_tmp));
+            for i = 1:length(vari_baro_tmp)
+                try
+                    vari_baro(i) = str2num(cell2mat(vari_baro_tmp(i)));
+                catch
+                    vari_baro(i) = NaN;
+                end
+            end
+        else
+            vari_baro = vari_baro_tmp;
+        end
+
+        gconst = 9.8; % m/s^2
+        rho0 = 1027; % kg/m^3
+        pref = 1010.06; % 3 year mean from the Nome station
+        vari_ib = -100*(vari_baro - pref)/(gconst*rho0);
+        vari_correct = vari_raw - vari_ib;
+
+        vari_sta(si,fi) = mean(vari_correct);
         vari_sta_pre(si,fi) = mean(vari_sta_pre_1h(index));
 
         disp([num2str(si), '/', num2str(length(station_name)), ' ', yyyymmdd])
@@ -78,9 +103,9 @@ for si = 1:length(station_name)
 end
 print('map_stations', '-dpng')
 
-map_station = geopoint(station_lat, station_lon);
-map_station.Name = station_name;
-kmlwrite('map_station.kml', map_station)
+% map_station = geopoint(station_lat, station_lon);
+% map_station.Name = station_name;
+% kmlwrite('map_station.kml', map_station)
 
 figure; hold on; grid on;
 set(gcf, 'Position', [1 200 1200 600])
@@ -100,7 +125,7 @@ for si = 1:length(station_name)
     ylabel('m');
     
     if si == 1
-        l = legend([ps, pc, pe], 'NOAA station', 'Control', 'No ice-ocean drag');
+        l = legend([ps, pc, pe], 'NOAA station', 'Control', 'Wind drag only');
         l.Location = 'NorthWest';
     end
     

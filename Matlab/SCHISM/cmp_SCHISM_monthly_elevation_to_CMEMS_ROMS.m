@@ -2,8 +2,8 @@ clear; clc; close all
 
 variable = 'elevation';
 expname = 'control';
-start_date = datenum(2018,7,1);
-yyyymm_all = [datenum(2018,7,15) datenum(2018,8,15)];
+start_date = datenum(2019,7,1);
+yyyymm_all = [datenum(2019,7:11,15)];
 
 % Read ROMS grid
 g = grd('BSf');
@@ -26,7 +26,7 @@ xlimit = [-206 -156];
 ylimit = [49 66.5];
 
 figure; hold on;
-set(gcf, 'Position', [1 1 1800 500])
+set(gcf, 'Position', [1 200 1800 500])
 t = tiledlayout(1,3);
 for yi = 1:length(yyyymm_all)
     yyyymmdd = yyyymm_all(yi);
@@ -70,8 +70,8 @@ for yi = 1:length(yyyymm_all)
     ax2 = nexttile(2); cla(ax2);
     p2 = pcolor(g.lon_rho, g.lat_rho, vari_ROMS.*g.mask_rho./g.mask_rho); shading interp
     colormap jet
-    cb = colorbar;
-    cb.Title.String = unit;
+%     cb = colorbar;
+%     cb.Title.String = unit;
 
     xlim(xlimit);
     ylim(ylimit);
@@ -97,10 +97,10 @@ for yi = 1:length(yyyymm_all)
 
     title(t, ['Elevation (', datestr(yyyymmdd, 'mmm, yyyy'), ')'], 'FontSize', 25)
 
-    set(gcf, 'Position', [1 1 1800 500])
+    set(gcf, 'Position', [1 200 1800 500])
     pause(3)
-    set(gcf, 'Position', [1 1 1800 500])
+    set(gcf, 'Position', [1 200 1800 500])
     pause(3)
 
-    print(['cmp_SCHISM_monthly_',variable, '_w_CMEMS_ROMS_', datestr(yyyymmdd, 'yyyymm')] ,'-dpng')
+    print(['cmp_', variable, '_SCHISM_to_CMEMS_ROMS_monthly_', datestr(yyyymmdd, 'yyyymm')] ,'-dpng')
 end

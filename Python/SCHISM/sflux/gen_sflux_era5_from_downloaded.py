@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     filepath_all = '/data/sdurski/ROMS_Setups/Forcing/Atm/Bering_Sea/ERA5/'
 
-    start_date=datetime(2018, 7, 1)
+    start_date=datetime(2019, 7, 1)
     rnday=153
   
     outdir = pathlib.Path('./')

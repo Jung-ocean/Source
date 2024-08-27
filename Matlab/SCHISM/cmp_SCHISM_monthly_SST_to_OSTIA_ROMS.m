@@ -2,8 +2,8 @@ clear; clc; close all
 
 variable = 'temperature';
 expname = 'control';
-start_date = datenum(2018,7,1);
-yyyymm_all = [datenum(2018,7,15) datenum(2018,8,15)];
+start_date = datenum(2019,7,1);
+yyyymm_all = [datenum(2019,7:11,15)];
 
 % Read ROMS grid
 g = grd('BSf');
@@ -24,7 +24,7 @@ xlimit = [-206 -156];
 ylimit = [49 66.5];
 
 figure; hold on;
-set(gcf, 'Position', [1 1 1800 500])
+set(gcf, 'Position', [1 200 1800 500])
 t = tiledlayout(1,3);
 for yi = 1:length(yyyymm_all)
     yyyymmdd = yyyymm_all(yi);
@@ -51,7 +51,7 @@ for yi = 1:length(yyyymm_all)
 
     % SCHISM
     SCHISM_filepath = ['../outputs_', expname, '/'];
-    SCHISM_filename = [variable, '_', datestr(yyyymmdd, 'yyyymm'), '_surf.nc'];
+    SCHISM_filename = [variable, '_surf_', datestr(yyyymmdd, 'yyyymm'), '.nc'];
     SCHISM_file = [SCHISM_filepath, SCHISM_filename];
     vari_SCHISM = squeeze(ncread(SCHISM_file, vari_str_SCHISM))';
 
@@ -59,8 +59,8 @@ for yi = 1:length(yyyymm_all)
     ax1 = nexttile(1); cla(ax1)
     p1 = pcolor(lon_OSTIA, lat_OSTIA, vari_OSTIA); shading interp
     colormap jet
-    cb = colorbar;
-    cb.Title.String = unit;
+%     cb = colorbar;
+%     cb.Title.String = unit;
 
     xlim(xlimit);
     ylim(ylimit);
@@ -70,8 +70,8 @@ for yi = 1:length(yyyymm_all)
     ax2 = nexttile(2); cla(ax2);
     p2 = pcolor(g.lon_rho, g.lat_rho, vari_ROMS.*g.mask_rho./g.mask_rho); shading interp
     colormap jet
-    cb = colorbar;
-    cb.Title.String = unit;
+%     cb = colorbar;
+%     cb.Title.String = unit;
 
     xlim(xlimit);
     ylim(ylimit);
@@ -97,11 +97,11 @@ for yi = 1:length(yyyymm_all)
 
     title(t, ['SST (', datestr(yyyymmdd, 'mmm, yyyy'), ')'], 'FontSize', 25)
 
-    set(gcf, 'Position', [1 1 1800 500])
+    set(gcf, 'Position', [1 200 1800 500])
     pause(3)
-    set(gcf, 'Position', [1 1 1800 500])
+    set(gcf, 'Position', [1 200 1800 500])
     pause(3)
-    set(gcf, 'Position', [1 1 1800 500])
+    set(gcf, 'Position', [1 200 1800 500])
 
-    print(['cmp_SCHISM_monthly_',variable, '_w_OSTIA_ROMS_', datestr(yyyymmdd, 'yyyymm')] ,'-dpng')
+    print(['cmp_', variable, '_SCHISM_to_OSTIA_ROMS_monthly_', datestr(yyyymmdd, 'yyyymm')] ,'-dpng')
 end

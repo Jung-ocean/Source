@@ -20,13 +20,9 @@ aice_value = 0.4;
 
 switch vari_str
     case 'salt'
-        ylimit_shelf = [30.5 34.5];
-        ylimit_basin = [32.2 34.0];
         climit = [31.5 33.5];
-        unit = 'g/kg';
-    case 'temp'
-        climit = [0 20];
-        unit = '^oC';
+        cinterval = [30:.5:35];
+        unit = '';
 end
 
 % Model
@@ -38,7 +34,6 @@ filepath_control = [filepath_all, case_control, '/monthly/'];
 g = grd('BSf');
 lon = g.lon_rho;
 lat = g.lat_rho;
-h = g.h;
 dx = 1./g.pm; dy = 1./g.pn;
 mask = g.mask_rho./g.mask_rho;
 area = dx.*dy.*mask;
@@ -51,9 +46,6 @@ area = dx.*dy.*mask;
 % mask_RSS_70km_Aug = load('mask_RSS_70km_Aug.mat');
 % mask = mask.*mask_RSS_70km_Aug.mask_sat_model;
 % area = area.*mask_RSS_70km_Aug.mask_sat_model;
-
-index_shelf = find(h < depth_shelf);
-index_basin = find(h > depth_shelf);
 
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
@@ -114,12 +106,17 @@ for yi = 1:length(yyyy_all)
         if yi == 1 && mi == 1
             plot_map('Bering', 'mercator', 'l')
             hold on;
-            contourm(lat, lon, h, [50 200], 'k');
+            contourm(lat, lon, g.h, [50 200], 'k');
         else
             delete(T(1));
         end
 
         T(1) = pcolorm(lat,lon,vari_control.*mask);
+        shading flat
+        vari_contour = vari_control;
+        vari_contour(isnan(vari_contour) == 1) = 1000;
+        [C h] = contourm(lat,lon,vari_contour, cinterval, 'Color', [.5 .5 .5]);
+        clabe
         uistack(T(1),'bottom')
         caxis(climit)
         title('ROMS', 'Interpreter', 'None')
@@ -164,11 +161,12 @@ for yi = 1:length(yyyy_all)
             if yi == 1 && mi == 1
                 plot_map('Bering', 'mercator', 'l')
                 hold on;
-                contourm(lat, lon, h, [50 200], 'k');
+                contourm(lat, lon, g.h, [50 200], 'k');
             else
                 delete(T(si+1));
             end
             T(si+1) = pcolorm(lat,lon,vari_sat_interp);
+            shading flat
             uistack(T(si+1),'bottom')
             caxis(climit)
             if yi == 1 && mi == 1 && si == num_sat

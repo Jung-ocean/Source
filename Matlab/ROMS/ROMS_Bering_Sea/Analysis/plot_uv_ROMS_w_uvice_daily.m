@@ -8,10 +8,13 @@
 clear; clc; close all
 
 vari_str = 'uv';
-yyyy_all = 2020:2020;
-mm_all = 4:4;
+yyyy_all = 2019:2019;
+mm_all = 1:1;
 depth_shelf = 200; % m
 layer = 45;
+
+ispng = 0;
+isgif = 1;
 
 interval_model = 40;
 scale_model = 2;
@@ -110,18 +113,22 @@ for yi = 1:length(yyyy_all)
             l.FontSize = 20;
 
             pause(1)
-            print(['uv_ROMS_w_uvice_', datestr(timenum, 'yyyymmdd')],'-dpng');
+            if ispng == 1
+                print(['uv_ROMS_w_uvice_', datestr(timenum, 'yyyymmdd')],'-dpng');
+            end
 
-            % Make gif
-            gifname = ['uv_ROMS_w_uvice_', datestr(timenum, 'yyyymm'), '.gif'];
+            if isgif == 1
+                % Make gif
+                gifname = ['uv_ROMS_w_uvice_', datestr(timenum, 'yyyymm'), '.gif'];
 
-            frame = getframe(h1);
-            im = frame2im(frame);
-            [imind,cm] = rgb2ind(im,256);
-            if mi == 1 && di == 1
-                imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
-            else
-                imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+                frame = getframe(h1);
+                im = frame2im(frame);
+                [imind,cm] = rgb2ind(im,256);
+                if mi == 1 && di == 1
+                    imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+                else
+                    imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+                end
             end
 
         end % di

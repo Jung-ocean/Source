@@ -10,7 +10,9 @@ clear; clc; close all
 plot_whole_map = 0;
 
 % [30, 36, 46, 47, 54, 58, 59]
-Argo_num = 46;
+Argo_num = 58;
+ispng = 0;
+isgif = 1;
 
 % Model
 g = grd('BSf');
@@ -185,8 +187,11 @@ for ti = 1:length(tindex)
 
     % Save figure snapshtop
 %     print(['Argo_num_', num2str(Argo_num, '%03i'), '_', datestr(time(index), 'yyyymmdd')], '-dpng')
+if ispng == 1
     saveas(gcf, ['Argo_num_', num2str(Argo_num, '%03i'), '_', datestr(time(index), 'yyyymmdd'), '.png'])
+end
 
+if isgif == 1
     % Make gif
     gifname = ['Argo_num_', num2str(Argo_num, '%03i'), '.gif'];
 
@@ -198,4 +203,5 @@ for ti = 1:length(tindex)
     else
         imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
     end
+end
 end % ti

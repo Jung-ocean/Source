@@ -8,8 +8,8 @@
 clear; clc; close all
 
 vari_str = 'aice';
-yyyy_all = 2019:2019;
-mm_all = 3:3;
+yyyy_all = 2020:2020;
+mm_all = 2:2;
 % dd_all = 1:28;
 depth_shelf = 200; % m
 
@@ -119,10 +119,10 @@ for yi = 1:length(yyyy_all)
             t.Padding = 'compact';
 
             pause(1)
-%             print(['cmp_', vari_str, '_satellite_daily_', datestr(timenum, 'yyyymmdd')],'-dpng');
+            print(['cmp_', vari_str, '_satellite_daily_', datestr(timenum, 'yyyymmdd')],'-dpng');
 
             % Make gif
-            gifname = ['cmp_', vari_str, '_satellite_daily_', ystr, '.gif'];
+            gifname = ['cmp_', vari_str, '_satellite_daily_', ystr, mstr, '.gif'];
 
             frame = getframe(h1);
             im = frame2im(frame);

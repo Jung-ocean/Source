@@ -9,7 +9,7 @@ clear; clc; close all
 
 vari_str = 'svstr';
 yyyy_all = 2020:2020;
-mm_all = 1:1;
+mm_all = 2:2;
 % dd_all = 1:28;
 depth_shelf = 200; % m
 
@@ -33,8 +33,8 @@ switch vari_str
         lat_plot = lat;
         lon_plot = lon;
     case 'zeta'
-        color = 'jet';
-        climit_model = [-1.5 1.5];
+        color = 'redblue';
+        climit_model = [-1 1];
         interval = 0.5;
         climit_sat = climit_model;
         unit = 'm';
@@ -43,7 +43,7 @@ switch vari_str
         lon_plot = lon;
     case 'svstr'
         color = 'redblue';
-        climit_model = [-1.5 1.5];
+        climit_model = [-1 1];
         interval = 0.5;
         climit_sat = climit_model;
         unit = 'N/m^2';
@@ -51,6 +51,16 @@ switch vari_str
         lat_plot = g.lat_v;
         lon_plot = g.lon_v;
         mask = g.mask_v./g.mask_v;
+
+    case 'salt'
+        color = 'jet';
+        climit_model = [31.5 33.5];
+        interval = 0.5;
+        climit_sat = climit_model;
+        unit = 'g/kg';
+
+        lat_plot = lat;
+        lon_plot = lon;
 end
 
 % Model control
@@ -60,8 +70,8 @@ label_con = 'Control';
 filepath_con = [filepath_all, case_con, '/ncks/'];
 
 % Model experiment
-case_exp = 'Dsm2_spng_wo_iwdrag';
-label_exp = 'No ice-ocean drag';
+case_exp = 'Dsm2_spng_awdrag';
+label_exp = 'Wind drag only';
 filepath_exp = [filepath_all, case_exp, '/ncks/'];
 
 for yi = 1:length(yyyy_all)
@@ -91,7 +101,7 @@ for yi = 1:length(yyyy_all)
             time_title = datestr(timenum, 'mmm dd, yyyy');
 
             % Figure title
-            title(t, time_title, 'FontSize', 25);
+            title(t, [vari_str, ' (', time_title, ')'], 'FontSize', 25);
 
             nexttile(1)
             if mi == 1 && di == 1
@@ -111,7 +121,7 @@ for yi = 1:length(yyyy_all)
                 c.Title.String = unit;
                 c.Ticks = [climit_model(1):interval:climit_model(end)];
             end
-            title([label_con], 'Interpreter', 'None')
+            title([label_con], 'Interpreter', 'None', 'FontSize', 15)
 
             % ROMS experiment
             file = [filepath_exp, filename];
@@ -135,7 +145,7 @@ for yi = 1:length(yyyy_all)
                 c.Title.String = unit;
                 c.Ticks = [climit_model(1):interval:climit_model(end)];
             end
-            title([label_exp], 'Interpreter', 'None')
+            title([label_exp], 'Interpreter', 'None', 'FontSize', 15)
 
             t.TileSpacing = 'compact';
             t.Padding = 'compact';

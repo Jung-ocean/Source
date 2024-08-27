@@ -1,11 +1,11 @@
 clear; clc
 
-start_date = '20180701';
+start_date = '20190701';
 runday = 153;
 
 filepath_HYCOM = '/data/sdurski/HYCOM_extract/Bering_Sea/';
 
-infofile = '/data/sdurski/HYCOM_extract/Bering_Sea/2018/HYCOM_glbvBeringSea_20180701.nc';
+infofile = '/data/sdurski/HYCOM_extract/Bering_Sea/2019Y/HYCOM_glbyBeringSea_20190701.nc';
 lon = ncread(infofile, 'Longitude');
 lon = lon(:,1)+360;
 lat = ncread(infofile, 'Latitude');
@@ -20,8 +20,8 @@ for i = 1:length(datenum_all)
     yyyymmdd = datestr(datenum_target, 'yyyymmdd');
     yyyy = datestr(datenum_target, 'yyyy');
 
-    filepath = [filepath_HYCOM, yyyy, '/Time_Filtered/'];
-    filename = ['HYCOM_glbvBeringSea_', yyyymmdd, '.nc'];
+    filepath = [filepath_HYCOM, yyyy, 'Y/Time_Filtered/'];
+    filename = ['HYCOM_glbyBeringSea_', yyyymmdd, '.nc'];
     file = [filepath, filename];
 
     ssh = ncread(file, 'ssh');
