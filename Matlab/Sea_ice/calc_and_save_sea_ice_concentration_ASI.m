@@ -8,9 +8,9 @@
 clear; clc; close all
 
 yyyy_all = 2012:2023;
-mm_all = 1:12;
+mm_all = 6:6;
 
-region = 'Gulf_of_Anadyr';
+region = 'Nmidshelf';
 
 filepath_monthly = '/data/jungjih/Observations/Sea_ice/ASI/monthly_ROMSgrid/';
 
@@ -50,4 +50,9 @@ plot(timenum, Fi, '-o')
 xticks(datenum(yyyy_all,1,15));
 datetick('x', 'yyyy')
 
-save(['Fi_ASI_', region, '.mat'], 'timenum', 'Fi')
+if length(mm_all) == 1
+    output_filename = ['Fi_ASI_', region, '_', num2str(mm_all, '%02i'), '.mat'];
+else
+    output_filename = ['Fi_ASI_', region, '.mat'];
+end
+save(output_filename, 'timenum', 'Fi')

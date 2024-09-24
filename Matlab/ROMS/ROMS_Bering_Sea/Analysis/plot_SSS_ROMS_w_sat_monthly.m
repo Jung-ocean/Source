@@ -9,7 +9,7 @@
 clear; clc; close all
 
 vari_str = 'salt';
-yyyy_all = 2018:2022;
+yyyy_all = 2023:2023;
 mm_all = 1:12;
 depth_shelf = 200; % m
 layer = 45;
@@ -131,12 +131,16 @@ for yi = 1:length(yyyy_all)
         % Satellite
         for si = 1:num_sat
             filepath_sat = filepaths_sat{si};
-            filepattern1_sat = fullfile(filepath_sat, (['*', ystr, mstr, '*.nc']));
+            filepattern1_sat = fullfile(filepath_sat, (['*_', ystr, mstr, '*.nc']));
             filepattern2_sat = fullfile(filepath_sat, (['*', ystr, '_', mstr, '*.nc']));
+            filepattern3_sat = fullfile(filepath_sat, (['*', ystr, '-', mstr, '*.nc']));
 
             filename_sat = dir(filepattern1_sat);
             if isempty(filename_sat)
                 filename_sat = dir(filepattern2_sat);
+            end
+            if isempty(filename_sat)
+                filename_sat = dir(filepattern3_sat);
             end
 
             if isempty(filename_sat)
@@ -208,11 +212,11 @@ for yi = 1:length(yyyy_all)
         frame = getframe(h1);
         im = frame2im(frame);
         [imind,cm] = rgb2ind(im,256);
-        if yi == 1 && mi == 1
-            imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
-        else
+%         if yi == 1 && mi == 1
+%             imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+%         else
             imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
-        end
+%         end
 
         disp([ystr, mstr, '...'])
     end % mi

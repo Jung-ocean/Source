@@ -7,17 +7,17 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc
 
-yyyy_all = 2021:2021;
-month_avg = [09:09];
+yyyy_all = 2019:2019;
+month_avg = [7:11];
 year_start = 2018;
 month_start = 7;
-exp = 'Dsm2_spng';
-filename_header = 'Dsm2_spng_';
+exp = 'Dsm4_phi3m1';
+filename_header = 'Dsm4_phi3m1';
 
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
-    filepath_daily = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
+    filepath_daily = ['/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2019/', exp, '/Output/'];
     datenum_ref = datenum(1968,05,23);
 
     for mi = 1:length(month_avg)
@@ -26,7 +26,7 @@ for yi = 1:length(yyyy_all)
         filenumbers = [datenum(yyyy,mm,1):datenum(yyyy,mm+1,1)-1] - datenum(year_start,month_start,1) + 1;
         for fi = 1:length(filenumbers)
             filenumber = filenumbers(fi); fstr = num2str(filenumber, '%04i');
-            filename = dir([filepath_daily, '*avg*', fstr, '*']);
+            filename = dir([filepath_daily, '*', filename_header, '_avg*', fstr, '*']);
             if ~isempty(filename)
                 command = ['ln -s ', filepath_daily, filename.name, ' ./'];
                 system(command)
@@ -36,7 +36,7 @@ for yi = 1:length(yyyy_all)
         command = ['ls *avg* | wc -l'];
         [status, nfile] = system(command);
         if str2num(nfile) == eomdays
-            command = ['ncra *avg* ', filename_header, ystr, mstr, '.nc'];
+            command = ['ncra *avg* ', filename_header, '_', ystr, mstr, '.nc'];
             system(command)
         end
         

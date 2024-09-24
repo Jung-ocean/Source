@@ -1,13 +1,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Plot ROMS area averaged zeta with wind daily
+% Plot ROMS area averaged variables with wind daily
 %
 % J. Jung
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; %close all
 
-yyyy = 2021;
+yyyy = 2020;
 ystr = num2str(yyyy);
 mm_all = 1:2;
 startdate = datenum(2018,7,1);
@@ -47,7 +47,7 @@ angle = azimuth(61.9925, -179.7011, 64.2886, -172.2554);
 figure; hold on; grid on;
 plot_map('Bering', 'mercator', 'l')
 plotm(polygon(:,2), polygon(:,1))
-plotm(polygon_wind(:,2), polygon_wind(:,1))
+plotm(polygon_wind(:,2), polygon_wind(:,1), 'LineWidth', 2)
 
 ind = 0;
 for mi = 1:length(mm_all)
@@ -141,7 +141,7 @@ load(['trans_', ystr, '.mat'])
 
 vari1 = wind_target;
 % vari1 = trans(1,:)/1e6;
-vari2 = trans(2,:)/1e6;
+vari2 = trans(1,:)/1e6;
 
 figure; hold on; grid on;
 set(gcf, 'Position', [1 200 1200 500])

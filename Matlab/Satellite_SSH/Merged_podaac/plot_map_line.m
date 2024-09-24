@@ -1,17 +1,17 @@
 clear; clc; close all
 
-direction = 'p';
+direction = 'a';
 if strcmp(direction, 'p')
-    lines = 1:16; % pline
+    lines = 1:15; % pline
 else
-    lines = 1:29; % aline
+    lines = 1:24; % aline
 end
 
 % Load grid information
 g = grd('BSf');
 
 h1 = figure; hold on;
-set(gcf, 'Position', [1 1 900 600])
+set(gcf, 'Position', [1 1 800 500])
 plot_map('Bering', 'mercator', 'l');
 [C,h] = contourm(g.lat_rho, g.lon_rho, g.h, [50 200], 'Color', [.7 .7 .7]);
 

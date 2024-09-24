@@ -7,11 +7,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-yyyy_all = [2019 2021 2022];
+% yyyy_all = [2019 2021 2022];
+yyyy_all = [2019];
 climit = [0 15];
 
+exp = 'Dsm4_phi3m1';
+
 % Model
-model_filepath = '/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm2_spng/';
+model_filepath = ['/data/jungjih/ROMS_BSf/Output/Multi_year/', exp, '/daily/'];
 g = grd('BSf');
 statrdate = datenum(2018,7,1);
 
@@ -70,7 +73,7 @@ for yi = 1:length(yyyy_all)
         dindex = find(timenum_floor == timenum_tmp);
         filenumber = timenum_tmp - statrdate + 1;
         fstr = num2str(filenumber, '%04i');
-        model_filename = ['Dsm2_spng_avg_', fstr, '.nc'];
+        model_filename = [exp, '_avg_', fstr, '.nc'];
         model_file = [model_filepath, model_filename];
         temp = ncread(model_file, 'temp');
         temp = permute(temp, [3 2 1]);

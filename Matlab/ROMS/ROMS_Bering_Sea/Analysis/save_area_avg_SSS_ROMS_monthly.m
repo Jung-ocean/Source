@@ -7,11 +7,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-region = 'Gulf_of_Anadyr';
+region = 'Gulf_of_Anadyr_50m';
 
 vari_str = 'salt';
-yyyy_all = 2018:2022;
-mm_all = 1:12;
+yyyy_all = 2019:2022;
+mm_all = 1:8;
 layer = 45;
 
 isice = 0;
@@ -24,9 +24,9 @@ g = grd('BSf');
 figure; hold on;
 set(gcf, 'Position', [1 200 800 500])
 plot_map('Bering', 'mercator', 'l')
-contourm(g.lat_rho, g.lon_rho, g.h, [50 200], 'k')
+contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k')
 pcolorm(g.lat_rho, g.lon_rho, mask);
-print('region', '-dpng')
+print(['region_', region], '-dpng')
 
 % Model
 filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
@@ -89,4 +89,9 @@ xticks(datenum(yyyy_all,1,15));
 xlim([datenum(yyyy_all(1),1,1) datenum(yyyy_all(end)+1,1,1)])
 datetick('x', 'yyyy', 'keepticks', 'keeplimits')
 
-save(['SSS_ROMS_', region, '.mat'], 'timenum', 'SSS_surf', 'SSS_bot')
+if length(mm_all) == 1
+    output_filename = ['SSS_ROMS_', region, '_', num2str(mm_all, '%02i'), '.mat'];
+else
+    output_filename = ['SSS_ROMS_', region, '.mat'];
+end
+save(output_filename, 'timenum', 'SSS_surf', 'SSS_bot')

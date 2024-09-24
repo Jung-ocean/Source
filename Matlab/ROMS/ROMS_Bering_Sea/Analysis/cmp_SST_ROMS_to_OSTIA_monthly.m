@@ -7,13 +7,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-yyyy_all = 2018:2018;
-mm_all = 7:12;
+yyyy_all = 2021:2021;
+mm_all = 6:8;
 climit = [0 15];
 climit_diff = [-3 3];
 
-ind_png = 0;
-ind_gif = 1;
+ind_png = 1;
+ind_gif = 0;
 
 % Model
 model_filepath = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng/monthly/';
@@ -34,6 +34,7 @@ for mi = 1:length(mm_all)
     mm = mm_all(mi); mstr = num2str(mm, '%02i');
 
     yyyymm = datenum(yyyy,mm,15);
+    title(t, [datestr(yyyymm, 'mmm, yyyy')], 'FontSize', 20)
 
     % Observation
     obs_filename = ['OSTIA_', ystr, mstr, '.nc'];
@@ -65,7 +66,7 @@ for mi = 1:length(mm_all)
     uistack(pobs,'bottom')
     caxis(climit)
 
-    title('OSTIA SST', 'FontSize', 15)
+    textm(65, -205, 'OSTIA', 'FontSize', 25)
 
     nexttile(2)
     plot_map('Bering', 'mercator', 'l');
@@ -77,7 +78,8 @@ for mi = 1:length(mm_all)
     c.Title.String = '^oC';
     uistack(pmodel,'bottom')
     caxis(climit)
-    title('ROMS SST', 'FontSize', 15)
+    
+    textm(65, -205, 'ROMS', 'FontSize', 25)
 
     ax3 = nexttile(3);
     plot_map('Bering', 'mercator', 'l');
@@ -89,12 +91,11 @@ for mi = 1:length(mm_all)
     c.Title.String = '^oC';
     uistack(pdiff,'bottom')
     caxis(climit_diff)
-    title('Difference (ROMS - OSTIA)', 'FontSize', 15)
+%     textm(65, -205, 'Difference (ROMS - OSTIA)', 'FontSize', 25)
+    textm(65, -205, 'Difference', 'FontSize', 25)
 
     t.TileSpacing = 'compact';
     t.Padding = 'compact';
-
-    title(t, [datestr(yyyymm, 'mmm, yyyy')], 'FontSize', 25)
 
     if ind_png == 1
         print(['cmp_SST_w_OSTIA_', ystr, mstr], '-dpng')

@@ -8,10 +8,10 @@
 clear; clc; close all
 
 yyyy = 2022;
-mm_all = 8;
+mm_all = 4:7;
 
-vari_str = 'temp';
-layer = -50;
+vari_str = 'zeta';
+layer = 45;
 casename = 'Bering';
 
 ind_contour = 1;
@@ -29,6 +29,7 @@ switch vari_str
         dim = '3d';
         color = 'parula';
         climit = [-2 6];
+%         climit = [6 12];
         contour_interval = climit(1):1:climit(end);
         unit = '^oC';
 
@@ -40,6 +41,13 @@ switch vari_str
         %         contour_interval = [31.5 32.5];
         unit = 'PSU';
 
+    case 'pden'
+        dim = '3d';
+        color = 'parula';
+        climit = [25.5 26.5];
+        contour_interval = climit(1):.2:climit(end);
+        unit = '\sigma_t';
+
     case 'aice'
         dim = '2d';
         color = 'parula';
@@ -50,6 +58,7 @@ switch vari_str
         dim = '2d';
         color = 'redblue';
         climit = [-1 1];
+        contour_interval = climit(1):.1:climit(end);
         unit = 'm';
 end
 
@@ -74,9 +83,25 @@ for mi = 1:length(mm_all)
         else
             zeta = ncread(file, 'zeta')';
             z = zlevs(g.h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'r',2);
+            if strcmp(vari_str, 'pden')
+                temp_sigma = squeeze(ncread(file, 'temp'));
+                temp_sigma = permute(temp_sigma, [3 2 1]);
+                temp = vinterp(temp_sigma,z,layer);
+
+                salt_sigma = squeeze(ncread(file, 'salt'));
+                salt_sigma = permute(salt_sigma, [3 2 1]);
+                salt = vinterp(salt_sigma,z,layer);
+
+                pres = sw_pres(layer*ones(size(g.lat_rho)), g.lat_rho);
+                pden = sw_pden_ROMS(salt, temp, pres, 0);
+
+                vari = pden - 1000;
+            else
+            
             var_sigma = squeeze(ncread(file, vari_str));
             var_sigma = permute(var_sigma, [3 2 1]);
             vari = vinterp(var_sigma,z,layer);
+            end
         end
     else
         vari = ncread(file, vari_str)';
@@ -104,7 +129,7 @@ for mi = 1:length(mm_all)
             title(['ROMS ', vari_str, ' ', num2str(layer), ' m (', datestr(timenum, 'mmm, yyyy'), ')'], 'FontSize', 15)
         end
     else
-        title(['ROMS ', vari_str, ' (', datestr(timenum, 'mmm dd, yyyy'), ')'], 'FontSize', 15)
+        title(['ROMS ', vari_str, ' (', datestr(timenum, 'mmm, yyyy'), ')'], 'FontSize', 15)
     end
 
     %     % Argo location

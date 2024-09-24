@@ -7,13 +7,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-region = 'Gulf_of_Anadyr';
+region = 'Nmidshelf';
 % area_frac_cutoff = 0.99;
-area_frac_cutoff = 0.99;
+area_frac_cutoff = 0.1;
 
 vari_str = 'salt';
 yyyy_all = 2010:2023;
-mm_all = 1:12;
+mm_all = 7:8;
 
 % Load grid information
 g = grd('BSf');
@@ -89,4 +89,9 @@ plot(timenum, SSS, '-o');
 xticks(datenum(yyyy_all,1,15));
 datetick('x', 'yyyy', 'keepticks', 'keeplimits')
 
-save(['SSS_SMOS_', region, '.mat'], 'timenum', 'SSS', 'area_frac_cutoff')
+if length(mm_all) == 1
+    output_filename = ['SSS_SMOS_', region, '_', num2str(mm_all, '%02i'), '.mat'];
+else
+    output_filename = ['SSS_SMOS_', region, '.mat'];
+end
+save(output_filename, 'timenum', 'SSS', 'area_frac_cutoff')

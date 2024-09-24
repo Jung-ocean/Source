@@ -8,8 +8,9 @@
 clear; clc; close all
 
 % User defined variables
-filepath = '/data/sdurski/Observations/SSH/Merged_MMv5.1_podaac/';
-filenum_all = 949:1087;
+filepath = '/data/jungjih/Observations/Satellite_SSH/Merged/Merged_MMv5.2_podaac/data/';
+% filenum_all = 949:1116;
+filenum_all = 931:1154;
 lon_range = [-205.9832 -156.8640]; lat_range = [49.1090 66.3040]; % Bering Sea
 vari_str = 'adt'; % adt or ssha
 
@@ -39,8 +40,10 @@ switch vari_str
         gifname_header = 'SLA';
 end
 
-ADT_month_sum = zeros;
-num_data = zeros;
+timenum_all = [datenum(2018, 1:12, 15), datenum(2019, 1:12, 15), datenum(2020, 1:12, 15) datenum(2021, 1:12, 15) datenum(2022, 1:12, 15) datenum(2023, 1:12, 15)];
+timevec_all = datevec(timenum_all);
+ADT_month_sum = zeros(length(timenum_all),14106);
+num_data = zeros(length(timenum_all),14106);
 for fi = 1:length(filenum_all)
     filenum = filenum_all(fi); fstr = num2str(filenum, '%04i');
     file_target = dir([filepath, '*', fstr, '*.nc']);
@@ -65,27 +68,39 @@ for fi = 1:length(filenum_all)
     %geoid = geoidheight(lat,lon); % units = m, EGM96 Geopotential Model
     %mdt = mssh - geoid;
     if fi == 1
-        mdt = griddata(lon_DTU15, lat_DTU15, mdt_DTU15, lon, lat);
+%         mdt = griddata(lon_DTU15, lat_DTU15, mdt_DTU15, lon, lat);
+        lat_ref = lat;
+        lon_ref = lon;
     end
+    load(['mdt_', num2str(length(lon)), '.mat']);
+
     ssha = ncread(file, 'ssha').*1e-3; % units = mm to m
     ssha = ssha(val);
+
+    if issame(lat, lat_ref) == 0
+        index = find(ismember(lat, lat_ref) == 1);
+        lat = lat(index);
+        lon = lon(index);
+        ssha = ssha(index);
+        timevec = timevec(index,:);
+    end
     adt = mdt + ssha;
 
-    for mi = 1:12
-        index = find(timevec(:,2) == mi);
+    for ti = 1:length(timenum_all)
+        index = find(timevec(:,1) == timevec_all(ti,1) & timevec(:,2) == timevec_all(ti,2));
         lon_tmp = lon(index);
         lat_tmp = lat(index);
-        if isempty(index)
+        if ~isempty(index)
+            adt_tmp = adt(index);
+            nanind = isnan(adt_tmp);
+            adt_tmp(isnan(adt_tmp) == 1) = 0;
 
-        index2 = find(lon == lon_tmp & lat == lat_tmp);
-        ADT_month_sum(mi,index2) = ADT_month_sum(mi,index2)+adt(index);
-        num_data(mi,index2) = num_data(mi,index2) + 1;
+            ADT_month_sum(ti,index) = ADT_month_sum(ti,index)+adt_tmp';
+            num_data(ti,index) = num_data(ti,index) + (~nanind)';
+        end
     end
-
-
-    
-
-
-
-
 end
+
+ADT_monthly = ADT_month_sum./num_data;
+
+save ADT_monthly.mat timenum_all timevec_all ADT_monthly ADT_month_sum num_data lon_ref lat_ref

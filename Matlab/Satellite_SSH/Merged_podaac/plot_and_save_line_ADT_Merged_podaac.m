@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Plot ADT along the specific line using the Merged_MMv5.1_podaac data
+% Plot ADT along the specific line using the Merged_podaac data
 %
 % J. Jung
 %
@@ -10,17 +10,17 @@ clear; clc; close all
 % Line numbers
 direction = 'a';
 if strcmp(direction, 'p')
-    lines = 1:16; % pline
+    lines = 1:15; % pline
 else
-    lines = 1:29; % aline
+    lines = 1:24; % aline
 end
 
 isfilter = 0;
 filter_window = 8; % 1 ~ 5.75 km
 
 % User defined variables
-filepath = '/data/sdurski/Observations/SSH/Merged_MMv5.1_podaac/';
-filenum_all = 949:1087;
+filepath = '/data/jungjih/Observations/Satellite_SSH/Merged/Merged_MMv5.2_podaac/data/';
+filenum_all = 949:1116;
 lon_range = [-205.9832 -156.8640]; lat_range = [49.1090 66.3040]; % Bering Sea
 
 % DTU15 data
@@ -111,7 +111,7 @@ lon_plot = lon_line+360;
 
 nexttile(2); cla; hold on; grid on
 %pcolor(lon_mid, timenum_all, geostrophic_all*100); shading interp
-pcolor(lon_plot, timenum_all, ADT_all*100); shading interp
+pcolor(lon_plot, timenum_all, ADT_all*100); shading flat
 ax = gca;
 colormap(ax, 'parula')
 
@@ -132,10 +132,10 @@ t.TileSpacing = 'compact';
 t.Padding = 'compact';
 
 pause(1)
-saveas(gcf, [direction, 'line_', lstr, '_ADT_Merged_MMv5.1_podaac.png']);
+saveas(gcf, [direction, 'line_', lstr, '_ADT_Merged_MMv5.2_podaac.png']);
 
 % Make gif
-gifname = [direction, 'line_ADT_Merged_MMv5.1_podaac.gif'];
+gifname = [direction, 'line_ADT_Merged_MMv5.2_podaac.gif'];
 
 frame = getframe(h1);
 im = frame2im(frame);

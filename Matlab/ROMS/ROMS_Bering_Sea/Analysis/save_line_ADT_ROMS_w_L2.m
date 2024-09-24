@@ -12,9 +12,9 @@ map = 'Bering';
 % Line numbers
 direction = 'a';
 if strcmp(direction, 'p')
-    lines = 1:16; % pline
+    lines = 1:15; % pline
 else
-    lines = 1:29; % aline
+    lines = 1:24; % aline
 end
 
 % Model
@@ -29,7 +29,7 @@ month_start = 7;
 g = grd('BSf');
 
 % Satellite
-filepath_sat = ['/data/jungjih/Observations/Satellite_SSH/Merged_MMv5.1_podaac/ADT_line_no_filter/'];
+filepath_sat = ['/data/jungjih/Observations/Satellite_SSH/Merged/Merged_MMv5.2_podaac/ADT_line_no_filter/'];
 
 index = 1;
 for li = 1:length(lines)

@@ -1,4 +1,4 @@
-function [lon, lat] = indices_lines_Bering_Sea_slope(direction, i)
+function [lon, lat] = indices_lines_Bering_Sea_slope_v51(direction, i)
 
 lonlat = load('lonlat_lines_Bering_Sea_slope.mat');
 

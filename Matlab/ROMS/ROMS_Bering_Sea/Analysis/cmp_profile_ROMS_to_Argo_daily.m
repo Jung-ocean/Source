@@ -10,14 +10,17 @@ clear; clc; close all
 plot_whole_map = 0;
 
 % [30, 36, 46, 47, 54, 58, 59]
-Argo_num = 58;
-ispng = 0;
+Argo_num = 47;
+ispng = 1;
 isgif = 1;
+
+exp = 'Dsm4_phi3m1';
 
 % Model
 g = grd('BSf');
 startdate = datenum(2018,7,1);
-filepath_model = ['/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm2_spng/'];
+filepath_model = ['/data/jungjih/ROMS_BSf/Output/Multi_year/', exp, '/daily/'];
+% filepath_model = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
 
 % Argo
 filepath = '/data/sdurski/Observations/ARGO/ARGO_drifters_BS/';
@@ -70,6 +73,7 @@ end % plot_whole_map
 
 % Model vs Argo comparison
 profile = Arg(Argo_num).profile;
+WMO_num = Arg(Argo_num).profile_dir(end-15:end-9);
 
 f1 = figure; hold on;
 set(gcf, 'Position', [1 200 1800 650])
@@ -85,7 +89,7 @@ for pi = 1:length(profile)
     lat = [lat; profile(pi).lat];
     time = [time; profile(pi).time];
 end
-save(['Argo_num_', num2str(Argo_num, '%03i'), '.mat'], 'lon', 'lat', 'time')
+save(['Argo_num_', num2str(Argo_num, '%03i'), '.mat'], 'lon', 'lat', 'time', 'WMO_num')
 
 timevec = datevec(datenum(datestr(time)));
 % tindex = find(timevec(:,1) > 2018 & ismember(timevec(:,2), [1:4]));
@@ -97,7 +101,7 @@ datetick(c, 'y', 'yyyy-mm-dd', 'keeplimits')
 
 s = scatterm(lat, lon, 20, time, 'filled');
 
-title(['Argo ', num2str(Argo_num, '%03i')])
+title(['Argo ', num2str(Argo_num, '%03i'), ' (', num2str(WMO_num), ')'])
 
 for ti = 1:length(tindex)
     index = tindex(ti);
@@ -117,7 +121,7 @@ for ti = 1:length(tindex)
     
     filenumber = floor(time_tmp) - startdate + 1;
     fstr = num2str(filenumber, '%04i');
-    filename_model = ['Dsm2_spng_avg_', fstr,'.nc'];
+    filename_model = [exp, '_avg_', fstr,'.nc'];
     file = [filepath_model, filename_model];
     
     if exist(file) == 0
@@ -152,7 +156,7 @@ for ti = 1:length(tindex)
     xlim([31.5 35])
     %ylim([-2500 0])
     ylim([-500 0])
-    xlabel('Salinity (g/kg)')
+    xlabel('Salinity (PSU)')
     ylabel('Pres (~Depth, m)')
 
     grid on

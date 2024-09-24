@@ -12,15 +12,20 @@ map = 'Bering';
 % Line numbers
 direction = 'a';
 if strcmp(direction, 'p')
-    lines = 1:16; % pline
+    lines = 1:15; % pline
 else
-    lines = 1:29; % aline
+%     lines = 1:24; % aline
+    lines = 4:7; % aline
 end
 
-isfilter = 1;
+isfilter = 0;
 filter_window = 8; % 1 ~ 5.75 km
 
-yyyy_all = 2018:2021;
+% xlimit = [154 203];
+xlimit = [175 187.5];
+ylimit = [-40 40];
+
+yyyy_all = 2018:2022;
 
 JFM = 1:3;
 AMJ = 4:6;
@@ -49,8 +54,8 @@ timenum_all = cell2array(ADT.time);
 
 for li = 1:length(lines)
     line = lines(li); lstr = num2str(line, '%02i');
-    lon_line = ADT.lon{li}+360;
-    lat_line = ADT.lat{li};
+    lon_line = ADT.lon{line}+360;
+    lat_line = ADT.lat{line};
     
 %     figure(f1);
 %     pm = plotm(lat_line, lon_line, '-k', 'LineWidth', 2);
@@ -93,7 +98,11 @@ for li = 1:length(lines)
             ADT_model = [];
             for ii = 1:length(index)
                 ADT_obs = [ADT_obs; ADT.obs{index(ii)}];
-                ADT_model = [ADT_model; ADT.model{index(ii)}];
+                if isscalar(ADT.model{index(ii)}) == 1
+                    ADT_model = [ADT_model; NaN([1, size(ADT_model,2)])];
+                else
+                    ADT_model = [ADT_model; ADT.model{index(ii)}];
+                end
             end
 
             if isempty(ADT_model) == 1
@@ -102,6 +111,9 @@ for li = 1:length(lines)
             else
                 ADT_obs_season = mean(ADT_obs,1, 'omitnan');
                 ADT_model_season = mean(ADT_model,1, 'omitnan');
+                if isscalar(ADT_model_season) == 1
+                    ADT_model_season = NaN(size(lon_line))';
+                end
             end
 
             if isfilter == 1
@@ -121,7 +133,14 @@ for li = 1:length(lines)
             if strcmp(direction, 'p') == 1 && min(dist) < 50
                 plot(zeros(1,201)+lon_line(hindex), -100:100, 'Color', [.7 .7 .7], 'LineWidth', 4)
             end
-            
+
+%             mean_obs = mean(ADT_obs_season, 'omitnan');
+%             std_obs = std(ADT_obs_season, 'omitnan');
+%             upper = mean_obs + std_obs;
+%             lower = mean_obs - std_obs;
+%             index = find(ADT_obs_season < lower | ADT_obs_season > upper);
+%             ADT_obs_season(index) = NaN;
+
             ADT_obs_adj = 100*(ADT_obs_season-mean(ADT_obs_season, 'omitnan'));
             ADT_model_adj = 100*(ADT_model_season - mean(ADT_model_season, 'omitnan'));
 
@@ -144,8 +163,8 @@ for li = 1:length(lines)
 
             R(li,yi,mi) = corr(ADT_obs_adj',ADT_model_adj', 'rows', 'complete');
 
-            xlim([154 203])
-            ylim([-40 40])
+            xlim(xlimit)
+            ylim(ylimit)
 
             xlabel('Longitude')
             ylabel('cm')
