@@ -11,8 +11,8 @@ clear; clc; close all
 
 % User defined variables
 major_rivers = {'Anadyr', 'Yukon', 'Kamchatka', 'Kuskokwim', 'Nushagak', 'Kvichak'};
-yyyy_all = [2017:2022]; % 9999 = climate
-filepath_all = '/data/jungjih/Model/GloFAS/';
+yyyy_all = [2023:2023]; % 9999 = climate
+filepath_all = '/data/jungjih/Models/GloFAS/';
 river_source_points = 'river_source_points.mat';
 dist_radius = 0.3;
 %
@@ -47,8 +47,14 @@ for yi = 1:length(yyyy_all)
 
     dis_points_all = zeros(length(lat_point),yeardays(yyyy));
     for pi = 1:length(lat_point)
-        latind = find(latitude == lat_point(pi));
-        lonind = find(longitude == lon_point(pi));
+        latdist = abs(latitude - lat_point(pi));
+        londist = abs(longitude - lon_point(pi));
+
+        latind = find(latdist == min(latdist));
+        lonind = find(londist == min(londist));
+        if min(latdist) > 0.00001 | min(londist) > 0.00001
+            error('Check the lat and lon indices')
+        end
 
         if lon_point(pi) > 190
             EW_check(pi) = 'E';
@@ -86,8 +92,18 @@ for yi = 1:length(yyyy_all)
         lat_major = lat_major_all{ri};
         lon_major = lon_major_all{ri};
         for mi = 1:length(lat_major)
-            lat_major_indices{ri}(mi) = find(latitude == lat_major(mi));
-            lon_major_indices{ri}(mi) = find(longitude == lon_major(mi));
+
+            latdist = abs(latitude - lat_major(mi));
+            londist = abs(longitude - lon_major(mi));
+
+            latind = find(latdist == min(latdist));
+            lonind = find(londist == min(londist));
+            if min(latdist) > 0.00001 | min(londist) > 0.00001
+                error('Check the lat and lon indices')
+            end
+
+            lat_major_indices{ri}(mi) = latind;
+            lon_major_indices{ri}(mi) = lonind;
         end
     end
 

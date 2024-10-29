@@ -7,12 +7,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc
 
-yyyy_all = 2021:2021;
-month_avg = [09:09];
+yyyy_all = 2018:2018;
+month_avg = [9:12];
 year_start = 2018;
 month_start = 7;
-exp = 'Dsm2_spng';
-filename_header = 'Dsm2_spng_';
+exp = 'Dsm4';
+filename_header = 'Dsm4';
 
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
@@ -26,7 +26,7 @@ for yi = 1:length(yyyy_all)
         filenumbers = [datenum(yyyy,mm,1):datenum(yyyy,mm+1,1)-1] - datenum(year_start,month_start,1) + 1;
         for fi = 1:length(filenumbers)
             filenumber = filenumbers(fi); fstr = num2str(filenumber, '%04i');
-            filename = dir([filepath_daily, '*avg*', fstr, '*']);
+            filename = dir([filepath_daily, '*', filename_header, '_avg*', fstr, '*']);
             if ~isempty(filename)
                 command = ['ln -s ', filepath_daily, filename.name, ' ./'];
                 system(command)
@@ -36,7 +36,7 @@ for yi = 1:length(yyyy_all)
         command = ['ls *avg* | wc -l'];
         [status, nfile] = system(command);
         if str2num(nfile) == eomdays
-            command = ['ncra *avg* ', filename_header, ystr, mstr, '.nc'];
+            command = ['ncra *avg* ', filename_header, '_', ystr, mstr, '.nc'];
             system(command)
         end
         

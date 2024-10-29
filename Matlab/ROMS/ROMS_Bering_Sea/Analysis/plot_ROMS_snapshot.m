@@ -1,0 +1,131 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Plot ROMS snapshot
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+exp = 'Dsm4';
+
+yyyy = 2018;
+mm = 7;
+dd = 31;
+
+vari_str = 'temp';
+layer = 45;
+casename = 'Bering';
+
+ind_contour = 0;
+ind_png = 1;
+ind_gif = 0;
+
+% Model
+filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
+startdate = datenum(2018,7,1);
+g = grd('BSf');
+mask = g.mask_rho./g.mask_rho;
+
+switch vari_str
+    case 'temp'
+        dim = '3d';
+        interval = 0.5;
+        climit = [4.5 15];
+        contour_interval = climit(1):interval:climit(2);
+        num_color = diff(climit)/interval;
+        color = jet(num_color);
+        unit = '^oC';
+
+    case 'salt'
+        dim = '3d';
+        color = 'jet';
+        climit = [31.5 33.5];
+        %contour_interval = climit(1):.5:climit(end);
+        %         contour_interval = [31.5 32.5];
+        unit = 'g/kg';
+
+    case 'aice'
+        dim = '2d';
+        color = 'parula';
+        climit = [0 1];
+        unit = '';
+
+    case 'zeta'
+        dim = '2d';
+        color = 'redblue';
+        climit = [-1 1];
+        unit = 'm';
+end
+
+f1 = figure; hold on;
+set(gcf, 'Position', [1 200 800 500])
+plot_map(casename, 'mercator', 'l');
+contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+
+ystr = num2str(yyyy);
+mstr = num2str(mm, '%02i');
+
+timenum = datenum(yyyy,mm,dd);
+filenumber = timenum - startdate + 1;
+fstr = num2str(filenumber, '%04i');
+filename = [exp, '_his_', fstr, '.nc'];
+file = [filepath, filename];
+
+if strcmp(dim, '3d')
+    vari = ncread(file, vari_str, [1 1 layer 1], [Inf Inf 1 Inf])';
+else
+    vari = ncread(file, vari_str)';
+end
+ot = ncread(file, 'ocean_time');
+title_str = datestr(datenum(1968,5,23) + ot/60/60/24, 'yyyy-mm-ddTHH:MM:SS');
+
+%     p = pcolorm(g.lat_rho, g.lon_rho, vari.*mask);
+% Convert lat/lon to figure (axis) coordinates
+[x, y] = mfwdtran(g.lat_rho, g.lon_rho);  % Convert lat/lon to projected x, y coordinates
+vari(vari < climit(1)) = climit(1);
+[cs, p] = contourf(x, y, vari, contour_interval, 'LineColor', 'none');
+colormap(color);
+caxis(climit);
+uistack(p,'bottom')
+c = colorbar;
+c.Title.String = unit;
+
+if ind_contour == 1
+    vari_contour = vari;
+    vari_contour(isnan(vari_contour) == 1) = -10;
+    [cs,h] = contourm(g.lat_rho, g.lon_rho, vari_contour, contour_interval, '-k', 'LineWidth', 4);
+    cl = clabelm(cs, h, 'LabelSpacing', 500);
+    set(cl, 'Color', 'k', 'FontSize', 20, 'LineStyle', 'none', 'BackgroundColor', 'none')
+end
+
+if strcmp(dim, '3d')
+%     title(['ROMS ', vari_str, ' layer ', num2str(layer), ' (', datestr(timenum, 'mmm dd, yyyy'), ')'], 'FontSize', 15)
+    title(['ROMS SST' ,' (', title_str, ')'], 'FontSize', 15)
+else
+    title(['ROMS ', vari_str, ' (', datestr(timenum, 'mmm dd, yyyy'), ')'], 'FontSize', 15)
+end
+
+if ind_png == 1
+    print([vari_str, '_layer_', num2str(layer), '_', casename, '_', datestr(timenum, 'yyyymmdd')], '-dpng')
+end
+
+if ind_gif == 1
+    % Make gif
+    gifname = [vari_str, '_layer_', num2str(layer), '_', casename, '_', datestr(timenum, 'yyyy'), '.gif'];
+
+    frame = getframe(f1);
+    im = frame2im(frame);
+    [imind,cm] = rgb2ind(im,256);
+    if mi == 1 && di == 1
+        imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+    else
+        imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+    end
+end % ind_gifrsync -av --include '*/' --include '*.png' --include '*.gif' --include '*.jpg' --exclude '*' --delete /data/jungjih/* ./data/
+
+delete(p)
+%     delete(pt)
+if ind_contour == 1
+    delete(cl); delete(h);
+end

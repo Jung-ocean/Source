@@ -8,19 +8,19 @@
 clear; clc; close all
 
 map = 'Bering';
+exp = 'Dsm4';
 
 % Line numbers
-direction = 'a';
+direction = 'p';
 if strcmp(direction, 'p')
-    lines = 1:16; % pline
+    lines = 1:15; % pline
 else
-    lines = 1:29; % aline
+    lines = 1:24; % aline
 end
 
 % Model
 filepath_all = ['/data/sdurski/ROMS_BSf/Output/Multi_year/'];
-case_control = 'Dsm2_spng';
-filepath_control = [filepath_all, case_control, '/'];
+filepath_control = [filepath_all, exp, '/'];
 
 year_start = 2018;
 month_start = 7;
@@ -29,7 +29,7 @@ month_start = 7;
 g = grd('BSf');
 
 % Satellite
-filepath_sat = ['/data/jungjih/Observations/Satellite_SSH/Merged_MMv5.1_podaac/ADT_line_no_filter/'];
+filepath_sat = ['/data/jungjih/Observations/Satellite_SSH/Merged/Merged_MMv5.2_podaac/ADT_line_no_filter/'];
 
 index = 1;
 for li = 1:length(lines)
@@ -50,13 +50,16 @@ for li = 1:length(lines)
         filenumber = timenum_tmp - datenum(year_start,month_start,1) + 1;
         fstr = num2str(filenumber, '%04i');
 
-        file = [filepath_control, 'Dsm2_spng_avg_', fstr, '.nc'];
+        file = [filepath_control, exp, '_avg_', fstr, '.nc'];
 
         if exist(file) == 2
             zeta = ncread(file,'zeta')';
-            zeta_line = interp2(g.lon_rho, g.lat_rho, zeta, lon_line, lat_line);
-
-            ADT.model{index} = zeta_line';
+            if ~isempty(zeta) 
+                zeta_line = interp2(g.lon_rho, g.lat_rho, zeta, lon_line, lat_line);
+                ADT.model{index} = zeta_line';
+            else
+                ADT.model{index} = NaN;
+            end
         else
             ADT.model{index} = NaN;
         end

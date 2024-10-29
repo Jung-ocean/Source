@@ -1,6 +1,6 @@
 clear; clc
 
-start_date = datetime(2018,7,1);
+start_date = datetime(2019,7,1);
 Mobj.rundays = 153;
 Mobj.time = (start_date:days(1):start_date + Mobj.rundays)';
 Mobj.dt = 120;
@@ -21,7 +21,7 @@ bndy_file = [bndy_filepath, bndy_filename];
 var = ncread(bndy_file, 'time_series');
 var = squeeze(var);
 
-hycom_filepath = '/data/jungjih/Models/SCHISM/test_schism/v1_SMS_min_5m_3D/gen_input/3Dth/HYCOM/';
+hycom_filepath = '/data/jungjih/Models/SCHISM/test_schism/v2_JZ/gen_input/2019/3Dth/HYCOM/';
 hycom_filename = ['HYCOM_', yyyymmdd, '.nc'];
 hycom_file = [hycom_filepath, hycom_filename];
 

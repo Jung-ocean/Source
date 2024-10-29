@@ -25,12 +25,12 @@ end_day = datetime.date( yyyy+year_inc, im%12+1, 1)
 num_days = (end_day-start_day).days
 
 filename_East=\
-('/data/jungjih/Model/GloFAS/'
+('/data/jungjih/Models/GloFAS/'
 + start_day.strftime("%Y") + '//' + 'BSf_GloFas'
 + start_day.strftime("_%Y_%m_E") + '.grib')
 
 filename_West=\
-('/data/jungjih/Model/GloFAS/'
+('/data/jungjih/Models/GloFAS/'
 + start_day.strftime("%Y") + '//' + 'BSf_GloFas'
 + start_day.strftime("_%Y_%m_W") + '.grib' )
 
@@ -41,7 +41,8 @@ c.retrieve(
     {
       'system_version': 'version_4_0',
       'variable': 'river_discharge_in_the_last_24_hours',
-      'format': 'grib',
+      'data_format': 'grib',
+      'download_format': 'unarchived',
       'hyear': start_day.strftime("%Y"),
       'hmonth': start_day.strftime("%m"),
       'hydrological_model': 'lisflood',
@@ -59,7 +60,8 @@ c.retrieve(
     {
       'system_version': 'version_4_0',
       'variable': 'river_discharge_in_the_last_24_hours',
-      'format': 'grib',
+      'data_format': 'grib',
+      'download_format': 'unarchived',
       'hyear': start_day.strftime("%Y"),
       'hmonth': start_day.strftime("%m"),
       'hydrological_model': 'lisflood',

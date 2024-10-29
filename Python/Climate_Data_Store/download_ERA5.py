@@ -20,7 +20,11 @@ c.retrieve(
         'variable': [
             '10m_u_component_of_wind', '10m_v_component_of_wind', '2m_dewpoint_temperature',
             '2m_temperature', 'mean_sea_level_pressure', 'sea_surface_temperature',
-            'total_precipitation',
+            'total_precipitation', 
+            'mean_surface_latent_heat_flux', 
+            'mean_surface_net_long_wave_radiation_flux', 
+            'mean_surface_net_short_wave_radiation_flux',
+            'mean_surface_sensible_heat_flux',
         ],
         'year': target_date.strftime("%Y"),
         'month': target_date.strftime("%m"),

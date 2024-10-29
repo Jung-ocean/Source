@@ -1,0 +1,106 @@
+clear; clc; close all
+
+mm_all = 4;
+ver = 'uv';
+ismap = 0;
+
+if strcmp(ver, 'transect')
+
+    main = 'Anadyr_Strait';
+    part1 = 'Navarin_Matthew';
+    part2 = 'Mattew_Lawrence';
+    part3 = 'Gulf_of_Anadyr';
+
+    filepath_all = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng/transect/';
+    straits = {main, part1, part2, part3};
+
+    for si = 1:length(straits)
+        strait = straits{si};
+        filepath = [filepath_all, strait, '/'];
+        filename = ['transport_', strait, '.mat'];
+        file = [filepath filename];
+        load(file)
+        trans = trans';
+    end
+
+elseif strcmp(ver, 'uv')
+    load transport_straits.mat
+   
+    trans_all(1,:) = trans(1,:);
+    trans_all(2,:) = trans(3,:);
+    trans_all(3,:) = -trans(4,:);
+    trans_all(4,:) = trans(2,:);
+    trans_all = trans_all*1e6;
+end
+timenum = [datenum(2019,1:12,1), datenum(2020,1:12,1), datenum(2021,1:12,1), datenum(2022,1:12,1)];
+
+%%%
+index = mm_all;
+for i = 1:4
+    sum_main(i) = sum(trans_all(1,[index]+(i-1)*12)/1e6);
+    sum_part1(i) = sum(trans_all(2,[index]+(i-1)*12)/1e6);
+    sum_part2(i) = sum(trans_all(3,[index]+(i-1)*12)/1e6);
+    sum_part3(i) = sum(trans_all(4,[index]+(i-1)*12)/1e6);
+end
+
+if ismap == 1
+g = grd('BSf');
+
+% Map plot
+figure;
+set(gcf, 'Position', [1 200 800 500])
+plot_map('Gulf_of_Anadyr', 'mercator', 'l');
+contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+% Anadyr Strait
+lonu_f = [-173.1215 -171.5040];
+latu_f = [64.5319 63.4801];
+plotm(latu_f, lonu_f, '-k', 'LineWidth', 4)
+% Gulf of Anadyr
+lonu_f = [-181.1100 -173.1215];
+latu_f = [62.7941 64.5319];
+plotm(latu_f, lonu_f, '-g', 'LineWidth', 4)
+% Cape Navarin-St.Matthew
+lonu_f = [-181.1100 -172.9703];
+latu_f = [62.7941 60.5403];
+plotm(latu_f, lonu_f, '-r', 'LineWidth', 4)
+% St.Lawrence-St.Matthew
+lonu_f = [-172.9703 -171.5040];
+latu_f = [60.5403 63.4801];
+plotm(latu_f, lonu_f, '-b', 'LineWidth', 4)
+print('map_straits', '-dpng')
+end
+
+% Bar plot
+ylimit = [-1.7 1.7];
+FS = 12;
+titles = {'Gulf of Anadyr', 'Anadyr Strait', 'Cape Navarin-St.Matthew', 'St.Lawrence-St.Matthew'};
+varis = {'sum_part3', 'sum_main', 'sum_part1', 'sum_part2'};
+colors = {'g', 'k', 'r', 'b'};
+
+figure;
+set(gcf, 'Position', [1 100 1300 800])
+t = tiledlayout(2,2);
+title(t, 'Mean volume transport', 'FontSize', 25)
+for i = 1:4
+    nexttile(i); hold on; grid on;
+    title(titles{i})
+    vari = eval(varis{i});
+    if i == 2
+        bar([2019:2022], -vari/length(index), colors{i});
+        ylim(-[ylimit(2) ylimit(1)])
+    else
+        bar([2019:2022], vari/length(index), colors{i});
+        ylim([ylimit])
+    end
+    xticks([2019:2022])
+    ylabel('Sv')
+    set(gca, 'FontSize', FS)
+end
+
+if length(mm_all) > 1
+    print(['transport_straits_ver_', ver, '_', num2str(mm_all(1)), '_', num2str(mm_all(end))], '-dpng')
+else
+    print(['transport_straits_ver_', ver, '_', num2str(mm_all)], '-dpng')
+end
+
+diff = (-sum_main + (sum_part1 + sum_part2 + sum_part3));

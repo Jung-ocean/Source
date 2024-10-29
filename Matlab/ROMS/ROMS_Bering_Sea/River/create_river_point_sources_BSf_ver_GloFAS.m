@@ -7,8 +7,8 @@ clear; clc
 % Nushagak, and Kvichak
 % The numbers from there are ...
 
-yyyy_all = 2017:2022;
-filepath = '/data/jungjih/Model/GloFAS/';
+yyyy_all = 2017:2023;
+filepath = '/data/jungjih/Models/GloFAS/';
 num_majors = 6;
 num_points = 92; % include num_majors i.e. total
 
@@ -149,7 +149,7 @@ for ir = 1:length(Riv)
     hlr(ir).hp =line(Grid.ln_r(riv(ir).indpt),Grid.lt_r(riv(ir).indpt));
     set(hlr(ir).hp,'LineStyle','none','Marker','p','color',[0 0.8 0]);
 end
-
+% print('river_source_points', '-dpng')
 
 % We have now identified our point sources.  Next we determine the
 % direction of outflow from that point source u or v.  and the magnitude
@@ -269,7 +269,7 @@ for it=1:length(times),
 end
 ncwrite(Fname,'river_transport',transp);
 
-
+ddd
 % Finally we need to write out the river temperature and the river
 % salinity.
 % Let's read in a time record from our simulation near the mouth of each

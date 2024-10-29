@@ -168,8 +168,8 @@ def main(output_directory, Base_Domain, hgridFileName, *args, **kwargs):
     database = 'tpxo'
     earth_tidal_potential = True
     sthconst = [[np.nan, np.nan]]
-    tobc = [0.5, 0.5]
-    sobc = [0.5, 0.5]
+    tobc = [0.01, 0.01]
+    sobc = [0.01, 0.01]
     
     '''
     bctides = Bctides(
@@ -355,13 +355,13 @@ def main(output_directory, Base_Domain, hgridFileName, *args, **kwargs):
 
 # ========================== Globals ========================== #
 # Main Paths:
-RunDir = '/data/jungjih/Models/SCHISM/test_schism/v2_SMS/'
+RunDir = '/data/jungjih/Models/SCHISM/test_schism/v2_JZ/'
 # Path to inputs:
 Base_Domain = RunDir
 hgridFileName =  'hgrid.gr3'
 # Path to outputs:
 SCHISM_RunDir = RunDir+'/gen_input/'
-case_tag = 'v2_SMS'
+case_tag = 'v2_JZ'
 
 # Secondary Paths:
 # SFLUX_SrcDir = RunDir+'/alaska_domain/' # used only if forcing option is sflux
@@ -373,8 +373,8 @@ VGRID_LSC2Path = RunDir+'/vgrid.in'
 # NOTE: Make sure you have TPXO files (h_tpxo9.v1.nc and u_tpxo9.v1.nc)
 # under ~/.local/share/tpxo/
 
-model_start_date = datetime(2018, 7, 1, 0, 0, 0) #Simulation start date in param.nml
-dt = 120.0  # time step in sec
+model_start_date = datetime(2019, 7, 1, 0, 0, 0) #Simulation start date in param.nml
+dt = 60.0  # time step in sec
 rnday = 153  # simulation length in days
 
 init_opt = 'hotstart'  # initialization option, can be: coldstart, hotstart
@@ -383,9 +383,8 @@ hotstart_file = '/data/sdurski/HYCOM_extract/Bering_Sea/2018/Time_Filtered/HYCOM
 # THe atmospheric forcing will be generated seperately
 atm_forc_opt = 'ERA5'  # forcing option, can be: GFS, HRRR, ERA5, sflux, None
 
-
 vgrid_type = 'LSC2'  # vertical coordinate case (2D, SZ, or LSC2)
-N_vert_lyr = 45  # number of vertical layers if 3D
+N_vert_lyr = 51  # number of vertical layers if 3D
 
 baro_type = 'baroclinic' # options: baroclinic (default), barotropic
 rough_type = 'drag' # options: drag, mannings_manual, none [drag.gr3, or rough.gr3 or manning.gr3 (default) that corresponds to nchi=0,1,-1] 

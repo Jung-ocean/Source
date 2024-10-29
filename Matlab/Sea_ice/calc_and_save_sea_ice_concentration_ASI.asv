@@ -1,0 +1,77 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Calculate and save sea ice concentration using ASI data
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+yyyy_all = 2012:2023;
+mm_all = 1:12;
+
+region = 'midshelf';
+
+filepath_monthly = '/data/jungjih/Observations/Sea_ice/ASI/monthly_ROMSgrid/';
+
+g = grd('BSf');
+lat = g.lat_rho;
+lon = g.lon_rho;
+h = g.h;
+dx = 1./g.pm; dy = 1./g.pn;
+mask = g.mask_rho./g.mask_rho;
+area = dx.*dy.*mask;
+
+switch region
+    case 'midshelf'
+        mask_Scott = load('/data/sdurski/ROMS_Setups/Initial/Bering_Sea/BSf_region_polygons.mat');
+        indbsb = mask_Scott.indeoshelf;
+        [row,col] = ind2sub([1460, 957], indbsb);
+        indmask = sub2ind([957, 1460], col, row); % transpose
+
+        mask_ind = NaN(size(mask));
+        mask_ind(indmask) = 1;
+
+        latind = find(g.lat_rho < 57.3 | g.lat_rho > 60.2);
+        mask_ind(latind) = NaN;
+        lonind = find(g.lon_rho > -163);
+        mask_ind(lonind) = NaN;
+
+        mask = mask.*mask_ind;
+        area = area.*mask_ind;
+end
+
+Fi = [];
+timenum = [];
+for yi = 1:length(yyyy_all)
+    yyyy = yyyy_all(yi); ystr = num2str(yyyy);
+
+    for mi = 1:length(mm_all)
+        mm = mm_all(mi); mstr = num2str(mm, '%02i');
+        timenum = [timenum; datenum(yyyy,mm,15)];
+
+        file = [filepath_monthly, 'asi-AMSR2-n6250-', ystr, mstr, '-v5.4.nc'];
+
+        if exist(file) == 0
+            Fi = [Fi; NaN];
+            continue
+        end
+
+        lon = ncread(file, 'longitude')';
+        lat = ncread(file, 'latitude')';
+        sic = ncread(file, 'z')';
+        
+        Fi_tmp = sum(sic(indmask).*area(indmask), 'omitnan')./sum(area(indmask), 'omitnan');
+        Fi = [Fi; Fi_tmp];
+
+        disp([ystr, mstr])
+    end % mi
+end % yi
+Fi = Fi/100;
+
+figure; hold on; grid on;
+plot(timenum, Fi, '-o')
+xticks(datenum(yyyy_all,1,15));
+datetick('x', 'yyyy')
+
+save(['Fi_ASI_', region, '.mat'], 'timenum', 'Fi')

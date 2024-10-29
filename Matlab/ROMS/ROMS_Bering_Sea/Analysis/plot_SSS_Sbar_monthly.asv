@@ -1,0 +1,157 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Plot ROMS SSS and SSSbar monthly
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+map = 'Gulf_of_Anadyr';
+
+vari_str = 'salt';
+yyyy_all = 2019:2022;
+mm = 8;
+mstr = num2str(mm, '%02i');
+
+remove_climate = 1;
+
+% Load grid information
+g = grd('BSf');
+
+filepath = ['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng/monthly/'];
+
+% Figure properties
+color = 'jet';
+climit_SSS = [29 34];
+climit_Sbar = [29 34];
+contour_interval = climit_SSS(1):0.5:climit_SSS(2);
+unit = 'psu';
+savename = 'SSS_and_Sbar';
+text1_lat = 65.9;
+text1_lon = -184.8;
+text2_lat = 65.9;
+text2_lon = -178;
+text_FS = 15;
+
+figure;
+set(gcf, 'Position', [1 200 1500 600])
+t = tiledlayout(2,4);
+% Figure title
+title(t, ['SSS and Sbar in ', datestr(datenum(0,mm,15), 'mmm')], 'FontSize', 25);
+
+for yi = 1:length(yyyy_all)
+    yyyy = yyyy_all(yi); ystr = num2str(yyyy);
+    title_str = datestr(datenum(yyyy,mm,1), 'mmm, yyyy');
+
+    filename = ['Dsm2_spng_', ystr, mstr, '.nc'];
+    file = [filepath, filename];
+    vari = ncread(file, 'salt'); 
+    vari = permute(vari, [3 2 1]);
+    zeta = ncread(file, 'zeta')';
+    
+    vari_surf = squeeze(vari(g.N,:,:));
+
+    z_w = zlevs(g.h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'w',2);
+    dz = z_w(2:end,:,:) - z_w(1:end-1,:,:);
+    vari_bar = squeeze(sum(vari.*dz,1)./sum(dz,1));
+
+    if remove_climate == 1
+        filepath_climate = ['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng/climate/'];
+        filename_climate = ['Dsm2_spng_climate_', mstr, '.nc'];
+        file_climate = [filepath_climate, filename_climate];
+        vari_climate = ncread(file_climate, 'salt'); 
+        vari_climate = permute(vari_climate, [3 2 1]);
+        zeta_climate = ncread(file_climate, 'zeta')';
+
+        vari_surf_climate = squeeze(vari_climate(g.N,:,:));
+
+        z_w = zlevs(g.h,zeta_climate,g.theta_s,g.theta_b,g.hc,g.N,'w',2);
+        dz = z_w(2:end,:,:) - z_w(1:end-1,:,:);
+        vari_bar_climate = squeeze(sum(vari_climate.*dz,1)./sum(dz,1));
+
+        vari_surf = vari_surf - vari_surf_climate;
+        vari_bar = vari_bar - vari_bar_climate;
+
+        climit = [-2 2];
+            interval = 0.5;
+            contour_interval = climit(1):interval:climit(2);
+            num_color = diff(climit)/interval;
+            color_tmp = redblue;
+            color = color_tmp(linspace(1,length(color_tmp),num_color),:);
+
+        color = 'redblue';
+        climit_SSS = [-2 2];
+        climit_Sbar = [-1 1];
+        title(t, ['SSS and Sbar anomaly (4 years) in ', datestr(datenum(0,mm,15), 'mmm')], 'FontSize', 25);        
+        savename = 'SSS_and_Sbar_anomaly';
+    end
+
+    % Surface plot
+    nexttile(yi); hold on;
+
+    plot_map(map, 'mercator', 'l')
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+
+% Convert lat/lon to figure (axis) coordinates
+        [x, y] = mfwdtran(lat2, lon2);  % Convert lat/lon to projected x, y coordinates
+        vari_sat(vari_sat < climit(1)) = climit(1);
+        vari_sat(vari_sat > climit(2)) = climit(2);
+        [cs, T] = contourf(x, y, vari_sat, contour_interval, 'LineColor', 'none');
+
+
+    T = pcolorm(g.lat_rho,g.lon_rho,vari_surf); shading flat
+    caxis(climit_SSS)
+    colormap(color)
+    uistack(T,'bottom')
+    plot_map(map, 'mercator', 'l')
+    vari_surf(isnan(vari_surf) == 1) = 0;
+    contourm(g.lat_rho, g.lon_rho, vari_surf, contour_interval, 'k');
+
+    textm(text1_lat, text1_lon, 'SSS', 'FontSize', text_FS)
+    textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+
+    if yi == 4
+        c = colorbar;
+        c.Layout.Tile = 'east';
+        c.Title.String = unit;
+    end
+
+%     if yyyy ~= 2018
+%         % Sea ice concentration
+%         filename_ice = ['Dsm2_spng_', ystr, msistr, '.nc'];
+%         file_ice = [filepath, filename_ice];
+%         aice_ice = ncread(file_ice, 'aice')';
+%         aice_ice(isnan(aice_ice) == 1) = 0;
+% 
+%         p = contourm(g.lat_rho, g.lon_rho, aice_ice, [cutoff, cutoff], color_ice, 'LineWidth', 2);
+%     end
+
+    % Surface plot
+    nexttile(yi+4); hold on;
+
+    plot_map(map, 'mercator', 'l')
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+
+    T = pcolorm(g.lat_rho,g.lon_rho,vari_bar); shading flat
+    caxis(climit_Sbar)
+    colormap(color)
+    uistack(T,'bottom')
+    plot_map(map, 'mercator', 'l')
+    vari_bar(isnan(vari_bar) == 1) = 0;
+    contourm(g.lat_rho, g.lon_rho, vari_bar, contour_interval, 'k');
+
+    textm(text1_lat, text1_lon, 'Sbar', 'FontSize', text_FS)
+    textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+
+%     if yi == 4
+%         c = colorbar;
+%         c.Title.String = unit;
+%     end
+  
+end % yi
+
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+
+print([savename, '_', mstr, '_monthly'],'-dpng');

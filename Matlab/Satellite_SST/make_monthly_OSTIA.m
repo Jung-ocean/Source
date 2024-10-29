@@ -7,7 +7,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc
 
-yyyy_all = 2018:2018;
+yyyy_all = 2022:2022;
 month_avg = [1:12];
 filename_header = 'OSTIA_';
 filename_footer = '';

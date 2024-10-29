@@ -1,0 +1,100 @@
+clear; clc; close all
+
+region = 'GOA';
+g = grd('BSf');
+days = 1;
+
+load(['saltBalance_', region, '.mat'])
+
+Sice = Ssurf - Satm;
+Uflux_river = Uflux_avg - Uflux_open_avg;
+Adv_river = (Uflux_river.*T_avg)./V_avg;
+
+timenum_his = t_his/60/60/24 + datenum(1968,5,23);
+timenum_avg = t_avg/60/60/24 + datenum(1968,5,23);
+
+% Area plot
+figure; hold on;
+set(gcf, 'Position', [1 200 800 500])
+plot_map('Bering', 'mercator', 'l');
+contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k')
+[c,h] = contourfm(grd.lat_rho, grd.lon_rho, mask_ave, [1 1], '--r', 'LineWidth', 2);
+set(h.Children(2), 'FaceColor', 'r')
+set(h.Children(2), 'FaceAlpha', 0.2)
+set(h.Children(3), 'FaceColor', 'none')
+print(['area_' region], '-dpng')
+
+% Check volume balance
+figure; hold on; grid on
+set(gcf, 'Position', [1 200 800 500])
+pv = plot(timenum_his, V_his, '-k', 'LineWidth', 2);
+pvcalc = plot(timenum_his, [V_his(1); V_his(1)-days*24*60*60*cumsum(Uflux_avg)], '--', 'Color', [0.4667 0.6745 0.1882], 'LineWidth', 2);
+xticks([datenum(2021,1:12,1)])
+xlim([datenum(2021,5,1) datenum(2021,7,1)])
+datetick('x', 'mmm, yyyy', 'keepticks', 'keeplimits')
+ylabel('Volume (m^3)')
+set(gca, 'FontSize', 15)
+l = legend([pv, pvcalc], 'Volume', 'Volume calculated from flux');
+l.FontSize = 20;
+l.Location = 'SouthOutside';
+l.NumColumns = 2;
+print(['chk_volumeBalance_' region], '-dpng')
+
+% Check salt balance
+figure; hold on; grid on;
+set(gcf, 'Position', [1 200 800 500])
+ptend = plot(timenum_avg, dTdt, '-k', 'LineWidth', 2);
+psurf = plot(timenum_avg, Ssurf, '-r');
+padv = plot(timenum_avg, Adv_opt, '-b');
+psum = plot(timenum_avg, Ssurf + Adv_opt, '--', 'Color', [0.4667 0.6745 0.1882], 'LineWidth', 2);
+xticks([datenum(2021,1:12,1)])
+xlim([datenum(2021,5,1) datenum(2021,7,1)])
+datetick('x', 'mmm, yyyy', 'keepticks', 'keeplimits')
+ylabel('psu/s')
+set(gca, 'FontSize', 15)
+l = legend([ptend, psurf, padv, psum], 'Tend', 'Ssflux', 'Hadv', 'Ssflux + Hadv');
+l.FontSize = 20;
+l.Location = 'SouthOutside';
+l.NumColumns = 4;
+print(['chk_saltBalance_' region], '-dpng')
+
+scale = days*24*60*60;
+% Salt balance
+figure; hold on; grid on;
+set(gcf, 'Position', [1 200 800 500])
+ptend = plot(timenum_avg, scale.*dTdt, '-k', 'LineWidth', 2);
+priver = plot(timenum_avg, scale.*Adv_river, '-b', 'LineWidth', 2);
+pice = plot(timenum_avg, scale.*Sice, '-', 'Color', [0.0588 1.0000 1.0000], 'LineWidth', 2);
+popen = plot(timenum_avg, scale.*Adv_open, '-r', 'LineWidth', 2);
+patm = plot(timenum_avg, scale.*Satm, 'Color', [0.7176 0.2745 1.0000], 'LineWidth', 2);
+presi = plot(timenum_avg, scale.*(dTdt - (Ssurf + Adv_opt)), '--k', 'LineWidth', 1);
+xticks([datenum(2021,1:12,1)])
+xlim([datenum(2021,5,1) datenum(2021,7,1)])
+datetick('x', 'mmm, yyyy', 'keepticks', 'keeplimits')
+ylabel('psu/day')
+set(gca, 'FontSize', 15)
+l = legend([ptend, priver, pice, popen, patm, presi], 'Tend', 'Adv (river)', 'Ice', 'Adv (open)', 'E-P', 'residual');
+l.FontSize = 20;
+l.Location = 'SouthOutside';
+l.NumColumns = 4;
+print(['saltBalance_' region], '-dpng')
+
+% if strcmp(region, 'GOA')
+%     % Ice and river
+%     figure; hold on; grid on
+%     set(gcf, 'Position', [1 200 800 500])
+%     plot(timenum_avg, aice_avg, '-k', 'LineWidth', 2);
+%     ylim([0 1])
+%     xticks([datenum(2021,1:12,1)])
+%     xlim([datenum(2021,5,1) datenum(2021,7,1)])
+%     datetick('x', 'mmm, yyyy', 'keepticks', 'keeplimits')
+%     ylabel('Sea ice concentration')
+%     yyaxis right
+%     ax = gca;
+%     set(ax, 'YColor', 'b')
+%     load ../discharge_Anadyr_2021.mat
+%     plot(datenum(2021,1,1):datenum(2021,12,31), dis_total, '-b', 'LineWidth', 2);
+%     ylabel('river discharge (m^3/s)')
+%     set(gca, 'FontSize', 15)
+%     print(['Ice_and_river_' region], '-dpng')
+% end
