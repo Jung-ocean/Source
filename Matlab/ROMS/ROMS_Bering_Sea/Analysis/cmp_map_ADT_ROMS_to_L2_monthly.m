@@ -1,19 +1,20 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Compare ROMS output seasonal averaged zeta to Satellite L2 monthly
+% Compare ROMS zeta to Satellite L2 monthly
 %
 % J. Jung
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
+exp = 'Dsm4';
 vari_str = 'zeta';
 yyyy_all = 2019:2022;
-mm = 5;
+mm = 9;
 
-region = 'Gulf_of_Anadyr';
+region = 'Bering';
 
-iswind = 1;
+iswind = 0;
 ERA5_filepath = '/data/jungjih/Models/ERA5/monthly/';
 interval_wind = 5;
 scale_wind = 0.8;
@@ -35,8 +36,7 @@ text_FS = 20;
 
 % Model
 filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
-case_control = 'Dsm2_spng';
-filepath_control = [filepath_all, case_control, '/monthly/'];
+filepath_control = [filepath_all, exp, '/monthly/'];
 
 % Satellite SSH Merged L2
 filepath_Merged = ['/data/jungjih/Observations/Satellite_SSH/Merged/Merged_MMv5.2_podaac/'];

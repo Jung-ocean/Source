@@ -7,20 +7,20 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all;
 
-yyyy = 2022;
+yyyy = 2021;
 mm_all = 1:6;
-isfig = 1;
+isfig = 0;
 region = 'Gulf_of_Anadyr';
 
-filepath = '/data/jungjih/Observations/Sea_ice/ICESat2/data/';
+filepath = '/data/jungjih/Observations/Sea_ice/ICESat2/SSHA/data/';
 
 if strcmp(region, 'Gulf_of_Anadyr')
     polygon = [;
-        -181.1407   62.6194
-        -173.5578   64.6246
-        -180.0089   66.2790
-        -184.7623   64.8251
-        -181.1407   62.6194
+        -180.9180   62.3790
+        -172.9734   64.3531
+        -178.7092   66.7637
+        -184.1599   64.8934
+        -180.9180   62.3790
         ];
 
     polygon2 = polygon;
@@ -127,5 +127,5 @@ for mi = 1:length(mm_all)
 
     end
 end
-df
+
 save(['ADT_ICESat2_', region, '_', ystr, '.mat'], 'ADT_ICESat2')

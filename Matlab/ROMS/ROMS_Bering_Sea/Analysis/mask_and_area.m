@@ -124,6 +124,19 @@ switch region
         mask = mask.*in./in;
         area = area.*mask;
 
+    case 'Norton_Sound'
+        polygon = [;
+            -166.3047   64.6603
+            -164.0475   62.6674
+            -160.0348   63.6554
+            -160.7155   65.0351
+            -166.3047   64.6603
+            ];
+
+        [in, on] = inpolygon(g.lon_rho, g.lat_rho, polygon(:,1), polygon(:,2));
+        mask = mask.*in./in;
+        area = area.*mask;
+
     case 'Trapezoid'
         polygon = [;
             -173.1215   64.5319

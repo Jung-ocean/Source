@@ -1,0 +1,38 @@
+clear; clc;
+
+filename_org = 'initial_1D_DP.nc';
+
+aice_value = 0.25; astr = num2str(aice_value*100, '%03i');
+hice_value = 2.00; hstr = num2str(hice_value*100, '%03i');
+
+filename = ['initial_1D_DP_aice_', astr, '_Hice_', hstr, '.nc'];
+copyfile(filename_org, filename)
+
+aice = ncread(filename, 'aice');
+aice = aice.*0 + aice_value;
+ncwrite(filename, 'aice', aice);
+
+hice = ncread(filename, 'hice');
+hice = hice.*0 + aice_value*hice_value;
+ncwrite(filename, 'hice', hice);
+
+temp = ncread(filename, 'temp');
+temp = temp.*0 + (-1.9);
+ncwrite(filename, 'temp', temp);
+
+ti = ncread(filename, 'ti');
+ti = ti.*0 + (-2.0);
+ncwrite(filename, 'ti', ti);
+
+salt = ncread(filename, 'salt');
+salt = salt.*0 + 32.5;
+ncwrite(filename, 'salt', salt);
+
+varis = {'uice', 'vice', 'ubar', 'vbar', 'zeta', 'u', 'v', 'w', 'ocean_time'};
+for vi = 1:length(varis)
+    vari = varis{vi};
+    vari_tmp = ncread(filename, vari);
+    vari_tmp = vari_tmp.*0;
+
+    ncwrite(filename, vari, vari_tmp);
+end

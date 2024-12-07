@@ -13,19 +13,22 @@ map = 'Bering';
 direction = 'a';
 if strcmp(direction, 'p')
 %     lines = 1:15; % pline
-    lines = 3:3;
-    xlimit = [175 190];
-    ylimit = [-30 30];
+    lines = 3:12;
+    lon_limit = 202.5;
+    ylimit = [-50 50];
 else
 %     lines = 1:24; % aline
-    lines = 8:8; % aline
-    lon_limit = 190;
-    ylimit = [-30 30];
+    lines = 4:13; % aline
+%     lon_limit = 190;
+    lon_limit = 202.5;
+%     ylimit = [-30 30];
+    ylimit = [-50 50];
 end
 
 yyyy_all = 2019:2022;
-mm = 6;
+mm = 11;
 
+ismap = 0;
 isQC = 0;
 iscut = 0; % Cut data points near the coastline 
 isfilter = 0;
@@ -54,6 +57,25 @@ for li = 1:length(lines)
     lon_line = ADT.lon{line}+360;
     lat_line = ADT.lat{line};
     
+    if ismap == 1
+        fm = figure;
+        set(gcf, 'Position', [1 200 800 500])
+        plot_map('Bering', 'mercator', 'l')
+        hold on;
+        contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+                
+        lon_map = lon_line;
+        lat_map = lat_line;
+        index = find(lon_line > lon_limit);
+        lon_map(index) = NaN;
+        lat_map(index) = NaN;
+
+        plotm(lat_map, lon_map, '-r', 'LineWidth', 4)
+
+        print(fm, ['map_', direction, 'line_', lstr], '-dpng')
+        close(fm)
+    end
+
     if strcmp(direction, 'p') == 1
     h_interp = interp2(g.lon_rho+360, g.lat_rho, g.h, lon_line, lat_line);
     dist = abs(h_interp - 200);
@@ -68,7 +90,7 @@ for li = 1:length(lines)
     for yi = 1:length(yyyy_all)
         yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
-        nexttile(yi); hold on; grid on;
+        nexttile(yi); cla; hold on; grid on;
             
         mstr = num2str(mm, '%02i');
             timenum = datenum(yyyy,mm,15);
@@ -125,6 +147,7 @@ for li = 1:length(lines)
                 plot(zeros(1,201)+lon_line(hindex), -100:100, 'Color', [.7 .7 .7], 'LineWidth', 4)
             end
 
+            if isQC == 1
             %             mean_obs = mean(ADT_obs_season, 'omitnan');
             %             std_obs = std(ADT_obs_season, 'omitnan');
             %             upper = mean_obs + std_obs;
@@ -135,6 +158,7 @@ for li = 1:length(lines)
             %             ADT_obs_mean = mean(ADT_obs_season, 'omitnan');
             %             ADT_obs_season(ADT_obs_season < ADT_obs_mean-0.4) = NaN;
             %             ADT_obs_season(ADT_obs_season > ADT_obs_mean+0.4) = NaN;
+            end
 
             if iscut == 1
                 ADT_obs_season(1:12) = NaN; % 50 km from the coast
@@ -160,23 +184,23 @@ for li = 1:length(lines)
                 pm = plot(lon_line, ADT_model_adj, 'Color', 'k', 'LineWidth', 2);
             end
 
-            if strcmp(direction, 'a')
-                xlim([min(lon_line)-0.5 lon_limit])
-            else
-                xlim(xlimit)
-            end
+            xlim([min(lon_line)-0.5 lon_limit])
             ylim(ylimit)
 
-            xticks = get(gca, 'XTick');
-            new_xticks = (xticks - 360);
-            set(gca, 'XTickLabel', new_xticks);
+%             xticks = get(gca, 'XTick');
+%             new_xticks = (xticks - 360);
+%             set(gca, 'XTickLabel', new_xticks);
 
             xlabel('Longitude')
             ylabel('cm')
 
             if yi == 1
             l = legend([po, pm], 'Satellite L2', 'ROMS');
-            l.Location = 'NorthWest';
+            if strcmp(direction, 'a')
+                l.Location = 'NorthWest';
+            else
+                l.Location = 'SouthEast';
+            end
             l.FontSize = 15;
             end
 

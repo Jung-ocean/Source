@@ -7,6 +7,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
+exp = 'Dsm4';
 vari_str = 'aice';
 yyyy_all = 2020:2020;
 mm_all = 2:2;
@@ -21,9 +22,9 @@ switch vari_str
 end
 
 % Model
-filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
-case_control = 'Dsm2_spng';
-filepath_control = [filepath_all, case_control, '/ncks/'];
+filepath_all = ['/data/sdurski/ROMS_BSf/Output/Multi_year/'];
+case_control = 'Dsm4';
+filepath_control = [filepath_all, case_control, '/'];
 
 % Load grid information
 g = grd('BSf');

@@ -9,17 +9,19 @@ clear; clc; close all
 
 map = 'Gulf_of_Anadyr';
 
+exp = 'Dsm4';
 vari_str = 'salt';
 yyyy_all = 2019:2022;
-mm = 8;
+mm = 7;
 mstr = num2str(mm, '%02i');
 
+isice = 0;
 remove_climate = 1;
 
 % Load grid information
 g = grd('BSf');
 
-filepath = ['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng/monthly/'];
+filepath = ['/data/jungjih/ROMS_BSf/Output/Multi_year/', exp, '/monthly/'];
 
 % Satellite
 lons_sat = {'lon', 'lon'};
@@ -43,7 +45,7 @@ text1_lat = 65.9;
 text1_lon = -184.8;
 text2_lat = 65.9;
 text2_lon = -178;
-text_FS = 20;
+text_FS = 15;
 
 figure;
 set(gcf, 'Position', [1 200 1500 900])
@@ -55,32 +57,42 @@ for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
     title_str = datestr(datenum(yyyy,mm,1), 'mmm, yyyy');
 
-    filename = ['Dsm2_spng_', ystr, mstr, '.nc'];
+    filename = [exp, '_', ystr, mstr, '.nc'];
     file = [filepath, filename];
     vari = ncread(file, 'salt', [1 1 g.N 1], [Inf Inf 1 Inf])';
 
     if remove_climate == 1
-        filepath_climate = ['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng/climate/'];
-        filename_climate = ['Dsm2_spng_climate_', mstr, '.nc'];
+        filepath_climate = ['/data/jungjih/ROMS_BSf/Output/Multi_year/', exp, '/climate/'];
+        filename_climate = [exp, '_climate_', mstr, '.nc'];
         file_climate = [filepath_climate, filename_climate];
         vari_climate = ncread(file_climate, 'salt', [1 1 g.N 1], [Inf Inf 1 Inf])';
 
         vari = vari - vari_climate;
 
-        color = 'redblue';
-        climit = [-1 1];
+        climit = [-2 2];
+        interval = 0.5;
+        contour_interval = climit(1):interval:climit(2);
+        num_color = diff(climit)/interval;
+        color_tmp = redblue;
+        color = color_tmp(linspace(1,length(color_tmp),num_color),:);
+
         title(t, ['SSSA with sea ice concentration (15%) in ', datestr(datenum(0,mm_sea_ice,1), 'mmm')], 'FontSize', 25);
         savename = 'SSSA';
         color_ice = 'g';
     end
 
     % ROMS plot
-    nexttile(yi); hold on;
+    nexttile(yi+8); hold on;
 
     plot_map(map, 'mercator', 'l')
     contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
 
-    T = pcolorm(g.lat_rho,g.lon_rho,vari); shading flat
+    %     T = pcolorm(g.lat_rho,g.lon_rho,vari_surf); shading flat
+    % Convert lat/lon to figure (axis) coordinates
+    [x, y] = mfwdtran(g.lat_rho, g.lon_rho);  % Convert lat/lon to projected x, y coordinates
+    vari(vari < climit(1)) = climit(1);
+    vari(vari > climit(2)) = climit(2);
+    [cs, T] = contourf(x, y, vari, contour_interval, 'LineColor', 'none');
     caxis(climit)
     colormap(color)
     uistack(T,'bottom')
@@ -90,13 +102,22 @@ for yi = 1:length(yyyy_all)
     textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
 
     if yyyy ~= 2018
+        if isice == 1
         % Sea ice concentration
-        filename_ice = ['Dsm2_spng_', ystr, msistr, '.nc'];
-        file_ice = [filepath, filename_ice];
-        aice_ice = ncread(file_ice, 'aice')';
-        aice_ice(isnan(aice_ice) == 1) = 0;
+            filename_ASI = ['asi-AMSR2-n6250-', ystr, msistr, '-v5.4.nc'];
+            file_ASI = [filepath_ASI, filename_ASI];
+            aice_ASI = ncread(file_ASI, 'z')'/100;
+            aice_ASI(isnan(aice_ASI) == 1) = 0;
 
-        p = contourm(g.lat_rho, g.lon_rho, aice_ice, [cutoff, cutoff], color_ice, 'LineWidth', 2);
+            p = contourm(g.lat_rho, g.lon_rho, aice_ASI, [cutoff, cutoff], color_ice, 'LineWidth', 2);
+        else
+            if remove_climate == 1
+                title(t, ['SSSA (ROMS = 4 years, SMAP & SMOS = 9 years) in July'], 'FontSize', 25);
+            else
+                title(t, ['SSS in ', datestr(datenum(0,mm_sea_ice,1), 'mmm')], 'FontSize', 25);
+            end
+            msistr = '00';
+        end
     end
 
 
@@ -129,13 +150,25 @@ for yi = 1:length(yyyy_all)
     end
     lon_sat = lon_sat - lons_360ind(si);
 
+    latind = find(40 < lat_sat & lat_sat <80);
+    lonind = find(-250 < lon_sat & lon_sat < -100);
+    lat_sat = lat_sat(latind);
+    lon_sat = lon_sat(lonind);
+    vari_sat = vari_sat(latind,lonind);
+    [lon2, lat2] = meshgrid(lon_sat, lat_sat);
+
     % SMAP plot
-    nexttile(yi+4); hold on;
+    nexttile(yi); hold on;
 
     plot_map(map, 'mercator', 'l')
     contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
 
-    T = pcolorm(lat_sat,lon_sat,vari_sat); shading flat
+    %         T = pcolorm(lat_sat,lon_sat,vari_sat); shading flat
+    % Convert lat/lon to figure (axis) coordinates
+    [x, y] = mfwdtran(lat2, lon2);  % Convert lat/lon to projected x, y coordinates
+    vari_sat(vari_sat < climit(1)) = climit(1);
+    vari_sat(vari_sat > climit(2)) = climit(2);
+    [cs, T] = contourf(x, y, vari_sat, contour_interval, 'LineColor', 'none');
     caxis(climit)
     colormap(color)
     uistack(T,'bottom')
@@ -144,13 +177,22 @@ for yi = 1:length(yyyy_all)
     textm(text1_lat, text1_lon, 'SMAP', 'FontSize', text_FS)
     textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
 
-    % Sea ice concentration
-    filename_ASI = ['asi-AMSR2-n6250-', ystr, msistr, '-v5.4.nc'];
-    file_ASI = [filepath_ASI, filename_ASI];
-    aice_ASI = ncread(file_ASI, 'z')'/100;
-    aice_ASI(isnan(aice_ASI) == 1) = 0;
+    if isice == 1
+        % Sea ice concentration
+        filename_ASI = ['asi-AMSR2-n6250-', ystr, msistr, '-v5.4.nc'];
+        file_ASI = [filepath_ASI, filename_ASI];
+        aice_ASI = ncread(file_ASI, 'z')'/100;
+        aice_ASI(isnan(aice_ASI) == 1) = 0;
 
-    p = contourm(g.lat_rho, g.lon_rho, aice_ASI, [cutoff, cutoff], color_ice, 'LineWidth', 2);
+        p = contourm(g.lat_rho, g.lon_rho, aice_ASI, [cutoff, cutoff], color_ice, 'LineWidth', 2);
+    else
+        if remove_climate == 1
+            title(t, ['SSSA (ROMS = 4 years, SMAP & SMOS = 9 years) in July'], 'FontSize', 25);
+        else
+            title(t, ['SSS in ', datestr(datenum(0,mm_sea_ice,1), 'mmm')], 'FontSize', 25);
+        end
+        msistr = '00';
+    end
 
 
     % SMOS SSS
@@ -187,13 +229,25 @@ for yi = 1:length(yyyy_all)
 
     lon_sat = lon_sat - lons_360ind(si);
 
+    latind = find(40 < lat_sat & lat_sat <80);
+    lonind = find(-250 < lon_sat & lon_sat < -100);
+    lat_sat = lat_sat(latind);
+    lon_sat = lon_sat(lonind);
+    vari_sat = vari_sat(latind,lonind);
+    [lon2, lat2] = meshgrid(lon_sat, lat_sat);
+
     % SMOS plot
-    nexttile(yi+8); hold on;
+    nexttile(yi+4); hold on;
 
     plot_map(map, 'mercator', 'l')
     contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
 
-    T = pcolorm(lat_sat,lon_sat,vari_sat); shading flat
+    %         T = pcolorm(lat_sat,lon_sat,vari_sat); shading flat
+    % Convert lat/lon to figure (axis) coordinates
+    [x, y] = mfwdtran(lat2, lon2);  % Convert lat/lon to projected x, y coordinates
+    vari_sat(vari_sat < climit(1)) = climit(1);
+    vari_sat(vari_sat > climit(2)) = climit(2);
+    [cs, T] = contourf(x, y, vari_sat, contour_interval, 'LineColor', 'none');
     caxis(climit)
     colormap(color)
     uistack(T,'bottom')
@@ -209,13 +263,22 @@ for yi = 1:length(yyyy_all)
         c.FontSize = 15;
     end
 
-    % Sea ice concentration
-    filename_ASI = ['asi-AMSR2-n6250-', ystr, msistr, '-v5.4.nc'];
-    file_ASI = [filepath_ASI, filename_ASI];
-    aice_ASI = ncread(file_ASI, 'z')'/100;
-    aice_ASI(isnan(aice_ASI) == 1) = 0;
+    if isice == 1
+        % Sea ice concentration
+        filename_ASI = ['asi-AMSR2-n6250-', ystr, msistr, '-v5.4.nc'];
+        file_ASI = [filepath_ASI, filename_ASI];
+        aice_ASI = ncread(file_ASI, 'z')'/100;
+        aice_ASI(isnan(aice_ASI) == 1) = 0;
 
-    p = contourm(g.lat_rho, g.lon_rho, aice_ASI, [cutoff, cutoff], color_ice, 'LineWidth', 2);
+        p = contourm(g.lat_rho, g.lon_rho, aice_ASI, [cutoff, cutoff], color_ice, 'LineWidth', 2);
+    else
+        if remove_climate == 1
+            title(t, ['SSSA (ROMS = 4 years, SMAP & SMOS = 9 years) in July'], 'FontSize', 25);
+        else
+            title(t, ['SSS in ', datestr(datenum(0,mm_sea_ice,1), 'mmm')], 'FontSize', 25);
+        end
+        msistr = '00';
+    end
 
 end % yi
 
