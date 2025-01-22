@@ -1,11 +1,3 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% Plot zeta (ROMS) with ice concentration (ROMS), 
-% ice velocity (ROMS) and wind (ERA5) daily
-%
-% J. Jung
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
 exp = 'Dsm4';
@@ -14,16 +6,10 @@ startdate = datenum(2018,7,1);
 
 yyyy_all = 2019:2022;
 
-mm = 4;
-dd = 30;
-
-isgray = 1;
-iszetaonly = 0;
+% mm = 3; % 4
+% dd = 10; % 30
 
 g = grd('BSf');
-dx=1./g.pm;
-dy=1./g.pn;
-area=dx.*dy;
 
 filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
 ERA5_filepath = '/data/sdurski/ROMS_Setups/Forcing/Atm/Bering_Sea/ERA5/';
@@ -38,7 +24,7 @@ switch map
                      
         text2_lat = 65.9;
         text2_lon = -178;
-        text_FS = 15;
+        text_FS = 12;
         
         color_ice = [1.0000 0.0745 0.6510];
         interval_ice = 30;
@@ -52,7 +38,7 @@ switch map
         % Adjust vector
         [scale_ice_value, scale_ice_v, lon_scl] = adjust_vector(scale_ice_lon, scale_ice_lat, scale_ice_value, 0);
 
-        color_wind = 'k';
+        color_wind = [0.0588 1.0000 1.0000];
         interval_wind = 6;
         scale_wind = 0.2;
         scale_wind_value = 3;
@@ -66,26 +52,29 @@ switch map
 end
 
 % Figure properties
-interval = 2.5;
-climit = [-40 10];
+interval = 0.1;
+climit = [0 1];
 contour_interval = climit(1):interval:climit(2);
 num_color = diff(climit)/interval;
-color = jet(num_color);
+color = gray(num_color);
+unit = '';
 cutoff_aice = 0.15;
-cutoff_hice = 0.1;
-unit = ['cm'];
 
-h1 = figure;
-set(gcf, 'Position', [1 200 1500 450])
-t = tiledlayout(1,4);
+figure;
+set(gcf, 'Position', [1 200 1800 900])
 
-if iszetaonly == 1
-    title(t, ['Sea level (color)'], 'FontSize', 20);
-    savename = 'zeta';
-else
-    title(t, ['Sea level (color) with ice concentration (white), ice velocity (magenta), and 10 m wind (black)'], 'FontSize', 20);
-    savename = 'zeta_w_aice_uvice_wind';
-end
+for mi = 1:3
+
+    if mi == 1
+        mm = 4;
+        dd = 2;
+    elseif mi == 2
+        mm = 4;
+        dd = 10;
+    else
+        mm = 4;
+        dd = 30;
+    end
 
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
@@ -97,7 +86,7 @@ for yi = 1:length(yyyy_all)
     vice_sum = zeros;
     for ti = 1:length(timenum_all)
         timenum = timenum_all(ti);
-        title_str = datestr(datenum(yyyy,mm,dd), 'mmm dd, yyyy');
+        title_str = [datestr(datenum(yyyy,mm,dd)-3, 'mmm dd'), '-', datestr(datenum(yyyy,mm,dd)+3, 'mmm dd')];
 
         filenum = timenum - startdate + 1;
         fstr = num2str(filenum, '%04i');
@@ -124,9 +113,9 @@ for yi = 1:length(yyyy_all)
     uice = uice_sum./length(timenum_all);
     vice = vice_sum./length(timenum_all);
 
-    vari = zeta*100;
+    vari = aice;
 
-    nexttile(yi); cla; hold on
+    subplot('Position', [.02+.15*(yi-1) .7-.3*(mi-1) .15 .25]); hold on;
     plot_map(map, 'mercator', 'l')
     contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
     
@@ -141,29 +130,7 @@ for yi = 1:length(yyyy_all)
     colormap(color)
     uistack(T,'bottom')
     plot_map(map, 'mercator', 'l')
-
-    if isgray == 1
-        T.FaceColor = [.3 .3 .3];
-        color_ice = [1.0000 0.0745 0.6510];
-        color_wind = [0.0588 1.0000 1.0000];
-        title(t, ['Ice concentration (white), ice velocity (magenta), and 10 m wind (cyan)'], 'FontSize', 20);
-    else
-        if yi == 4
-            c = colorbar;
-            c.Layout.Tile = 'east';
-            c.Title.String = unit;
-            c.Ticks = climit(1):5:climit(2);
-        end
-    end
-
-    if iszetaonly ~= 1
-    icf = aice;
-    icf(size(g.lat_rho,1),1)=0.5;
-    ind = find(isnan(icf)==1);
-    icf(ind)=0.0;
-    icf = icf*1.0;
-    set(T,'alphadata',1-icf,'AlphaDataMapping','none','facealpha','flat','edgecolor','none');
-
+   
     % Sea ice velocity plot
     skip = 1;
     npts = [0 0 0 0];
@@ -202,10 +169,10 @@ for yi = 1:length(yyyy_all)
     timenum_end = ot_end/60/60/24 + datenum(1968,5,23);
     mm_end = str2num(datestr(timenum_end, 'mm'));
     
+    tlength = zeros;
+    ERA5_uwind_sum = zeros;
+    ERA5_vwind_sum = zeros;
     if mm_first ~= mm_end
-        tlength = zeros;
-        ERA5_uwind_sum = zeros;
-        ERA5_vwind_sum = zeros;
         for mm_atm = mm_first:mm_end
             mstr_atm = num2str(mm_atm, '%02i');
             yyyy_mm = [ystr, '_', mstr_atm];
@@ -224,6 +191,23 @@ for yi = 1:length(yyyy_all)
             ERA5_uwind_sum = ERA5_uwind_sum + sum(ERA5_uwind(:,:,tindex),3)';
             ERA5_vwind_sum = ERA5_vwind_sum + sum(ERA5_vwind(:,:,tindex),3)';
         end
+    else
+        mstr_atm = num2str(mm_first, '%02i');
+        yyyy_mm = [ystr, '_', mstr_atm];
+        ERA5_filename = ['ERA5_', yyyy_mm, '_a.nc'];
+        ERA5_file = [ERA5_filepath, '/', ystr, '/', ERA5_filename];
+        ERA5_lon = double(ncread(ERA5_file, 'longitude'));
+        ERA5_lat = double(ncread(ERA5_file, 'latitude'));
+        ERA5_time = double(ncread(ERA5_file, 'time'));
+        ERA5_uwind = ncread(ERA5_file, 'u10');
+        ERA5_vwind = ncread(ERA5_file, 'v10');
+
+        ERA5_timenum = ERA5_time/24 + datenum(1900,1,1);
+        tindex = find(ERA5_timenum >= timenum_first -0.5 & ERA5_timenum < timenum_end +0.5);
+        tlength = tlength+length(tindex);
+
+        ERA5_uwind_sum = ERA5_uwind_sum + sum(ERA5_uwind(:,:,tindex),3)';
+        ERA5_vwind_sum = ERA5_vwind_sum + sum(ERA5_vwind(:,:,tindex),3)';
     end
     ERA5_uwind_daily = ERA5_uwind_sum./tlength;
     ERA5_vwind_daily = ERA5_vwind_sum./tlength;
@@ -262,20 +246,23 @@ for yi = 1:length(yyyy_all)
     if strcmp(map, 'Gulf_of_Anadyr')
         t1 = textm(text_ice_lat, text_ice_lon, 'Sea ice', 'Color', color_ice, 'FontSize', text_FS);
         t2 = textm(text_wind_lat, text_wind_lon, 'Wind', 'Color', color_wind, 'FontSize', text_FS);
-    else
-        title(['ROMS (', title_str, ')'])
     end
 
-    end % iszetaonly
-%     t3 = textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS);
-    t3 = textm(text2_lat, text2_lon-0.3, 'Apr 27-May 3', 'FontSize', text_FS);
+    t3 = textm(text2_lat+0.1, text2_lon-.6, [title_str], 'FontSize', 12);
+    t4 = textm(text2_lat-0.5, text2_lon+2.4, [ystr], 'FontSize', 12);
 
-    
-if yi == 4
-    t.Padding = 'compact';
-    t.TileSpacing = 'compact';
-end
+    if mi == 1 | mi == 2
+        mlabel off
+    end
+    if yi ~= 1
+        plabel off
+    end
 
 end % yi
+end % mi
 
-print([savename, '_', datestr(timenum, 'yyyymmdd'), '_7day_ma'], '-dpng')
+c = colorbar('Position', [.63 .1 .01 .85]);
+c.Title.String = unit;
+c.FontSize = 12;
+
+exportgraphics(gcf,'figure13.png','Resolution',150)

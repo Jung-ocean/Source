@@ -15,7 +15,7 @@ filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', ExpID, '/'];
 aveBoxName='GOA'; % 'ORE4346', 'SCA'
 issub = 0;
 
-yyyy_all = 2019:2022;
+yyyy_all = 2019:2021;
 mm_start = 1;
 mm_end = 8;
 startdate = datenum(2018,7,1);
@@ -49,7 +49,7 @@ polygon = [;
 [in, on] = inpolygon(lon_river, lat_river, polygon(:,1), polygon(:,2));
 
 rtrans_area = sum(rtrans(in,:),1);
-rtime_filenum = (datenum(1968,5,23) + rtime) - startdate + 1;
+rtime_filenum = (datenum(1968,5,23) + rtime) - startdate; % +1 if needed (check file number and ocean_time)
 %%%
 
 for yi = 1:length(yyyy_all)
