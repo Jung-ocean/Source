@@ -14,7 +14,7 @@ colors = {'0.9294 0.6941 0.1255', '0.4667 0.6745 0.1882', 'b', 'r'};
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
-    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/dia/ice_volume/ice_volume_Balance_', region, '_', ystr, '.mat']);
+    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/dia/ice_volume/ice_volume_Balance_', region, '_', ystr, '_new.mat']);
     
     dTdt_cumsum = [cumsum(dt.*dTdt)];
     thermo_cumsum = [cumsum(dt.*thermo)];
@@ -49,8 +49,8 @@ for yi = 1:length(yyyy_all)
 end
 plot([0 1e7], [0 1e7], '-k')
 axis equal
-xlim([0 5e6])
-ylim([0 5e6])
+xlim([0 6e6])
+ylim([0 6e6])
 xticks([0:1e6:5e6])
 yticks([0:1e6:5e6])
 xlabel('cumsum of thermodynamics from Jan 1 to Mar 31 (m^3)')

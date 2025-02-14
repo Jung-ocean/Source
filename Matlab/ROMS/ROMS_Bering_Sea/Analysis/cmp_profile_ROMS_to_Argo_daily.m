@@ -7,20 +7,24 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-plot_whole_map = 1;
+plot_whole_map = 0;
 
 % [30, 36, 46, 47, 54, 58, 59]
-Argo_num = 47;
-ispng = 1;
+Argo_num_all = [4 5 6 11 29 34 36 37 42 43 45 46 47 54 56 57 58 59 ...
+  64 68 73 84 89 96 102 128 133 ];
+
+for Ai = 11:length(Argo_num_all)
+
+Argo_num = Argo_num_all(Ai);
+ispng = 0;
 isgif = 1;
 
-exp = 'Dsm4_phi3m1';
+exp = 'Dsm4';
 
 % Model
 g = grd('BSf');
 startdate = datenum(2018,7,1);
-filepath_model = ['/data/jungjih/ROMS_BSf/Output/Multi_year/', exp, '/daily/'];
-% filepath_model = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
+filepath_model = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
 
 % Argo
 filepath = '/data/sdurski/Observations/ARGO/ARGO_drifters_BS/';
@@ -32,7 +36,7 @@ if plot_whole_map == 1
     f1 = figure; hold on;
     set(gcf, 'Position', [1 200 800 500])
     plot_map('Bering', 'mercator', 'l')
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 200 1000], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
 
     %caxis([datenum(2019,1,1) datenum(2022,5,1)])
     caxis([datenum(2015,7,1) datenum(2023,1,1)])
@@ -74,7 +78,7 @@ if plot_whole_map == 1
         delete(s);
     end % i
 end % plot_whole_map
-dd
+
 % Model vs Argo comparison
 profile = Arg(Argo_num).profile;
 WMO_num = Arg(Argo_num).profile_dir(end-15:end-9);
@@ -85,7 +89,7 @@ t = tiledlayout(1,2);
 
 nexttile(1);
 plot_map('Bering', 'mercator', 'l')
-contourm(g.lat_rho, g.lon_rho, g.h, [50 200], 'k');
+contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
 
 lon = []; lat = []; time = [];
 for pi = 1:length(profile)
@@ -138,6 +142,12 @@ for ti = 1:length(tindex)
         temp = permute(temp, [3 2 1]);
         salt = ncread(file, 'salt');
         salt = permute(salt, [3 2 1]);
+
+        if isempty(zeta)
+            zeta = NaN([size(g.lon_rho)]);
+            temp = NaN([g.N size(g.lon_rho)]);
+            salt = NaN([g.N size(g.lon_rho)]);
+        end
     end
 
     z = zlevs(g.h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'r',2);
@@ -157,11 +167,11 @@ for ti = 1:length(tindex)
     plot(ax1, profile(index).salt, -profile(index).pres, 'r', 'LineWidth', 2);
     plot(ax1, salt_model, z_model, '--r', 'LineWidth', 2);
     ax1.XColor = 'r';
-    xlim([31.5 35])
+    xlim([31 35])
     %ylim([-2500 0])
     ylim([-500 0])
-    xlabel('Salinity (PSU)')
-    ylabel('Pres (~Depth, m)')
+    xlabel('Salinity (psu)')
+    ylabel('Pres (~depth, dbar)')
 
     grid on
     ax1.GridColor = 'k';
@@ -184,7 +194,7 @@ for ti = 1:length(tindex)
     ax2.YTick = [];
     % ax2.YAxisLocation = 'right';
 %     ax2.Color = 'none';
-    xlim([-2 5])
+    xlim([0 14])
 %     ylim([-2500 0])
     ylim([-500 0])
     if ti == 1
@@ -213,3 +223,7 @@ if isgif == 1
     end
 end
 end % ti
+
+
+close all
+end % Ai

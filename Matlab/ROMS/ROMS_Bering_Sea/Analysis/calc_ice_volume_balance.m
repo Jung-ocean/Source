@@ -11,9 +11,9 @@ filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', ExpID, '/'];
 aveBoxName='GOA'; % 'ORE4346', 'SCA'
 issub = 0;
 
-yyyy_all = 2022:2022;
+yyyy_all = 2020:2022;
 mm_start = 1;
-mm_end = 1;
+mm_end = 7;
 startdate = datenum(2018,7,1);
 
 g = grd('BSf');
@@ -184,7 +184,8 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
 
   [aice_avg(it),A_avg]=aave(aice,dxdy,mask_ave);
 
-  thermo_tmp = dxdy.*(rhoice./rhoo).*(aice.*(wio-wai) + (1-aice).*wao + wfr);
+%   thermo_tmp = dxdy.*(rhoice./rhoo).*(aice.*(wio-wai) + (1-aice).*wao + wfr);
+  thermo_tmp = dxdy.*(rhoo./rhoice).*(aice.*(wio-wai) + (1-aice).*wao + wfr);
   [thermo(it),A_avg]=aave(thermo_tmp,dxdy,mask_ave);
 
   [xi_rho,eta_rho]=size(mask_ave);
@@ -222,8 +223,8 @@ plot(dTdt, '-k', 'LineWidth', 2);
 plot(thermo, '-r');
 plot(dyn, '-b');
 plot(thermo + dyn, '--m')
-ddd
-save(['ice_volume_Balance_', aveBoxName, '_', ystr, '.mat'], ...
+
+save(['ice_volume_Balance_', aveBoxName, '_', ystr, '_new.mat'], ...
     'grd', 'mask_ave', 'dxdy', ...
     't_his', 'T_his', 't_avg', 'T_avg', ...
     'dTdt', 'aice_avg', 'thermo', 'dyn')

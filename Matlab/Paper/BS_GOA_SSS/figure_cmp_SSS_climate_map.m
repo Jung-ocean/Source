@@ -53,7 +53,7 @@ plot_map(map, 'mercator', 'l')
 % vari(isnan(vari) == 1) = 0;
 % contourm(g.lat_rho, g.lon_rho, vari, contour_interval, 'k');
 
-title(['(c) ROMS climate SSS in Jul (2019-2022)'])
+title(['(c) ROMS clim. SSS in Jul (2019-2022)'])
 
 plabel off
 mlabel('FontSize', 12)
@@ -61,7 +61,7 @@ mlabel('FontSize', 12)
 % SMAP SSS
 si = 1;
 % RSS SMAP v6.0
-filepath_RSS_70 = ['/data/jungjih/Observations/Satellite_SSS/Global/RSS/v5.3/climate/'];
+filepath_RSS_70 = ['/data/jungjih/Observations/Satellite_SSS/Global/RSS/v6.0/climate/'];
 
 filepath_sat = filepath_RSS_70;
 filepattern1_sat = fullfile(filepath_sat, (['*climate_', mstr, '*.nc']));
@@ -100,7 +100,7 @@ colormap(color)
 uistack(T,'bottom')
 plot_map(map, 'mercator', 'l')
 
-title(['(a) SMAP climate SSS in Jul (2015-2023)'])
+title(['(a) SMAP clim. SSS in Jul (2015-2023)'])
 
 plabel('FontSize', 12)
 mlabel('FontSize', 12)
@@ -150,7 +150,7 @@ colormap(color)
 uistack(T,'bottom')
 plot_map(map, 'mercator', 'l')
 
-title(['(b) SMOS climate SSS in Jul (2015-2023)'])
+title(['(b) SMOS clim. SSS in Jul (2015-2023)'])
 
 c = colorbar('Position', [.86 .14 .01 .71]);
 c.Title.String = unit;

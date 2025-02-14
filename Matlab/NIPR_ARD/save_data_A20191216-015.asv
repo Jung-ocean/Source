@@ -1,6 +1,13 @@
 clear; clc
 
-filename = ['1-s2.0-S0079661121000823-mmc1.xlsx'];
+filepath = '/data/jungjih/Observations/NIPR_ARD/A20191216-015/';
+
+filenames1 = dir([filepath, 'C040_Leg3_CTDdata/*.asc']);
+filenames2 = dir([filepath, 'C040_Leg3_CTDdata/*.asc']);
+filenames = [filenames1; filenames2];
+
+for fi = 1:length(filenames)
+
 
 data_all = readtable(filename);
 
@@ -30,7 +37,6 @@ for i = 1:height(data_all)
 
         break
     else
-
 
         data1 = string(table2cell(data_all(i,1)));
         data2 = string(table2cell(data_all(i+1,1)));
@@ -80,19 +86,24 @@ polygon = [;
     ];
 
 for i = 1:length(data)
-    lon(i) = data(i).longitude-360;
+    stations{i} = data(i).station;
+   
+    lon(i) = data(i).longitude;
+    if lon(i) > 0
+        lon(i) = lon(i)-360;
+    end
     lat(i) = data(i).latitude;
+    timenum(i) = data(i).date;
+    depth(i) = max(data(i).pressure_db);
+    index = find(data(i).pressure_db == min(data(i).pressure_db));
+    SSS(i) = data(i).salt(index);
 end
 
-[in, on] = inpolygon(lon, lat, polygon(:,1), polygon(:,2));
-index = find(in);
+figure; plot_map('Gulf_of_Anadyr', 'mercator', 'l')
+s = scatterm(lat, lon, 50, SSS, 'filled', 'MarkerEdgeColor', 'k');
+colormap jet
+caxis([29 34])
+c = colorbar;
+textm(lat, lon, stations);
 
-for ii = index
-    datestr(data(ii).date)
-    salt(ii) = data(ii).salt(1);
-end
-salt(salt == 0) = [];
-SSS_mean = mean(salt);
-SSS_std = std(salt);
-
-save(['data_Nomura_etal_2021.mat'], 'data', 'SSS_mean', 'SSS_std');
+save(['data_Nomura_etal_2021.mat'], 'data', 'lat', 'lon', 'timenum', 'depth', 'SSS');

@@ -7,15 +7,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-region = 'Gulf_of_Anadyr';
+region = 'Nmidshelf_old';
 
 exp = 'Dsm4';
 vari_str = 'salt';
 yyyy_all = 2019:2022;
-mm_all = 8:8;
+mm_all = 1:12;
 layer = 45;
 
-ismap = 0;
+ismap = 1;
 isice = 0;
 aice_value = 0.4;
 
@@ -41,8 +41,8 @@ if ismap == 1
     
     figure; hold on;
     set(gcf, 'Position', [1 200 800 500])
-    plot_map('Gulf_of_Anadyr', 'mercator', 'l');
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k')
+    plot_map('Bering', 'mercator', 'l');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k')
     [c,h] = contourfm(g.lat_rho, g.lon_rho, mask_map, [1 1], '--r', 'LineWidth', 2);
     set(h.Children(2), 'FaceColor', 'r')
     set(h.Children(2), 'FaceAlpha', 0.2)

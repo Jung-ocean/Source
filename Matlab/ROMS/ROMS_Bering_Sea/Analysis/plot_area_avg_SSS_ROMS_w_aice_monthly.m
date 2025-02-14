@@ -12,7 +12,7 @@ yyyy_all = 2019:2022;
 mm_all = 1:12;
 layer = 45;
 
-region = 'Gulf_of_Anadyr';
+region = 'Smidshelf';
 
 % Load grid information
 g = grd('BSf');
@@ -44,8 +44,8 @@ switch vari_str
 end
 
 % Model
+case_control = 'Dsm4';
 filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
-case_control = 'Dsm2_spng';
 filepath_control = [filepath_all, case_control, '/monthly/'];
 
 timenum_all = NaN(length(yyyy_all)*12,1);

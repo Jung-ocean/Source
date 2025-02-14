@@ -7,13 +7,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-region = 'Gulf_of_Anadyr_common';
-% area_frac_cutoff = 0.99;
-area_frac_cutoff = 0.1;
+region = 'Smidshelf';
+area_frac_cutoff = 0.95;
+% area_frac_cutoff = 0.1;
 
 vari_str = 'salt';
 yyyy_all = 2015:2023;
-mm_all = 8;
+mm_all = 1:12;
 
 % Load grid information
 g = grd('BSf');
@@ -36,14 +36,14 @@ for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
     % Satellite SSS
-    % RSS SMAP v5.3 (https://catalog.data.gov/dataset/rss-smap-level-3-sea-surface-salinity-standard-mapped-image-8-day-running-mean-v5-0-valida-ce1a1)
-    filepath_RSS_70 = ['/data/jungjih/Observations/Satellite_SSS/Global/RSS/v5.3/monthly/', ystr, '/'];
+    % RSS SMAP v6.0
+    filepath_RSS_70 = ['/data/jungjih/Observations/Satellite_SSS/Global/RSS/v6.0/monthly/', ystr, '/'];
 
     lons_sat = 'lon';
     lons_360ind = [360];
     lats_sat = 'lat';
     varis_sat = 'sss_smap';
-    titles_sat = 'RSS SMAP L3 SSS v5.3 (70 km)';
+    titles_sat = 'RSS SMAP L3 SSS v6.0 (70 km)';
 
     % Satellite
     for mi = 1:length(mm_all)

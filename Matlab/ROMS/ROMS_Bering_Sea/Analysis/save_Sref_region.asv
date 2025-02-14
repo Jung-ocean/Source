@@ -13,23 +13,20 @@ mm_all = 1:8;
 filepath = '/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm4/';
 
 for yi = 1:length(yyyy_all)
-    yyyy = yyyy_all(yi); ystr = num2str(yyyy);
+    yyyy = yyyy_all(yi);
 
-    start_day=datenum(yyyy,mm_all(1),1)-1; % -1 because there is 12h delay of ocean_time in the output file
-    end_day=datenum(yyyy,mm_all(end)+1,1);
-    timenum_ref = start_day:end_day;
+        start_day=datenum(yyyy,mm_all(1),1)-1; % -1 because there is 12h delay of ocean_time in the output file
+        end_day=datenum(yyyy,mm_all(end)+1,1);
+        timeR = start_day:end_day;
 
-    ind_start = start_day - startdate;
-    ind_end = end_day - startdate;
+        ind_start = start_day - startdate;
+        ind_end = end_day - startdate;
 
-    i = 0;
-    Sref = NaN;
-    for fi = ind_start:ind_end
-        i = i+1;
-        filenum = fi;
-        fstr = num2str(filenum, '%04i');
-
-        filename = ['Dsm4_avg_', fstr, '.nc'];
+        for fi = ind_start:ind_end
+            filenum = fi;
+            fstr = num2str(fi, '%0')
+        
+        filename = ['Dsm2_spng_', yyyymm, '.nc'];
         file = [filepath, filename];
         zeta = ncread(file, 'zeta')';
         salt = ncread(file, 'salt');
@@ -50,10 +47,14 @@ for yi = 1:length(yyyy_all)
         TV=sum(salt.*dz.*area3d,'all');
         V=sum(dz.*area3d,'all');
         Tave=TV/V;
-
+        
         Sref(i) = Tave;
 
         disp(filename)
     end
-    save(['Sref_', region, '_', ystr, '.mat'], 'timenum_ref', 'Sref')
 end
+dd
+Sref(i) = NaN;
+timenum_ref = timenum;
+
+save(['Sref_', region, '.mat'], 'timenum_ref', 'Sref')

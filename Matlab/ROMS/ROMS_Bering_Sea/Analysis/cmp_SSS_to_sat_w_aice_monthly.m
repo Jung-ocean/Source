@@ -12,11 +12,11 @@ map = 'Gulf_of_Anadyr';
 exp = 'Dsm4';
 vari_str = 'salt';
 yyyy_all = 2019:2022;
-mm = 7;
+mm = 8;
 mstr = num2str(mm, '%02i');
 
 isice = 0;
-remove_climate = 1;
+remove_climate = 0;
 
 % Load grid information
 g = grd('BSf');
@@ -37,8 +37,11 @@ cutoff = 0.15; % 15 %
 color_ice = 'm';
 
 % Figure properties
-color = 'jet';
-climit = [30.5 33.5];
+climit = [29 34];
+interval = 0.25;
+contour_interval = climit(1):interval:climit(2);
+num_color = diff(climit)/interval;
+color = jet(num_color);
 unit = 'psu';
 savename = 'SSS';
 text1_lat = 65.9;
@@ -85,7 +88,7 @@ for yi = 1:length(yyyy_all)
     nexttile(yi+8); hold on;
 
     plot_map(map, 'mercator', 'l')
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
 
     %     T = pcolorm(g.lat_rho,g.lon_rho,vari_surf); shading flat
     % Convert lat/lon to figure (axis) coordinates
@@ -161,7 +164,7 @@ for yi = 1:length(yyyy_all)
     nexttile(yi); hold on;
 
     plot_map(map, 'mercator', 'l')
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
 
     %         T = pcolorm(lat_sat,lon_sat,vari_sat); shading flat
     % Convert lat/lon to figure (axis) coordinates
@@ -240,7 +243,7 @@ for yi = 1:length(yyyy_all)
     nexttile(yi+4); hold on;
 
     plot_map(map, 'mercator', 'l')
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
 
     %         T = pcolorm(lat_sat,lon_sat,vari_sat); shading flat
     % Convert lat/lon to figure (axis) coordinates
@@ -275,7 +278,7 @@ for yi = 1:length(yyyy_all)
         if remove_climate == 1
             title(t, ['SSSA (ROMS = 4 years, SMAP & SMOS = 9 years) in July'], 'FontSize', 25);
         else
-            title(t, ['SSS in ', datestr(datenum(0,mm_sea_ice,1), 'mmm')], 'FontSize', 25);
+            title(t, ['SSS in ', datestr(datenum(0,mm,1), 'mmm')], 'FontSize', 25);
         end
         msistr = '00';
     end
@@ -284,5 +287,5 @@ end % yi
 
 t.Padding = 'compact';
 t.TileSpacing = 'compact';
-fff
+
 print(['cmp_', savename, '_', mstr, '_with_aice_', msistr, '_monthly'],'-dpng');

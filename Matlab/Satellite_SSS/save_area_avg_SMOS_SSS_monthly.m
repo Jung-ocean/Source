@@ -7,13 +7,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-region = 'Gulf_of_Anadyr_common';
-% area_frac_cutoff = 0.99;
-area_frac_cutoff = 0.1;
+region = 'Smidshelf';
+area_frac_cutoff = 0.95;
+% area_frac_cutoff = 0.1;
 
 vari_str = 'salt';
 yyyy_all = 2010:2023;
-mm_all = 8;
+mm_all = 1:12;
 
 % Load grid information
 g = grd('BSf');

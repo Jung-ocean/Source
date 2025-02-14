@@ -22,7 +22,7 @@ switch vari_str
     case 'salt'
         climit = [31.5 33.5];
         cinterval = [30:.5:35];
-        unit = 'PSU';
+        unit = 'psu';
 end
 
 % Model

@@ -1,27 +1,33 @@
 % This is a script to extract data at a collection of sections from ROMS
 
 clear all
-addpath(genpath('/home/grindylow/sdurski/matlab_tools/ROMS_general_tools'));
+% addpath(genpath('/home/grindylow/sdurski/matlab_tools/ROMS_general_tools'));
 
-region = 'Line1';
-yyyy = 2021;
-mm = 1:2;
+exp = 'Dsm4';
+startdate = datenum(2018,7,1);
+region = 'Gulf_of_Anadyr_NE_SW';
+yyyy = 2022;
+mm = 1:8;
 
 ln_scl=110000;
 lt_scl=ln_scl.*cos(60/180*pi);
 
 % From ROMS
-file_i.dir='/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm2_spng';
-file_i.prefix='Dsm2_spng_avg';
+% file_i.dir='/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm4';
 %file_i=Rfile_collect_2(file_i,datenum(1968,5,23));
 %save(sprintf('%s/%s_file_info.mat',file_i.dir,file_i.prefix),'-v7.3','file_i');
-load(sprintf('%s/MAT_files/%s_file_info.mat',file_i.dir,file_i.prefix));
+% load(sprintf('%s/MAT_files/%s_file_info.mat',file_i.dir,file_i.prefix));
+% load ('/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm2_spng/MAT_files/Dsm2_spng_avg_file_info.mat');
 %file_i=file_F;
 load('/data/sdurski/ROMS_Setups/Grids/Bering_Sea/BeringSea_DsmV2_grid.mat');
 % file_i.dir='/home/jaguar/data7/sdurski/ROMS/Output/NE_P/FlN2/';
 % file_i.prefix='Flr4_avg';
+file_i.yyyy = yyyy;
+file_i.dir = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
+file_i.prefix='Dsm4_avg';
+file_i.exp = exp;
 
-start_day=datenum(yyyy,mm(1),1);
+start_day=datenum(yyyy,mm(1),1)-1; % -1 because there is 12h delay of ocean_time in the output file
 end_day=datenum(yyyy,mm(end)+1,1);
 
 % fname=char(sprintf('%s%s_0350.nc',file_i.dir,file_i.prefix))
@@ -39,9 +45,9 @@ end_day=datenum(yyyy,mm(end)+1,1);
 % varDim=[      3   3   3   ];
 % RvarDim={'u3d','v3d','p3d'};
 
-Rvarname={'u',   'v', 'zeta', 'sustr', 'svstr'};
-varDim=[   3      3     2        2        2];
-RvarDim={'u3d', 'v3d', 'r2d',  'u2d',   'v2d'  };
+Rvarname={'u',   'v',  'temp', 'salt', 'w',   'AKt',  'zeta', 'aice', 'sustr', 'svstr'};
+varDim=[   3      3     3       3       3       3        2       2       2        2];
+RvarDim={ 'u3d', 'v3d','r3d',  'r3d',  'w3d',  'r3d',  'r2d',  'r2d',  'u2d',   'v2d'};
 
 % 
 % Rvarname={'rel_vort'};
@@ -231,10 +237,10 @@ Rcount_v=[Grid.L Grid.M-1 Grid.N 1];
 % latu_f = [65 61.5];
 
 switch region
-    case 'Gulf_of_Anadyr'
-        Trans_label = 'Gulf_of_Anadyr';
-        lonu_f = [-181.1458 -173.4779];
-        latu_f = [62.7068 64.5947];
+    case 'Gulf_of_Anadyr_NE_SW'
+        Trans_label = 'Gulf_of_Anadyr_NE_SW';
+        lonu_f = [-180.9180 -172.9734];
+        latu_f = [62.3790 64.3531];
 
     case 'Bering_Strait'
         Trans_label = 'Bering_Strait';
@@ -514,17 +520,22 @@ for iss=1:length(Seg)
 end
 
     
-ind_start=find(file_i.times>=start_day);
-ind_end=find(file_i.times>=end_day);
-if isempty(ind_end)
-    ind_end=ind_start(end);
-    Nt=length(ind_start);
-else
-    Nt=ind_end(1)-ind_start(1)+1
-end
+% ind_start=find(file_i.times>=start_day);
+% ind_end=find(file_i.times>=end_day);
+% if isempty(ind_end)
+%     ind_end=ind_start(end);
+%     Nt=length(ind_start);
+% else
+%     Nt=ind_end(1)-ind_start(1)+1
+% end
 
 % for now just go from the start to however many records we have
-Nt=length(ind_start);
+% Nt=length(ind_start);
+
+ind_start = start_day - startdate;
+ind_end = end_day - startdate;
+Nt = length(ind_start:ind_end);
+
 % Preallocate space for the Field structure
 
 for iv=1:length(Rvarname),
@@ -555,12 +566,10 @@ Fld_intrp_w=scatteredInterpolant(G(iss).ln_wv, G(iss).lt_wv, G(iss).z_wv, ...
 Fld_intrp_p=scatteredInterpolant(G(iss).ln_pv, G(iss).lt_pv, G(iss).z_pv, ...
                                  zeros(size(Seg(iss).Rindx_nearby_pp))','linear');
 
-                             
-
 % Collect all the data along the transect
 % ROMS
-Ntt=ind_end(1)-ind_start(1);
-timeh=file_i.times(ind_start:ind_end);
+% Ntt=ind_end(1)-ind_start(1);
+% timeh=file_i.times(ind_start:ind_end);
 fprintf('Interpolation \n');
 
 % IN this iteration we send each field off as a batch job to a processor.
@@ -571,7 +580,8 @@ fprintf('Interpolation \n');
 % The next step in the optimization of this will be to identify the
 % smallest box that encloses the transect and only read in that chunk of
 % each field.
-time_ind_rng=ind_start(1):ind_end(1)-1;
+% time_ind_rng=ind_start(1):ind_end(1)-1;
+time_ind_rng=ind_start:ind_end;
 
 % only submit 5 batch jobs max, at a time
 tic;
@@ -675,7 +685,6 @@ if length(Rvarname)>10,
                 Job(iv).id=batch('interp_to_transect_v2d_nc',1, ...
                     {Seg,iss,time_ind_rng,file_i,[Grid.L Grid.M],...
                     Rvarname{iv},Fld_intrp_v2d},'Pool',3);
-
             case {'r3d'}
                 Job(iv).id=batch('interp_to_transect_r3d_nc',1, ...
                     {Seg,iss,time_ind_rng,file_i,[Grid.L Grid.M Grid.N],...
@@ -716,8 +725,9 @@ for iv=1:length(Rvarname),
 end
 
 % timeR=times;
- timeR=file_i.times(time_ind_rng); 
-fprintf('\n Done \n')  
+% timeR=file_i.times(time_ind_rng); 
+timeR = start_day:end_day;
+fprintf('\n Done \n')
 
 % calculate normal and tangential velocities (this depends on how we want
 % to define these directions relative to the orientation of the section
@@ -736,5 +746,4 @@ out_file = sprintf('%s_transect_ocean_vars_%s.mat', ...
                    Trans_label, num2str(yyyy));
 save(out_file,'-v7.3','Seg','Sec','timeR'); 
 
-rmpath(genpath('/home/grindylow/sdurski/matlab_tools/ROMS_general_tools'));
-
+% rmpath(genpath('/home/grindylow/sdurski/matlab_tools/ROMS_general_tools'));

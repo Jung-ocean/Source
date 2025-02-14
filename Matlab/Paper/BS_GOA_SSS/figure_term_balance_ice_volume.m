@@ -9,7 +9,7 @@ refdate = datenum(1968,5,23);
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
-    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/dia/ice_volume/ice_volume_Balance_', region, '_', ystr, '.mat']);
+    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/dia/ice_volume/ice_volume_Balance_', region, '_', ystr, '_new.mat']);
     
     dTdt_cumsum = [T_his(1); T_his(1)+cumsum(dt.*dTdt)];
     thermo_cumsum = [cumsum(dt.*thermo)];
@@ -42,7 +42,7 @@ subplot('Position', [.1 .7 .8 .25]); hold on; grid on
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
-    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/dia/ice_volume/ice_volume_Balance_', region, '_', ystr, '.mat']);
+    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/dia/ice_volume/ice_volume_Balance_', region, '_', ystr, '_new.mat']);
     dTdt_cumsum = [T_his(1); T_his(1)+cumsum(dt.*dTdt)];
 
     p(yi) = plot(movmean(dTdt_cumsum, day_movmean, 'Endpoints', 'fill'), 'LineWidth', 2, 'Color', colors{yi});
@@ -71,7 +71,7 @@ subplot('Position', [.1 .4 .8 .25]); hold on; grid on
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
-    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/dia/ice_volume/ice_volume_Balance_', region, '_', ystr, '.mat']);
+    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/dia/ice_volume/ice_volume_Balance_', region, '_', ystr, '_new.mat']);
     p(yi) = plot(movmean(dyn, day_movmean, 'Endpoints', 'fill'), 'LineWidth', 2, 'Color', colors{yi});
     xticks([datenum(0,1:7,1)])
     xlim([datenum(0,1,0) datenum(0,8,1)])
@@ -96,7 +96,7 @@ subplot('Position', [.1 .1 .8 .25]); hold on; grid on
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
-    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/dia/ice_volume/ice_volume_Balance_', region, '_', ystr, '.mat']);
+    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/dia/ice_volume/ice_volume_Balance_', region, '_', ystr, '_new.mat']);
     p(yi) = plot(movmean(thermo, day_movmean, 'Endpoints', 'fill'), 'LineWidth', 2, 'Color', colors{yi});
     xticks([datenum(0,1:7,1)])
     xlim([datenum(0,1,0) datenum(0,8,1)])

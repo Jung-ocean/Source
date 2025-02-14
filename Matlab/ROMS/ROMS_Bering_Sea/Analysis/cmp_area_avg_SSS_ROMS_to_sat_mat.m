@@ -8,8 +8,8 @@
 clear; clc; close all
 
 exp = 'Dsm4';
-region = 'Gulf_of_Anadyr_common';
-mm_all = 7;
+region = 'Nmidshelf_old';
+mm_all = 1:12;
 
 if length(mm_all) == 1
     title_str = datestr(datenum(0,mm_all,15), 'mmm');
@@ -48,7 +48,7 @@ for ni = 1:3%length(names)
     if ni == 3
         timenum = timenum(6:end);
         SSS = SSS(6:end);
-        err = err(6:end);
+%         err = err(6:end);
         legends = {'ROMS (4 years)', 'SMAP (9 years)', 'SMOS (9 years)'};
     end
 
@@ -56,8 +56,8 @@ for ni = 1:3%length(names)
         pmodel_surf = plot(timenum, SSS_surf, '-o', 'Color', colors{ni}, 'LineWidth', 2);
 %         pmodel_bot = plot(timenum, SSS_bot, '--', 'Color', colors{ni}, 'LineWidth', 2);
     else
-%         p(ni-1) = plot(timenum, SSS, '-o', 'Color', colors{ni}, 'LineWidth', 2);
-        p(ni-1) = errorbar(timenum, SSS, err, '-o', 'Color', colors{ni}, 'LineWidth', 2);
+        p(ni-1) = plot(timenum, SSS, '-o', 'Color', colors{ni}, 'LineWidth', 2);
+%         p(ni-1) = errorbar(timenum, SSS, err, '-o', 'Color', colors{ni}, 'LineWidth', 2);
     end
 end
 uistack(p(1), 'bottom')

@@ -7,15 +7,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-map = 'Gulf_of_Anadyr';
+map = 'Bering';
 
 vari_str = 'salt';
 yyyy_all = 2015:2023;
-mm = 6;
+mm = 8;
 mstr = num2str(mm, '%02i');
 
 isice = 0;
-remove_climate = 0;
+remove_climate = 1;
+issave = 1;
 
 climit = [29 34];
 interval = 0.25;
@@ -98,6 +99,10 @@ for yi = 1:length(yyyy_all)
         lon_sat = lon_sat(lonind);
         vari_sat = vari_sat(latind,lonind);
         [lon2, lat2] = meshgrid(lon_sat, lat_sat);
+
+        if issave == 1
+            save(['SMAP_SSSA_', datestr(datenum(yyyy,mm,1), 'yyyymm'), '.mat'], 'lon_sat', 'lat_sat', 'vari_sat')
+        end
 
         % Tile
         nexttile(yi); hold on;
