@@ -7,6 +7,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
+ismonthly = 1;
+
 files = {
     '/data/jungjih/Observations/Nomura_etal_2021/data_Nomura_etal_2021_2018.mat'
     '/data/jungjih/Observations/NIPR_ARD/A20191216-015/data_NIPR_ARD_2017.mat'
@@ -34,6 +36,8 @@ for fi = 1:length(files)
     timenum_SMOS = [];
     for ti = 1:length(timenum_all)
         timenum = floor(timenum_all(ti));
+        ystr = datestr(timenum, 'yyyy');
+        mstr = datestr(timenum, 'mm');
         timenum_SMOS(ti) = timenum;
 
         lat_mean = lat(ti);
@@ -52,8 +56,14 @@ for fi = 1:length(files)
         varis_sat = 'SSS';
         titles_sat = 'CEC SMOS L3 SSS v9.0';
 
-        filepath_sat = filepath_CEC;
-        filename_sat = ['SMOS_L3_DEBIAS_LOCEAN_AD_', datestr(timenum, 'yyyymmdd'), '_EASE_09d_25km_v09.nc'];
+        if ismonthly == 1
+            filepath_sat = ['/data/jungjih/Observations/Satellite_SSS/Global/CEC/v9/monthly/'];
+            filename_sat = ['SMOS_L3_DEBIAS_LOCEAN_AD_', ystr, mstr, '_EASE_09d_25km_v09.nc'];
+            timenum_SMOS(ti) = datenum(str2num(ystr), str2num(mstr), 15);
+        else
+            filepath_sat = filepath_CEC;
+            filename_sat = ['SMOS_L3_DEBIAS_LOCEAN_AD_', datestr(timenum, 'yyyymmdd'), '_EASE_09d_25km_v09.nc'];
+        end
         file_sat = [filepath_sat, filename_sat];
 
         numbers = [-1 1 -2 2 -3 3];
@@ -90,5 +100,9 @@ for fi = 1:length(files)
         disp([datestr(timenum, 'yyyymmdd...')])
     end % ti
 
-    save(['SSS_SMOS_' filename_obs, '.mat'], 'lat_SMOS', 'lon_SMOS', 'timenum_SMOS', 'SSS_SMOS', 'err_SMOS')
+        if ismonthly == 1
+            save(['SSS_SMOS_' filename_obs, '_monthly.mat'], 'lat_SMOS', 'lon_SMOS', 'timenum_SMOS', 'SSS_SMOS', 'err_SMOS')
+        else
+            save(['SSS_SMOS_' filename_obs, '.mat'], 'lat_SMOS', 'lon_SMOS', 'timenum_SMOS', 'SSS_SMOS', 'err_SMOS')
+        end
 end % fi

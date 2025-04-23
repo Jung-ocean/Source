@@ -27,8 +27,11 @@ varis_sat = {'sss_smap', 'SSS'};
 titles_sat = {'RSS SMAP SSS', 'CEC SMOS SSS'};
 
 % Figure properties
-color = 'jet';
-climit = [30.5 33.5];
+climit = [29 34];
+interval = 0.25;
+contour_interval = climit(1):interval:climit(2);
+num_color = diff(climit)/interval;
+color = jet(num_color);
 unit = 'psu';
 savename = 'SSS';
 text1_lat = 65.9;
@@ -69,7 +72,7 @@ for yi = 1:length(yyyy_all)
     plot_map(map, 'mercator', 'l')
     text(-0.16, 1.55, labels_ROMS{yi}, 'FontSize', 20)
 
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
 
     %     T = pcolorm(g.lat_rho,g.lon_rho,vari_surf); shading flat
     % Convert lat/lon to figure (axis) coordinates
@@ -130,7 +133,7 @@ for yi = 1:length(yyyy_all)
     plot_map(map, 'mercator', 'l')
     text(-0.16, 1.55, labels_SMAP{yi}, 'FontSize', 20)
 
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
 
     %         T = pcolorm(lat_sat,lon_sat,vari_sat); shading flat
     % Convert lat/lon to figure (axis) coordinates
@@ -197,7 +200,7 @@ for yi = 1:length(yyyy_all)
     plot_map(map, 'mercator', 'l')
     text(-0.16, 1.55, labels_SMOS{yi}, 'FontSize', 20)
 
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
 
     %         T = pcolorm(lat_sat,lon_sat,vari_sat); shading flat
     % Convert lat/lon to figure (axis) coordinates
@@ -224,4 +227,8 @@ c = colorbar('Position', [.66 .1 .01 .81]);
 c.Title.String = unit;
 c.FontSize = 12;
 ddd
-exportgraphics(gcf,'figure_SSSA_SMAP_SMOS_ROMS.png','Resolution',150) 
+if remove_climate == 1
+    exportgraphics(gcf,'figure_SSSA_SMAP_SMOS_ROMS.png','Resolution',150) 
+else
+    exportgraphics(gcf,'figure_SSS_SMAP_SMOS_ROMS.png','Resolution',150) 
+end

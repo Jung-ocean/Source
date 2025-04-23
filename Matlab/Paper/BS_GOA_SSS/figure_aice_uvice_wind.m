@@ -121,7 +121,7 @@ for yi = 1:length(yyyy_all)
     subplot('Position', [.05+.2*(mi-1) .55-.45*(yi-1) .2 .4]); hold on;
     plot_map(map, 'mercator', 'l')
     text(-0.16, 1.55, labels{li}, 'FontSize', 20)
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
     
     % Convert lat/lon to figure (axis) coordinates
     [x, y] = mfwdtran(g.lat_rho, g.lon_rho);  % Convert lat/lon to projected x, y coordinates

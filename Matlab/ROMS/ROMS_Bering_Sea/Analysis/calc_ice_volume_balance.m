@@ -11,7 +11,7 @@ filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', ExpID, '/'];
 aveBoxName='GOA'; % 'ORE4346', 'SCA'
 issub = 0;
 
-yyyy_all = 2020:2022;
+yyyy_all = 2019:2022;
 mm_start = 1;
 mm_end = 7;
 startdate = datenum(2018,7,1);
@@ -95,6 +95,7 @@ grd.lat_rho=lat_rho;
 grd.mask_rho=mask_rho;
 grd.h=h;
 mask_ave=customMask(aveBoxName,grd);
+num_grid = sum(mask_ave(:));
 
 fnums=fnumSTR:fnumEND;
 nf=length(fnums);
@@ -134,10 +135,11 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
  t1=ncread(fname,'ocean_time');
  hice = ncread(fname,'hice'); % m
  T = dxdy.*hice; % m^3; ice volume
-  
+ 
  % - inst V 
  % - area-ave T based on inst volume
  [T1,A1]=aave(T,dxdy,mask_ave);
+ T1 = T1.*num_grid;
  
  if it>0
   dTdt(it)=(T1-T0)/(t1-t0);
@@ -164,7 +166,7 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
   %                        theta_s,theta_b,Tcline);
   %   Hz=z_w(:,:,2:end)-z_w(:,:,1:end-1);
   z_r = zlevs(h,zeta_avg,theta_s,theta_b,Tcline,N,'r',Vtransform);
-  z_r_surf = squeeze(z_r(g.N,:,:));
+  z_r_surf = squeeze(z_r(:,:,g.N));
   
   pres_surf = sw_pres(abs(z_r_surf), lat_rho);
   rhoo = sw_pden_ROMS(SSS, SST, pres_surf, 0);
@@ -181,12 +183,14 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
   vice = double(ncread(fname,'vice')); % m/s
   
   [T_avg(it),A_avg]=aave(T,dxdy,mask_ave);
+  T_avg(it) = T_avg(it).*num_grid;
 
   [aice_avg(it),A_avg]=aave(aice,dxdy,mask_ave);
 
 %   thermo_tmp = dxdy.*(rhoice./rhoo).*(aice.*(wio-wai) + (1-aice).*wao + wfr);
   thermo_tmp = dxdy.*(rhoo./rhoice).*(aice.*(wio-wai) + (1-aice).*wao + wfr);
   [thermo(it),A_avg]=aave(thermo_tmp,dxdy,mask_ave);
+  thermo(it) = thermo(it).*num_grid;
 
   [xi_rho,eta_rho]=size(mask_ave);
 
@@ -215,6 +219,7 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
   Bflux=sum(sum(divU)); % volume flux outside the ave area, m3/s
 
   dyn(it) = -Bflux./A_avg;
+  dyn(it) = dyn(it).*num_grid;
  end
 end
 

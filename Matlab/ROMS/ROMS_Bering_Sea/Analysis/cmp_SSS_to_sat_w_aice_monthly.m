@@ -12,7 +12,7 @@ map = 'Gulf_of_Anadyr';
 exp = 'Dsm4';
 vari_str = 'salt';
 yyyy_all = 2019:2022;
-mm = 8;
+mm = 9;
 mstr = num2str(mm, '%02i');
 
 isice = 0;

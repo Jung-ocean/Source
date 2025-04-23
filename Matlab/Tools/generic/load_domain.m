@@ -2,7 +2,9 @@ function [lon, lat] = load_domain(casename)
 
 switch casename
     case 'US_west'
-        lon = [-140 -110]; lat = [28 55];
+        lon = [-129.9873 -122.1182]; lat = [40.6590 49.9874];
+    case 'WCOFS'
+        lon = [-147.5 -110]; lat = [17.5 57.5];
     case 'Bering_Arctic'
         lon = [-185 -155]; lat = [45 85];
     case 'Bering'

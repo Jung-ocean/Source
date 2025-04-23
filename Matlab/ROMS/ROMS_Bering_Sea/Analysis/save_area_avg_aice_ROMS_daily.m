@@ -5,13 +5,13 @@
 % J. Jung
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear; clc; close all
+clear; clc; %close all
 
-region = 'Gulf_of_Anadyr';
+region = 'M5_50km';
 
 exp = 'Dsm4';
 vari_str = 'aice';
-yyyy_all = 2019:2022;
+yyyy_all = 2019:2023;
 mm_all = 1:12;
 
 % Load grid information
@@ -50,14 +50,15 @@ for yi = 1:length(yyyy_all)
             filename_control = dir(filepattern_control);
             if ~isempty(filename_control)
                 file_control = [filepath_control, filename_control.name];
-                vari = ncread(file_control,'aice')';
-
-                aice_tmp = sum(vari(:).*area(:), 'omitnan')./sum(area(:), 'omitnan');
-
-                aice = [aice; aice_tmp];
+                vari = ncread(file_control,'aice');
+                if isempty(vari) == 1
+                    aice = [aice; NaN];
+                else
+                    aice_tmp = sum(vari(:).*area(:), 'omitnan')./sum(area(:), 'omitnan');
+                    aice = [aice; aice_tmp];
+                end
             else
                 aice = [aice; NaN];
-                continue
             end
 
             disp([ystr, mstr, dstr, '...'])
@@ -67,7 +68,7 @@ end % yi
 
 figure; hold on; grid on
 plot(timenum, aice, '-');
-xticks(datenum(yyyy_all,1,1));
+xticks([datenum(yyyy_all,6,1)]);
 xlim([datenum(yyyy_all(1),1,0) datenum(yyyy_all(end)+1,1,1)])
 datetick('x', 'yyyy', 'keepticks', 'keeplimits')
 

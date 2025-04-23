@@ -11,7 +11,7 @@ map = 'Gulf_of_Anadyr';
 
 exp = 'Dsm4';
 vari_str = 'salt';
-mm = 6;
+mm = 8;
 mstr = num2str(mm, '%02i');
 
 % Load grid information
@@ -39,7 +39,7 @@ figure;
 set(gcf, 'Position', [1 200 1300 430])
 t = tiledlayout(1,3);
 % Figure title
-title(t, ['Climate SSS in ', datestr(datenum(0,mm,15), 'mmm')], 'FontSize', 25);
+title(t, ['Clim. SSS in ', datestr(datenum(0,mm,15), 'mmm')], 'FontSize', 25);
 
 
 filename = [exp, '_climate_', mstr, '.nc'];
@@ -68,7 +68,7 @@ title(['ROMS (2019-2022)'])
 % SMAP SSS
 si = 1;
 % RSS SMAP v6.0
-filepath_RSS_70 = ['/data/jungjih/Observations/Satellite_SSS/Global/RSS/v5.3/climate/'];
+filepath_RSS_70 = ['/data/jungjih/Observations/Satellite_SSS/Global/RSS/v6.0/climate/'];
 
 filepath_sat = filepath_RSS_70;
 filepattern1_sat = fullfile(filepath_sat, (['*climate_', mstr, '*.nc']));

@@ -1,0 +1,64 @@
+<html><head><meta http-equiv="Content-Style-Type" content="text/html; charset=UTF-8" />
+<style type="text/css" media="all"> @import "m2html.css";</style>
+<title>jLab Help Files</title></head><body>
+<div><h1>jOceans is a module of <a href="jLab.html">jLab</a>.</h1></div><div class="fragment"><pre class="comment">
+  <a href="jOceans.html">jOceans</a>:  Oceanography-specific data and model analysis tools
+ 
+  Conversions for Lagrangian trajectories
+    <a href="latlon2uv.html">latlon2uv</a>   - Converts latitude and longitude to horizontal velocity.  
+    <a href="uv2latlon.html">uv2latlon</a>   - Integrates horizontal velocity to give latitude and longitude.  
+ 
+  Manipulating Lagrangian trajectories [see also jCell]
+    <a href="trajextract.html">trajextract</a>  - Extracts Lagrangian trajectory segments within given region.        
+    <a href="trajunwrap.html">trajunwrap</a>   - Unwraps Lagrangian trajectories from a periodic domain.              
+    <a href="trajwrap.html">trajwrap</a>     - Wraps Lagrangian trajectories to fit within a periodic domain.       
+    <a href="trajchunk.html">trajchunk</a>    - Chunks Lagrangian trajectories based on the Coriolis period.
+    <a href="griddrifters.html">griddrifters</a> - Average drifter velocities onto a space/time 3D grid.
+ 
+  Idealized numerical model tools
+    <a href="psi2fields.html">psi2fields</a>   - Velocity and other fields from the streamfunction. [with P.E. Isachsen]    
+    <a href="periodize.html">periodize</a>    - Returns a doubly periodic version of an input array.   
+ 
+  Lagrangian eddy identification and analysis
+    <a href="eddyridges.html">eddyridges</a>    - Coherent eddy ridges from Lagrangian trajectories.   
+    <a href="noisedrifters.html">noisedrifters</a> - Create a noise Lagrangian dataset matching mean and variance.
+    <a href="eddylevels.html">eddylevels</a>    - Eddy ridge significance levels using the survival function.
+ 
+  Eulerian eddy identification and analysis
+    <a href="inellipse.html">inellipse</a>    - Locates points on the interior of ellipses.                          
+    <a href="closedcurves.html">closedcurves</a> - Locate and interpolate closed curves in a possibly periodic domain.
+    <a href="curvemoments.html">curvemoments</a> - Centroid, area, and many other moments of a closed curve.          
+    <a href="divgeom.html">divgeom</a>      - Geometric decomposition of eddy vorticity flux divergence.     
+    <a href="eddyfit2d.html">eddyfit2d</a>    - Least squares fit of 2D velocity data to an eddy profile.
+    <a href="simpleddy.html">simpleddy</a>     - Streamfunction, velocity, and vorticity for various eddy profiles.
+ 
+  Plotting tools for mooring data
+    <a href="hodograph.html">hodograph</a>  - Generate <a href="hodograph.html">hodograph</a> plots (simple and fancy).                                   
+    <a href="provec.html">provec</a>     - Generate progressive vector diagrams (simple and fancy).             
+    <a href="stickvect.html">stickvect</a>  - Plots "stick vectors" for multicomponent velocity time series. 
+ 
+  Alongtrack altimetry tools
+    <a href="trackextract.html">trackextract</a>  - Extracts alongtrack altimetry segments within given region.
+ 
+  Wind-driven surface currents
+     <a href="windtrans.html">windtrans</a>  - Ekman-like transfer-functions for the wind-driven response.
+ 
+  NetCDF tools
+    <a href="ncinterp.html">ncinterp</a>    - One-line interpolation from 3D lat/lon/time field in NetCDF file.
+ 
+  Date and time
+    <a href="monthstats.html">monthstats</a>  - Mean month and standard deviation using circular statistics.
+ 
+  Topography tools and data
+    jtopo.mat   - One-sixth degree global topography, from Smith and Sandwell + IBCAO.              
+    <a href="topoplot.html">topoplot</a>    - Plot regional or global topography at one-sixth degree resolution.
+  
+  Low-level functions
+    <a href="besselktilde.html">besselktilde</a>  - K-type Bessel function after factoring off exponential decay.
+    <a href="besselitilde.html">besselitilde</a>  - I-type Bessel function after factoring off exponential growth.
+    <a href="curveinterp.html">curveinterp</a>  - Interpolate a field or its gradient onto a set of curves.           
+    <a href="orbitbreaks.html">orbitbreaks</a>  - Separate orbit into passes based on turning points.          
+    <a href="topo_copyright.html">topo_copyright</a> - Copyright statement for the Smith and Sandwell topography.
+ 
+   See also <a href="jData.html">jData</a>.
+</pre></div><h2><a href="jLab.html">contents</a>  |  <a href="jlab_allhelp.html">allhelp</a>  |  <a href="jlab_index.html">index</a></h2></body></html>

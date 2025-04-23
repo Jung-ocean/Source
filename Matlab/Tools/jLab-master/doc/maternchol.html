@@ -1,0 +1,54 @@
+<html><head><meta http-equiv="Content-Style-Type" content="text/html; charset=UTF-8" />
+<style type="text/css" media="all"> @import "m2html.css";</style>
+<title>jLab Help Files</title></head><body>
+<div><h1>MATERNCHOL is the <a href="jMatern.html">jMatern</a> module of <a href="jLab.html">jLab</a>.</h1></div><div class="fragment"><pre class="comment">
+ <a href="maternchol.html">MATERNCHOL</a>  Cholesky decomposition of Matern and fBm covariances. [with A. Sykulski]
+ 
+    <a href="maternchol.html">MATERNCHOL</a> is a low-level function called by <a href="maternoise.html">MATERNOISE</a>.
+ 
+    T=<a href="maternchol.html">MATERNCHOL</a>(DT,N,SIGMA,ALPHA,LAMBDA) returns the Cholesky 
+    decomposition of the N x N autocovariance matrix of a Matern process.
+ 
+    T=<a href="maternchol.html">MATERNCHOL</a>(DT,N,A,ALPHA,0) returns the Cholesky decomposition for
+    fractional Brownian motion.  In this case, the third input argument is
+    the spectral amplitude A, not the standard deviation SIGMA.
+    __________________________________________________________________
+ 
+    Extensions
+ 
+    Several extensions of the basic Matern form are supported, all of which
+    are discussed in more detail in <a href="maternspec.html">MATERNSPEC</a>.
+ 
+    Oscillatory Matern
+        T=<a href="maternchol.html">MATERNCHOL</a>(DT,N,SIGMA,ALPHA,LAMBDA,NU)
+    Generalized Matern (+ optional oscillations)
+        T=<a href="maternchol.html">MATERNCHOL</a>(DT,N,SIGMA,ALPHA,LAMBDA,GAMMA,'general') 
+        T=<a href="maternchol.html">MATERNCHOL</a>(DT,N,SIGMA,ALPHA,LAMBDA,GAMMA,NU,'general') 
+    Extended Matern  (+ optional oscillations)
+        T=<a href="maternchol.html">MATERNCHOL</a>(DT,N,SIGMA,ALPHA,LAMBDA,MU,'extended')
+        T=<a href="maternchol.html">MATERNCHOL</a>(DT,N,SIGMA,ALPHA,LAMBDA,MU,NU,'extended')
+    Composite Matern 
+        T=<a href="maternchol.html">MATERNCHOL</a>(DT,N,SIGMA,ALPHA,LAMBDA,MU,NU,'composite')
+    __________________________________________________________________
+ 
+    Non positive-definiteness adjustment
+ 
+    It can be the case that the covariance matrix is not positive definite 
+    to numerical precision, owing to very small eigenvalues, and this
+    will cause the Cholesky decomposition to fail.
+ 
+    In such cases, an identity matrix with a very small amplitude is added
+    to the covariance matrix in order to ensure numerical stability, and a
+    notification is issued.  The amplitude begins at 1e-16 and increases
+    by powers of ten until positive definiteness is attained.
+    __________________________________________________________________
+ 
+    '<a href="maternchol.html">maternchol</a> --t' runs a test.
+ 
+    Usage: T=<a href="maternchol.html">maternchol</a>(dt,N,sigma,alpha,lambda,nu);
+           T=<a href="maternchol.html">maternchol</a>(dt,N,sigma,alpha,lambda,mu,nu,'extended');
+    __________________________________________________________________
+    This is part of <a href="jLab.html">JLAB</a> --- type 'help jlab' for more information
+    (C) 2013--2020  A.M. Sykulski and J.M. Lilly
+                                  --- type 'help <a href="jlab_license.html">jlab_license</a>' for details
+</pre></div><h2><a href="jLab.html">contents</a>  |  <a href="jlab_allhelp.html">allhelp</a>  |  <a href="jlab_index.html">index</a></h2></body></html>

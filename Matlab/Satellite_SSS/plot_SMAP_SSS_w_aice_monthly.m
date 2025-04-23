@@ -11,12 +11,12 @@ map = 'Bering';
 
 vari_str = 'salt';
 yyyy_all = 2015:2023;
-mm = 8;
+mm = 12;
 mstr = num2str(mm, '%02i');
 
 isice = 0;
-remove_climate = 1;
-issave = 1;
+remove_climate = 0;
+issave = 0;
 
 climit = [29 34];
 interval = 0.25;

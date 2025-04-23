@@ -48,7 +48,7 @@ for yi = 1:length(yyyy_all)
     p(yi) = plot(movmean(dTdt_cumsum, day_movmean, 'Endpoints', 'fill'), 'LineWidth', 2, 'Color', colors{yi});
     xticks([datenum(0,1:7,1)])
     xlim([datenum(0,1,0) datenum(0,8,1)])
-    ylim([0 5e6])
+    ylim([0 1.2e11])
     datetick('x', 'mmm', 'keepticks', 'keeplimits')
     ylabel('m^3')
 
@@ -57,9 +57,9 @@ for yi = 1:length(yyyy_all)
 %     title(['(a) Sea ice volume (', num2str(day_movmean), '-day moving average)'])
     title(['(a) Sea ice volume'])
 end
-plot([datenum(0,4,2) datenum(0,4,2)], [0 1e7], '-k')
-plot([datenum(0,4,10) datenum(0,4,10)], [0 1e7], '-k')
-plot([datenum(0,4,30) datenum(0,4,30)], [0 1e7], '-k')
+plot([datenum(0,4,2) datenum(0,4,2)], [0 1e12], '-k')
+plot([datenum(0,4,10) datenum(0,4,10)], [0 1e12], '-k')
+plot([datenum(0,4,30) datenum(0,4,30)], [0 1e12], '-k')
 xticklabels('')
 box on
 
@@ -75,20 +75,20 @@ for yi = 1:length(yyyy_all)
     p(yi) = plot(movmean(dyn, day_movmean, 'Endpoints', 'fill'), 'LineWidth', 2, 'Color', colors{yi});
     xticks([datenum(0,1:7,1)])
     xlim([datenum(0,1,0) datenum(0,8,1)])
-    ylim([-3.5 3.5])
-    yticks(-3:1:3)
+    ylim([-8.5e4 8.5e4])
+    yticks(-8e4:2e4:8e4)
     datetick('x', 'mmm', 'keepticks', 'keeplimits')
     ylabel('m^3/s')
 
     set(gca, 'FontSize', 15)
 
 %     title(['(b) Advection (', num2str(day_movmean), '-day moving average)'])
-    title(['(b) Advection'])
+    title(['(b) Transport'])
 end
 plot(0:length(dyn)+1, zeros([1,length(dyn)+2]), '-k')
-plot([datenum(0,4,2) datenum(0,4,2)], [-4 4], '-k')
-plot([datenum(0,4,10) datenum(0,4,10)], [-4 4], '-k')
-plot([datenum(0,4,30) datenum(0,4,30)], [-4 4], '-k')
+plot([datenum(0,4,2) datenum(0,4,2)], [-10e4 10e4], '-k')
+plot([datenum(0,4,10) datenum(0,4,10)], [-10e4 10e4], '-k')
+plot([datenum(0,4,30) datenum(0,4,30)], [-10e4 10e4], '-k')
 xticklabels('')
 box on
 
@@ -100,8 +100,8 @@ for yi = 1:length(yyyy_all)
     p(yi) = plot(movmean(thermo, day_movmean, 'Endpoints', 'fill'), 'LineWidth', 2, 'Color', colors{yi});
     xticks([datenum(0,1:7,1)])
     xlim([datenum(0,1,0) datenum(0,8,1)])
-    ylim([-3.5 3.5])
-    yticks(-3:1:3)
+    ylim([-8.5e4 8.5e4])
+    yticks(-8e4:2e4:8e4)
     datetick('x', 'mmm', 'keepticks', 'keeplimits')
     ylabel('m^3/s')
 

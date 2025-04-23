@@ -11,15 +11,18 @@ map = 'Bering';
 
 vari_str = 'salt';
 yyyy_all = 2015:2023;
-mm = 8;
+mm = 12;
 mstr = num2str(mm, '%02i');
 
 isice = 0;
-remove_climate = 1;
-issave = 1;
+remove_climate = 0;
+issave = 0;
 
-color = 'jet';
-climit = [31.5 33.5];
+climit = [29 34];
+interval = 0.25;
+contour_interval = climit(1):interval:climit(2);
+num_color = diff(climit)/interval;
+color = jet(num_color);
 unit = 'psu';
 
 lons_sat = {'lon'};
@@ -144,7 +147,11 @@ for yi = 1:length(yyyy_all)
 
             p = contourm(g.lat_rho, g.lon_rho, aice_ASI, [cutoff, cutoff], color_ice, 'LineWidth', 2);
         else
-            title(t, [titles_sat, 'A'], 'FontSize', 25);
+            if remove_climate == 1
+                title(t, [titles_sat, 'A'], 'FontSize', 25);
+            else
+                title(t, [titles_sat], 'FontSize', 25);
+            end
             msistr = '00';
         end
     end

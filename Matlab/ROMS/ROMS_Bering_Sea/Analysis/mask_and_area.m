@@ -5,6 +5,18 @@ mask = g.mask_rho./g.mask_rho;
 area = dx.*dy.*mask;
 
 switch region
+    case 'M5_50km'
+        polygon = [;
+            -172.6098   59.4637
+            -170.8127   59.4637
+            -170.8127   60.3646
+            -172.6098   60.3646
+            -172.6098   59.4637
+            ];
+
+        [in, on] = inpolygon(g.lon_rho, g.lat_rho, polygon(:,1), polygon(:,2));
+        mask = mask.*in./in;
+        area = area.*mask;
     case 'eshelf'
         mask_Scott = load('/data/sdurski/ROMS_Setups/Initial/Bering_Sea/BSf_region_polygons.mat');
         indbsb = mask_Scott.indbsb;

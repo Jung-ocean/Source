@@ -87,7 +87,7 @@ for i = 1:length(k)
     dis_point_all = [dis_point_all; dis_point];
 end
 p = plot(lon_point_all, lat_point_all, 'xr');
-print(['01_GloFAS_all_river_source_points_', ystr],'-dpng')
+% print(['01_GloFAS_all_river_source_points_', ystr],'-dpng')
 
 dis_hist = dis_point_all;
 pd = fitdist(log10(dis_hist(:)),'Normal');
@@ -96,11 +96,11 @@ histfit(log10(dis_hist(:))); % Default nbin value is the square root of the numb
 plot(zeros(1,201)+(pd.mu-pd.sigma), [0:200], '--k', 'LineWidth', 2)
 xlabel('River discharge [log_1_0 m^3/s]')
 ylabel('Frequency')
-print(['02_GloFAS_river_discharge_hist_', ystr],'-dpng')
+% print(['02_GloFAS_river_discharge_hist_', ystr],'-dpng')
 
 cutoff = 10^(pd.mu-pd.sigma);
 index = find(dis_point_all > cutoff);
-
+ddddd
 figure(f1); shading faceted;
 delete(p);
 plot(lon_point_all(index), lat_point_all(index), 'xr')

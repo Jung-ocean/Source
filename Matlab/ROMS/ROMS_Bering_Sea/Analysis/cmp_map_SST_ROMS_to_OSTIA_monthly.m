@@ -7,22 +7,25 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
+exp = 'Dsm4';
 vari_str = 'SST';
 yyyy_all = 2019:2022;
-mm = 5;
+mm = 7;
 
 region = 'Gulf_of_Anadyr';
 
-iswind = 1;
+iswind = 0;
 ERA5_filepath = '/data/jungjih/Models/ERA5/monthly/';
 interval_wind = 5;
 scale_wind = 0.8;
 
 switch vari_str
     case 'SST'
-        climit_model = [2 12];
-        climit_sat = climit_model;
-
+        climit = [4 12];
+        interval = .5;
+        contour_interval = climit(1):interval:climit(2);
+        num_color = diff(climit)/interval;
+        color = jet(num_color);
         unit = '^oC';
 end
 
@@ -30,12 +33,11 @@ text1_lat = 65.9;
 text1_lon = -184.8;
 text2_lat = 65.9;
 text2_lon = -178;
-text_FS = 20;
+text_FS = 15;
 
 % Model
 filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
-case_control = 'Dsm2_spng';
-filepath_control = [filepath_all, case_control, '/monthly/'];
+filepath_control = [filepath_all, exp, '/monthly/'];
 
 % OSTIA
 obs_filepath = ['/data/jungjih/Observations/Satellite_SST/OSTIA/monthly/'];
@@ -54,7 +56,7 @@ for yi = 1:length(yyyy_all)
     mstr = num2str(mm, '%02i');
     timenum = datenum(yyyy,mm,15);
 
-    filename = [case_control, '_', ystr, mstr, '.nc'];
+    filename = [exp, '_', ystr, mstr, '.nc'];
     file = [filepath_control, filename];
     if ~exist(file)
         vari = NaN;
@@ -68,17 +70,23 @@ for yi = 1:length(yyyy_all)
     nexttile(yi)
     plot_map(region, 'mercator', 'l')
     hold on;
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
 
-    T(1) = pcolorm(g.lat_rho,g.lon_rho,vari); shading flat
-    uistack(T(1),'bottom')
-    caxis(climit_model)
-    plot_map(region, 'mercator', 'l')
+    % Convert lat/lon to figure (axis) coordinates
+    [x, y] = mfwdtran(g.lat_rho, g.lon_rho);  % Convert lat/lon to projected x, y coordinates
+    vari(vari < climit(1)) = climit(1);
+    vari(vari > climit(2)) = climit(2);
+    [cs, T] = contourf(x, y, vari, contour_interval, 'LineColor', 'none');
+    caxis(climit)
+    colormap(color)
+    uistack(T,'bottom')
+    %     plot_map(map, 'mercator', 'l')
+
     if yi == 1
         c = colorbar;
         c.Layout.Tile = 'east';
         c.Title.String = unit;
-%         c.Ticks = climit_model(1):4:climit_model(end);
+        %         c.Ticks = climit_model(1):4:climit_model(end);
         c.FontSize = 15;
     end
     textm(text1_lat, text1_lon, 'ROMS', 'FontSize', text_FS)
@@ -114,27 +122,37 @@ for yi = 1:length(yyyy_all)
     obs_filename = ['OSTIA_', ystr, mstr, '.nc'];
     obs_file = [obs_filepath, obs_filename];
 
-    lon_obs = double(ncread(obs_file, 'lon'));
-    lat_obs = double(ncread(obs_file, 'lat'));
-    vari_obs = ncread(obs_file, 'analysed_sst')' - 273.15; % K to dec C
+    lon_sat = double(ncread(obs_file, 'lon'));
+    lat_sat = double(ncread(obs_file, 'lat'));
+    vari_sat = ncread(obs_file, 'analysed_sst')' - 273.15; % K to dec C
 
-    index1 = find(lon_obs < 0);
-    index2 = find(lon_obs > 0);
+    index1 = find(lon_sat < 0);
+    index2 = find(lon_sat > 0);
 
-    lon_obs = [lon_obs(index2)-360; lon_obs(index1)];
-    vari_obs = [vari_obs(:,index2) vari_obs(:,index1)];
+    lon_sat = [lon_sat(index2)-360; lon_sat(index1)];
+    vari_sat = [vari_sat(:,index2) vari_sat(:,index1)];
 
     % Tile
     nexttile(4+yi);
 
     plot_map(region, 'mercator', 'l')
     hold on;
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
 
-    T(2) = pcolorm(lat_obs, lon_obs, vari_obs); shading flat
-    uistack(T(2),'bottom')
-    caxis(climit_sat)
-    plot_map(region, 'mercator', 'l')
+    latind = find(40<lat_sat & lat_sat <80);
+    lonind = find(-250<lon_sat & lon_sat <-100);
+    lat_sat = lat_sat(latind);
+    lon_sat = lon_sat(lonind);
+    vari_sat = vari_sat(latind,lonind);
+    [lon2, lat2] = meshgrid(lon_sat, lat_sat);
+    [x, y] = mfwdtran(lat2, lon2);  % Convert lat/lon to projected x, y coordinates
+    vari_sat(vari_sat < climit(1)) = climit(1);
+    vari_sat(vari_sat > climit(2)) = climit(2);
+    [cs, T] = contourf(x, y, vari_sat, contour_interval, 'LineColor', 'none');
+    caxis(climit)
+    colormap(color)
+    uistack(T,'bottom')
+    %     plot_map(region, 'mercator', 'l')
 
     textm(text1_lat, text1_lon, 'OSTIA', 'FontSize', text_FS)
     textm(text2_lat, text2_lon, datestr(timenum, 'mmm, yyyy'), 'FontSize', text_FS)

@@ -1,0 +1,100 @@
+<html><head><meta http-equiv="Content-Style-Type" content="text/html; charset=UTF-8" />
+<style type="text/css" media="all"> @import "m2html.css";</style>
+<title>jLab Help Files</title></head><body>
+<div><h1>MATERNSPEC is the <a href="jMatern.html">jMatern</a> module of <a href="jLab.html">jLab</a>.</h1></div><div class="fragment"><pre class="comment">
+ <a href="maternspec.html">MATERNSPEC</a>  Fourier spectrum of the Matern random process and variations.
+  
+    [F,S]=<a href="maternspec.html">MATERNSPEC</a>(DT,N,SIGMA,ALPHA,LAMBDA) returns the spectrum S of a  
+    length N real-valued or complex-valued Matern random process having 
+    variance SIGMA^2, slope parameter ALPHA, and damping parameter LAMBDA.
+ 
+    DT is the sample interval.  Note that LAMBDA is understood to have the
+    same units as the inverse sample interval 1/DT.
+ 
+    F is an array of one-sided (positive) Fourier frequencies for a time
+    series of length N, F=<a href="fourier.html">FOURIER</a>(N), where F is a *radian* frequency. 
+ 
+    The lengths of the output variables F and S are N/2+1 for even N, and
+    (N+1)/2 for odd N.
+      
+    S is the postive or negative rotary spectrum given by
+ 
+         S(F) = SIGMA^2 / (F^2+LAMBDA^2)^ALPHA 
+                            * LAMBDA^(2*ALPHA-1) / C
+ 
+    where C is a normalizing constant dependent upon ALPHA.  Note that the
+    positive and negative spectra are identical for this process.
+ 
+    For LAMBDA=0, the Matern spectrum reduces to the spectrum of fractional
+    Brownian motion.  
+ 
+    For details on the Matern process and its spectrum, see:
+ 
+      Lilly, Sykulski, Early, and Olhede, (2017).  Fractional Brownian
+         motion, the Matern process, and stochastic modeling of turbulent 
+         dispersion.  Nonlinear Processes in Geophysics, 24: 481--514.
+    __________________________________________________________________
+ 
+    Matrix and cell array output
+ 
+    [F,S]=<a href="maternspec.html">MATERNSPEC</a>(DT,N,SIGMA,ALPHA,LAMBDA) where N is a scalar while the
+    other input arguments are all either scalars or arrays of the same 
+    length M, gives an output spectra S with LENGTH(F) rows and M columns. 
+ 
+    [F,S]=<a href="maternspec.html">MATERNSPEC</a>(DT,N,SIGMA,ALPHA,LAMBDA) where N is an array of M 
+    different lengths, returns F and S that are length M cell arrays.  Then 
+    SIGMA, ALPHA, and LAMBDA may all either be scalars or length M arrays.
+ 
+    This latter format is convenient for generating sets of spectra that 
+    do not all have the same size. 
+ 
+    When N is an array, <a href="maternspec.html">MATERNSPEC</a>(...,'parallel') parallelizes the 
+    computation of the various spectra using a PARFOR loop.  This option
+    requires that Matlab's Parallel Computing Toolbox be installed.
+ 
+    The matrix and cell array formats also work for the variations of the 
+    Matern process described below. 
+    __________________________________________________________________
+ 
+    Oscillatory Matern
+ 
+    [F,SPP,SNN]=<a href="maternspec.html">MATERNSPEC</a>(DT,N,SIGMA,ALPHA,LAMBDA,NU) with six input 
+    arguments modifies the spectrum to have a rotation frequency NU. 
+ 
+    This is accomplished by shifting the spectrum to be centered on F=NU 
+    rather than F=0.  SPP and SNN are now the postive rotary and negative
+    rotary spectra, with the spectrum for positive frequencies +F returned
+    in SPP, and for negative frequencies -F in SNN.  
+ 
+    With ALPHA=1, the oscillatory Matern becomes the complex Ornstein-
+    Uhlenbeck process.
+ 
+    Note that NU has units of radians per sample interval DT.
+ 
+    The oscillatory Matern is described in Lilly et al. (2017).
+    __________________________________________________________________
+ 
+    Real-valued processes
+ 
+    By default MATERSPEC returns the spectrum of a complex-valued process. 
+ 
+    <a href="maternspec.html">MATERNSPEC</a>(...,'real') instead returns the spectrum of a real-valued
+    process. This also works with any of extended versions described above.
+ 
+    In this case, the rotary spectra SPP and SNN be forced to be the same 
+    in models that return them.
+    __________________________________________________________________
+ 
+    See also <a href="materncov.html">MATERNCOV</a>, <a href="maternimp.html">MATERNIMP</a>, <a href="maternoise.html">MATERNOISE</a>, <a href="maternfit.html">MATERNFIT</a>, <a href="blurspec.html">BLURSPEC</a>.
+ 
+    '<a href="maternspec.html">maternspec</a> --f' generates some sample figures.
+ 
+    Tests for <a href="maternspec.html">MATERNSPEC</a> can be found in <a href="materncov.html">MATERNCOV</a>.
+ 
+    Usage:  [f,s]=<a href="maternspec.html">maternspec</a>(dt,N,sigma,alpha,lambda);
+            [f,spp,snn]=<a href="maternspec.html">maternspec</a>(dt,N,sigma,alpha,lambda);
+            [f,spp,snn]=<a href="maternspec.html">maternspec</a>(dt,N,sigma,alpha,lambda,nu);
+    __________________________________________________________________
+    This is part of <a href="jLab.html">JLAB</a> --- type 'help jlab' for more information
+    (C) 2013--2021 J.M. Lilly --- type 'help <a href="jlab_license.html">jlab_license</a>' for details
+</pre></div><h2><a href="jLab.html">contents</a>  |  <a href="jlab_allhelp.html">allhelp</a>  |  <a href="jlab_index.html">index</a></h2></body></html>

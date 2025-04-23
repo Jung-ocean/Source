@@ -12,10 +12,10 @@ map = 'Bering';
 vari_str = 'salt';
 yyyy_all = 2019:2022;
 plusind = yyyy_all(1) - 2015;
-mm = 8;
+mm = 10;
 mstr = num2str(mm, '%02i');
 
-remove_climate = 1;
+remove_climate = 0;
 
 color = 'jet';
 climit = [31.5 33.5];

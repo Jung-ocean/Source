@@ -1,0 +1,54 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Save vertical uv 1 hourly from Bering Sea mooring data
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+filepath_obs = '/data/jungjih/Observations/Bering_Sea_mooring/data/';
+filenames_obs = dir([filepath_obs, '/ADCP*']);
+
+for fi = 1:length(filenames_obs)
+    filename_obs = filenames_obs(fi).name;
+    file_obs = [filepath_obs, filename_obs];
+
+    lon_obs = ncread(file_obs, 'lon');
+    lon_obs(lon_obs > 180) = lon_obs(lon_obs > 180)-360;
+    lat_obs = ncread(file_obs, 'lat');
+    time_obs = ncread(file_obs, 'time');
+    timenum_obs = time_obs/60/60/24 + datenum(1970,1,1);
+
+    depth_obs = ncread(file_obs, 'depth');
+    u_obs = ncread(file_obs, 'u_comp_current');
+    v_obs = ncread(file_obs, 'v_comp_current');
+
+    depth_1m = 0:max(depth_obs);
+    timenum_1h = timenum_obs(1):1/24:timenum_obs(end);
+    u_obs_1h = NaN(length(depth_1m), length(timenum_1h));
+    v_obs_1h = NaN(length(depth_1m), length(timenum_1h));
+    for ti = 1:length(timenum_1h)-1
+        tindex = find(timenum_obs >= timenum_1h(ti) & timenum_obs < timenum_1h(ti+1));
+        if isempty(tindex)
+            u_obs_1h(:,ti) = NaN;
+            v_obs_1h(:,ti) = NaN;
+        else
+            for di = 1:length(depth_1m)
+                dindex = find(depth_obs == depth_1m(di));
+                if isempty(dindex)
+                    u_obs_1h(di,ti) = NaN;
+                    v_obs_1h(di,ti) = NaN;
+                else
+                    u_obs_1h(di,ti) = mean(u_obs(dindex,tindex),2);
+                    v_obs_1h(di,ti) = mean(v_obs(dindex,tindex),2);
+                end
+            end
+        end
+    end
+
+    figure; pcolor(timenum_obs, -depth_obs, u_obs); shading flat; caxis([-50 50])
+    figure; pcolor(timenum_1h, -depth_1m, u_obs_1h); shading flat; caxis([-50 50])
+
+    save(['uv_1h_', filename_obs([11:12, 14]), '.mat'], 'lon_obs', 'lat_obs', 'timenum_1h', 'depth_1m', 'u_obs_1h', 'v_obs_1h')
+end

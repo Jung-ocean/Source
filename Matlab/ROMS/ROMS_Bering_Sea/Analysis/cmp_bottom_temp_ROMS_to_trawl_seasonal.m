@@ -8,7 +8,7 @@
 clear; clc; close all
 
 exp = 'Dsm4';
-yyyy_all = [2019 2021 2022];
+yyyy_all = [2019 2021 2022 2023];
 % yyyy_all = [2019];
 
 % Figure properties
@@ -81,9 +81,11 @@ for yi = 1:length(yyyy_all)
         fstr = num2str(filenumber, '%04i');
         model_filename = [exp, '_avg_', fstr, '.nc'];
         model_file = [model_filepath, model_filename];
+        if filenumber == 1826
+            model_file = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
+        end
         temp = ncread(model_file, 'temp');
-        temp = permute(temp, [3 2 1]);
-        tbot = squeeze(temp(1,:,:));
+        tbot = squeeze(temp(:,:,1));
         
         for di = 1:length(dindex)
 
@@ -91,11 +93,11 @@ for yi = 1:length(yyyy_all)
             lat_tmp = obs_lat(dindex(di));
 
             dist = sqrt((g.lon_rho - lon_tmp).^2 + abs(g.lat_rho - lat_tmp).^2);
-            [latind, lonind] = find(dist == min(dist(:)));
+            [lonind, latind] = find(dist == min(dist(:)));
 
-            model_bt = [model_bt; tbot(latind, lonind)];
-            model_lon = [model_lon; g.lon_rho(latind, lonind)];
-            model_lat = [model_lat; g.lat_rho(latind, lonind)];
+            model_bt = [model_bt; tbot(lonind, latind)];
+            model_lon = [model_lon; g.lon_rho(lonind, latind)];
+            model_lat = [model_lat; g.lat_rho(lonind, latind)];
         end % di
 
         disp([num2str(ti), ' / ', num2str(length(timenum_unique)), ' ...'])
@@ -117,7 +119,7 @@ for yi = 1:length(yyyy_all)
 
     nexttile(1)
     plot_map('Eastern_Bering', 'mercator', 'l');
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
 
 %     pobs = pcolorm(obs_lat2, obs_lon2, obs_bt2);
 %     colormap jet;
@@ -135,7 +137,7 @@ for yi = 1:length(yyyy_all)
 
     nexttile(2)
     plot_map('Eastern_Bering', 'mercator', 'l');
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
 
 %     pmodel = pcolorm(model_lat2, model_lon2, model_bt2);
 %     colormap jet;

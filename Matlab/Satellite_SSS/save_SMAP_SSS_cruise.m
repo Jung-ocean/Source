@@ -7,6 +7,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
+ismonthly = 1;
+
 files = {
     '/data/jungjih/Observations/Nomura_etal_2021/data_Nomura_etal_2021_2018.mat'
     '/data/jungjih/Observations/NIPR_ARD/A20191216-015/data_NIPR_ARD_2017.mat'
@@ -35,6 +37,7 @@ for fi = 1:length(files)
     for ti = 1:length(timenum_all)
         timenum = floor(timenum_all(ti));
         ystr = datestr(timenum, 'yyyy');
+        mstr = datestr(timenum, 'mm');
         timenum_SMAP(ti) = timenum;
         filenum_SMAP = timenum - datenum(str2num(datestr(timenum, 'yyyy')), 1, 1) + 1;
         fstr_SMAP = num2str(filenum_SMAP, '%03i');
@@ -55,8 +58,14 @@ for fi = 1:length(files)
         varis_sat = 'sss_smap';
         titles_sat = 'RSS SMAP L3 SSS v6.0 (70 km)';
 
-        filepath_sat = filepath_RSS_70;
-        filename_sat = ['RSS_smap_SSS_L3_8day_running_', ystr, '_', fstr_SMAP, '_FNL_v06.0.nc'];
+        if ismonthly == 1
+            filepath_sat = ['/data/jungjih/Observations/Satellite_SSS/Global/RSS/v6.0/monthly/', ystr, '/'];
+            filename_sat = ['RSS_smap_SSS_L3_monthly_', ystr, '_', mstr, '_FNL_v06.0.nc'];
+            timenum_SMAP(ti) = datenum(str2num(ystr), str2num(mstr), 15);
+        else
+            filepath_sat = filepath_RSS_70;
+            filename_sat = ['RSS_smap_SSS_L3_8day_running_', ystr, '_', fstr_SMAP, '_FNL_v06.0.nc'];
+        end
         file_sat = [filepath_sat, filename_sat];
 
         if ~exist(file_sat)
@@ -83,5 +92,9 @@ for fi = 1:length(files)
         disp([datestr(timenum, 'yyyymmdd...')])
     end % ti
 
-    save(['SSS_SMAP_' filename_obs, '.mat'], 'lat_SMAP', 'lon_SMAP', 'timenum_SMAP', 'SSS_SMAP', 'err_SMAP')
+    if ismonthly == 1
+        save(['SSS_SMAP_' filename_obs, '_monthly.mat'], 'lat_SMAP', 'lon_SMAP', 'timenum_SMAP', 'SSS_SMAP', 'err_SMAP')
+    else
+        save(['SSS_SMAP_' filename_obs, '.mat'], 'lat_SMAP', 'lon_SMAP', 'timenum_SMAP', 'SSS_SMAP', 'err_SMAP')
+    end
 end % fi

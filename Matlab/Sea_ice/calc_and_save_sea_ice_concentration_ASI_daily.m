@@ -7,10 +7,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-yyyy_all = 2019:2022;
+yyyy_all = 2012:2024;
 mm_all = 1:12;
 
-region = 'Gulf_of_Anadyr';
+region = 'M5_50km';
 
 filepath_daily = '/data/jungjih/Observations/Sea_ice/ASI/daily_ROMSgrid/';
 
@@ -37,9 +37,9 @@ for yi = 1:length(yyyy_all)
                 continue
             end
 
-            lon = ncread(file, 'longitude')';
-            lat = ncread(file, 'latitude')';
-            sic = ncread(file, 'z')';
+            lon = ncread(file, 'longitude');
+            lat = ncread(file, 'latitude');
+            sic = ncread(file, 'z');
 
             Fi_tmp = sum(sic(:).*area(:), 'omitnan')./sum(area(:), 'omitnan');
             Fi = [Fi; Fi_tmp];

@@ -8,10 +8,10 @@ if isscalar(lat) == 1
     uscale = u.*lon_scl;
     vscale = v;
 else
-    for i=1:size(lat,1)
-        lon_scl(i,:)=lat_dist./distance('rh',[lat(i,1) lon(i,1)],[lat(i,1) lon(i,1)+1],almanac('earth', 'ellipsoid', 'km'));
+    for i=1:size(lat,2)
+        lon_scl(:,i)=lat_dist./distance('rh',[lat(1,i) lon(1,i)],[lat(1,i) lon(1,i)+1],almanac('earth', 'ellipsoid', 'km'));
     end
-    lon_scl = repmat(lon_scl, [1,size(lat,2)]);
+    lon_scl = repmat(lon_scl, [size(lat,1),1]);
     uscale = u.*lon_scl;
     vscale = v;
 end

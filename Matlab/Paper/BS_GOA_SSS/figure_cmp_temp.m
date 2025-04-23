@@ -65,7 +65,7 @@ for yi = 1:length(yyyy_all)
     model_lon = [];
     model_lat = [];
 
-    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/SST/vs_bottom_trawl/SST_ROMS_trawl_', ystr, '.mat']);
+    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/vs_bottom_trawl/csv/SST_ROMS_trawl_', ystr, '.mat']);
 
     % Trawl survey plot
     subplot('Position',[.05,.7 - .3*(yi-1),.15,.25])
@@ -73,8 +73,8 @@ for yi = 1:length(yyyy_all)
     if yi ~= 3
         mlabel off
     end
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
-    pobs = plot_contourf(obs_lat2, obs_lon2, obs_st2, contour_interval, climit, color);
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
+    pobs = plot_contourf([], obs_lat2, obs_lon2, obs_st2, color, climit, contour_interval);
     if yi == 1
         title('Trawl survey SST', 'FontSize', 12)
     end
@@ -89,8 +89,8 @@ for yi = 1:length(yyyy_all)
     if yi ~= 3
         mlabel off
     end
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
-    pmodel = plot_contourf(model_lat2, model_lon2, model_st2, contour_interval, climit, color);
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
+    pmodel = plot_contourf([], model_lat2, model_lon2, model_st2, color, climit, contour_interval);
 %     c = colorbar;
 %     c.Title.String = '^oC';
 
@@ -139,7 +139,7 @@ for yi = 1:length(yyyy_all)
     model_lon = [];
     model_lat = [];
 
-    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/botT/vs_bottom_trawl/bottomT_ROMS_trawl_', ystr, '.mat']);
+    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/vs_bottom_trawl/csv/bottomT_ROMS_trawl_', ystr, '.mat']);
     
     % Trawl survey plot
     subplot('Position',[.40,.7 - .3*(yi-1),.15,.25])
@@ -147,8 +147,8 @@ for yi = 1:length(yyyy_all)
     if yi ~= 3
         mlabel off
     end
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
-    pobs = plot_contourf(obs_lat2, obs_lon2, obs_bt2, contour_interval, climit, color);
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
+    pobs = plot_contourf([], obs_lat2, obs_lon2, obs_bt2, color, climit, contour_interval);
     [cs2, h2] = contourm(obs_lat2, obs_lon2, obs_bt2, [2 2], '-k', 'LineWidth', 2);
 
     if yi == 1
@@ -165,8 +165,8 @@ for yi = 1:length(yyyy_all)
     if yi ~= 3
         mlabel off
     end
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
-    pmodel = plot_contourf(model_lat2, model_lon2, model_bt2, contour_interval, climit, color);
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
+    pmodel = plot_contourf([], model_lat2, model_lon2, model_bt2, color, climit, contour_interval);
     [cs2, h2] = contourm(model_lat2, model_lon2, model_bt2, [2 2], '-k', 'LineWidth', 2);
 
     if yi == 1
@@ -181,5 +181,5 @@ end
 c = colorbar('Position', [.70 .1 .01 .85]);
 c.Title.String = '^oC';
 c.FontSize = 12;
-
+fff
 exportgraphics(gcf,'figure_cmp_temp.png','Resolution',150) 

@@ -12,11 +12,11 @@ map = 'Eastern_Bering';
 exp = 'Dsm4';
 vari_str = 'salt';
 yyyy_all = 2019:2022;
-mm = 7;
+mm = 1;
 mstr = num2str(mm, '%02i');
 
-isfill = 0;
-layer = 45;
+isfill = 1;
+layer = -200;
 if layer < 0
     dstr = num2str(-layer);
 else
@@ -74,22 +74,21 @@ for yi = 1:length(yyyy_all)
 
     filename = [exp, '_', ystr, mstr, '.nc'];
     file = [filepath, filename];
-    zeta = ncread(file, 'zeta')';
+    zeta = ncread(file, 'zeta');
     
     z = zlevs(g.h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'r',2);
-    temp_sigma = squeeze(ncread(file, 'salt'));
-    temp_sigma = permute(temp_sigma, [3 2 1]);
+    salt_sigma = squeeze(ncread(file, 'salt'));
     
     if layer < 0
-        vari_sigma = temp_sigma;
-        vari_bottom = squeeze(vari_sigma(1,:,:));
-        vari = vinterp(vari_sigma,z,layer);
+        vari_sigma = salt_sigma;
+        vari_bottom = squeeze(vari_sigma(:,:,1));
+        vari = vinterp_J(vari_sigma,z,layer);
 
         if isfill == 1
             vari(isnan(vari) == 1) = vari_bottom(isnan(vari) == 1);
         end
     else
-        vari = squeeze(temp_sigma(layer,:,:));
+        vari = squeeze(salt_sigma(:,:,layer));
     end
 
     nexttile(yi); hold on

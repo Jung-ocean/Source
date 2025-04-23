@@ -30,7 +30,7 @@ plotm([lat(1) lat(1) lat(2) lat(2) lat(1)], [lon(1) lon(2) lon(2) lon(1) lon(1)]
 % Study area
 subplot('Position',[.5,.15,.4,.75]); hold on;
 plot_map('Gulf_of_Anadyr', 'mercator', 'l')
-contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k')
+contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k')
 
 % Text on map
 % Anadyr River

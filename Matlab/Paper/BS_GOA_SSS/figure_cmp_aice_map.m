@@ -49,7 +49,7 @@ for yi = 1:length(yyyy_all)
     plot_map(map, 'mercator', 'l')
     text(-0.16, 1.55, labels_ASI{yi}, 'FontSize', 20)
 
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
 
 %     T = pcolorm(g.lat_rho,g.lon_rho,vari_sat); shading flat
         % Convert lat/lon to figure (axis) coordinates
@@ -83,7 +83,7 @@ for yi = 1:length(yyyy_all)
     plot_map(map, 'mercator', 'l')
     text(-0.16, 1.55, labels_ROMS{yi}, 'FontSize', 20)
 
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
 
     %     T = pcolorm(g.lat_rho,g.lon_rho,vari_surf); shading flat
     % Convert lat/lon to figure (axis) coordinates

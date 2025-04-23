@@ -42,22 +42,22 @@ else
     % nc = netcdf.open(grd_file);
     grd.grd_file = grd_file;
     
-    grd.lon_rho = ncread(grd_file,'lon_rho')';
-    grd.lat_rho = ncread(grd_file,'lat_rho')';
-    grd.mask_rho = ncread(grd_file,'mask_rho')';
-    grd.angle = ncread(grd_file,'angle')';
-    grd.h = ncread(grd_file,'h')';
-    grd.lon_psi = ncread(grd_file,'lon_psi')';
-    grd.lat_psi = ncread(grd_file,'lat_psi')';
-    grd.mask_psi = ncread(grd_file,'mask_psi')';
-    grd.lon_v = ncread(grd_file,'lon_v')';
-    grd.lat_v = ncread(grd_file,'lat_v')';
-    grd.mask_v = ncread(grd_file,'mask_v')';
-    grd.lon_u = ncread(grd_file,'lon_u')';
-    grd.lat_u = ncread(grd_file,'lat_u')';
-    grd.mask_u = ncread(grd_file,'mask_u')';
-    grd.pm = ncread(grd_file,'pm')';
-    grd.pn = ncread(grd_file,'pn')';
+    grd.lon_rho = ncread(grd_file,'lon_rho');
+    grd.lat_rho = ncread(grd_file,'lat_rho');
+    grd.mask_rho = ncread(grd_file,'mask_rho');
+    grd.angle = ncread(grd_file,'angle');
+    grd.h = ncread(grd_file,'h');
+    grd.lon_psi = ncread(grd_file,'lon_psi');
+    grd.lat_psi = ncread(grd_file,'lat_psi');
+    grd.mask_psi = ncread(grd_file,'mask_psi');
+    grd.lon_v = ncread(grd_file,'lon_v');
+    grd.lat_v = ncread(grd_file,'lat_v');
+    grd.mask_v = ncread(grd_file,'mask_v');
+    grd.lon_u = ncread(grd_file,'lon_u');
+    grd.lat_u = ncread(grd_file,'lat_u');
+    grd.mask_u = ncread(grd_file,'mask_u');
+    grd.pm = ncread(grd_file,'pm');
+    grd.pn = ncread(grd_file,'pn');
 end
 
 %if nargin == 1, scoord = [5 0.4 50 20];end  % edit cskim

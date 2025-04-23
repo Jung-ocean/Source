@@ -11,9 +11,9 @@ month_avg = [1:12];
 year_start = [2019 2019 2019 2019 2019 2019 2018 2018 2018 2018 2018 2018];
 year_end = year_start+3;
 filename_header = 'RSS_smap_SSS_L3_climatology_';
-filename_footer = '_FNL_v05.3';
+filename_footer = '_FNL_v06.0';
 
-filepath_monthly = ['/data/jungjih/Observations/Satellite_SSS/Global/RSS/v5.3/monthly/'];
+filepath_monthly = ['/data/jungjih/Observations/Satellite_SSS/Global/RSS/v6.0/monthly/'];
 
 for mi = 1:length(month_avg)
     mm = month_avg(mi); mstr = num2str(mm, '%02i');

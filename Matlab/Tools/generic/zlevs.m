@@ -88,24 +88,24 @@ Np=N+1;
 if (Vtransform == 1)
     for k=1:N
         z0=(sc(k)-Cs(k))*hc + Cs(k).*hr;
-        z(k,:,:)=z0 + zetar.*(1.0 + z0./hr);
+        z(:,:,k)=z0 + zetar.*(1.0 + z0./hr);
     end
     if type=='w'
         z(1,:,:)=-hr;
         for k=2:Np
             z0=(sc(k)-Cs(k))*hc + Cs(k).*hr;
-            z(k,:,:)=z0 + zetar.*(1.0 + z0./hr);
+            z(:,:,k)=z0 + zetar.*(1.0 + z0./hr);
         end
     end
 elseif (Vtransform == 2)
     for k=1:N
         z0=(hc.*sc(k)+Cs(k).*hr)./(hc+hr);
-        z(k,:,:)=zetar+(zeta+hr).*z0;
+        z(:,:,k)=zetar+(zeta+hr).*z0;
     end
     if type=='w'
         for k=1:Np
             z0=(hc.*sc(k)+Cs(k).*hr)./(hc+hr);
-            z(k,:,:)=zetar+(zetar+hr).*z0;
+            z(:,:,k)=zetar+(zetar+hr).*z0;
         end
     end
 end

@@ -9,10 +9,9 @@ clear; clc; close all
 
 exp = 'Dsm4';
 vari_str = 'aice';
-yyyy_all = 2020:2020;
-mm_all = 2:2;
+yyyy_all = 2023:2023;
+mm_all = 3:5;
 % dd_all = 1:28;
-depth_shelf = 200; % m
 
 switch vari_str
     case 'aice'
@@ -33,7 +32,6 @@ lat = g.lat_rho;
 h = g.h;
 mask = g.mask_rho./g.mask_rho;
 startdate = datenum(2018,7,1,0,0,0);
-reftime = datenum(1968,5,23,0,0,0);
 
 % Satellite SSH
 % ASI
@@ -44,7 +42,7 @@ for yi = 1:length(yyyy_all)
 
     % Figure
     h1 = figure; hold on;
-    set(gcf, 'Position', [1 200 1800 650])
+    set(gcf, 'Position', [1 200 1300 500])
     t = tiledlayout(1,2);
 
     for mi = 1:length(mm_all)
@@ -55,27 +53,28 @@ for yi = 1:length(yyyy_all)
 
             filenum = datenum(yyyy,mm,dd) - startdate + 1;
             fstr = num2str(filenum, '%04i');
-            filename = [vari_str, '_', fstr, '.nc'];
+            filename = [exp, '_avg_', fstr, '.nc'];
             file = [filepath_control, filename];
-            vari_control = ncread(file, 'aice')';
+            vari_control = ncread(file, 'aice');
             ot = ncread(file, 'ocean_time');
 
             timenum = datenum(yyyy,mm,dd);
             time_title = datestr(timenum, 'mmm dd, yyyy');
 
             % Figure title
-            title(t, time_title, 'FontSize', 25);
+            title(t, {time_title, ''}, 'FontSize', 25);
 
-            nexttile(1)
+            nexttile(2)
             if mi == 1 && di == 1
                 plot_map('Bering', 'mercator', 'l')
                 hold on;
-                contourm(lat, lon, h, [50 200], 'k');
+                contourm(lat, lon, h, [50 75 100 200], 'k');
             else
                 delete(T(1));
             end
 
             T(1) = pcolorm(lat,lon,vari_control.*mask);
+            colormap gray
             uistack(T(1),'bottom')
             caxis(climit_model)
             if mi == 1 && di == 1
@@ -91,27 +90,28 @@ for yi = 1:length(yyyy_all)
             filename_sat = dir(filepattern_sat);
 
             file_sat = [filepath_sat, filename_sat.name];
-            lon_sat = double(ncread(file_sat,'longitude'))';
-            lat_sat = double(ncread(file_sat,'latitude'))';
-            vari_sat = double(squeeze(ncread(file_sat,'z'))')/100;
+            lon_sat = double(ncread(file_sat,'longitude'));
+            lat_sat = double(ncread(file_sat,'latitude'));
+            vari_sat = double(squeeze(ncread(file_sat,'z')))/100;
 
             % Tile
-            nexttile(2);
+            nexttile(1);
 
             if mi == 1 && di == 1
                 plot_map('Bering', 'mercator', 'l')
                 hold on;
-                contourm(lat, lon, h, [50 200], 'k');
+                contourm(lat, lon, h, [50 75 100 200], 'k');
             else
                 delete(T(2));
             end
             T(2) = pcolorm(lat,lon,vari_sat.*mask);
+            colormap gray
             uistack(T(2),'bottom')
             caxis(climit_sat)
             if mi == 1 && di == 1
-                c = colorbar;
+%                 c = colorbar;
                 %             c.Title.String = unit;
-                c.Ticks = [climit_sat(1):.5:climit_sat(end)];
+%                 c.Ticks = [climit_sat(1):.5:climit_sat(end)];
             end
 
             title('Satellite (ASI)', 'Interpreter', 'None')
@@ -119,11 +119,11 @@ for yi = 1:length(yyyy_all)
             t.TileSpacing = 'compact';
             t.Padding = 'compact';
 
-            pause(1)
-            print(['cmp_', vari_str, '_satellite_daily_', datestr(timenum, 'yyyymmdd')],'-dpng');
+%             pause(1)
+%             print(['cmp_', vari_str, '_satellite_daily_', datestr(timenum, 'yyyymmdd')],'-dpng');
 
             % Make gif
-            gifname = ['cmp_', vari_str, '_satellite_daily_', ystr, mstr, '.gif'];
+            gifname = ['cmp_', vari_str, '_satellite_daily_', ystr, '.gif'];
 
             frame = getframe(h1);
             im = frame2im(frame);

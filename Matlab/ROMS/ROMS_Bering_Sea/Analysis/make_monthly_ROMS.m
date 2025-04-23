@@ -8,7 +8,7 @@
 clear; clc
 
 yyyy_all = 2018:2018;
-month_avg = [9:12];
+month_avg = [8:8];
 year_start = 2018;
 month_start = 7;
 exp = 'Dsm4';

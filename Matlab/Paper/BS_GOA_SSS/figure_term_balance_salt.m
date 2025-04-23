@@ -57,7 +57,7 @@ for yi = 1:length(yyyy_all)
     box on
 end
 
-l = legend([ptend, popen, patm, priver, pice], 'Tend', 'Horizontal advection', 'E-P', 'River', 'Ice');
+l = legend([ptend, popen, patm, priver, pice], 'Tendency', 'Transport', 'E-P', 'River', 'Freeze/Melt');
 l.Position = [.1 .07 .85 .05]
 l.NumColumns = 5;
 l.FontSize = 20;

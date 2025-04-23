@@ -1,0 +1,62 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Compare SSS time series among mooring, model, satellite SSS
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+si = 3;
+
+datenum_start = datenum(2023,1,1);
+datenum_end = datenum(2023,7,31);
+
+stations = {'bs2', 'bs4', 'bs5', 'bs8'};
+names = {'M2', 'M4', 'M5', 'M8'};
+
+figure; hold on; grid on;
+
+% M5 station
+filepath_obs = '/data/jungjih/Observations/Bering_Sea_mooring/figures/';
+load([filepath_obs, 'ts_1h_', stations{si}, '.mat']);
+
+lon_target = mean(lon_obs(:), 'omitnan');
+lat_target = mean(lat_obs(:), 'omitnan');
+
+dindex = find(depth_1m < 20);
+for di = 1:length(dindex)
+    plot(timenum_1h, salt_obs_1h(dindex,:));
+end
+
+% Model
+vari_str = 'salt';
+layer = 45;
+if ~exist(['SSS_ROMS_', names{si}])
+    [tm,sm] = load_BSf_3d(vari_str, layer, datenum(2019,1,1), datenum(2023,12,31), lat_target, lon_target);
+    save(['SSS_ROMS_', names{si}], 'tm', 'sm')
+else
+    load(['SSS_ROMS_', names{si}])
+end
+plot(tm, sm, 'k');
+
+% SMAP
+if ~exist(['SSS_SMAP_', names{si}])
+    [tsmap, ssmap] = load_SSS_sat('SMAP', datenum(2015,1,1), datenum(2023,12,31), lat_target, lon_target);
+    save(['SSS_SMAP_', names{si}], 'tm', 'sm')
+else
+    load(['SSS_SMAP_', names{si}])
+end
+plot(tsmap, ssmap);
+
+% SMOS
+if ~exist(['SSS_SMOS_', names{si}])
+    [tsmos, ssmos] = load_SSS_sat('SMOS', datenum(2010,1,1), datenum(2023,12,31), lat_target, lon_target);
+    save(['SSS_SMOS_', names{si}], 'tm', 'sm')
+else
+    load(['SSS_SMAP_', names{si}])
+end
+plot(tsmos, ssmos, 'o');
+
+xlim([datenum_start-1 datenum_end+1])
+datetick('x', 'mmm, yyyy', 'keeplimits')

@@ -15,4 +15,3 @@ QA=sum(q.*dxdy,'all');
 dxdy(mask_ave == 0) = 0;
 A=sum(dxdy,'all');
 Q=QA/A;
-

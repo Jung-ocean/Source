@@ -19,6 +19,28 @@ switch location
         Vtransform = 2;
         grd = roms_get_grid(grd_file,scoord,0,Vtransform);
 
+    case 'NANOOS'
+        grd_file = '/data/serofeev//RTDAOW2/Prm/grd_ow2km_03_smooth04_lana.nc';
+        scoord = [8 2 50 40]; % theta_s theta_b hc N
+
+        disp(' ')
+        disp([ 'Loading ROMS grd for application: ' location])
+        disp([ 'using grid file ' grd_file])
+        disp(' ')
+        Vtransform = 2;
+        grd = roms_get_grid(grd_file,scoord,0,Vtransform);
+
+    case 'WCOFS'
+        grd_file = '/data/jungjih/Models/WCOFS/wcofs.t03z.20250222.2ds.f001.nc';
+        scoord = [8 3 50 40]; % theta_s theta_b hc N
+
+        disp(' ')
+        disp([ 'Loading ROMS grd for application: ' location])
+        disp([ 'using grid file ' grd_file])
+        disp(' ')
+        Vtransform = 2;
+        grd = roms_get_grid(grd_file,scoord,0,Vtransform);
+
     case 'Lab'
         grd_file = 'G:\내 드라이브\Model\ROMS\Case\Lab\roms_grd.nc' ;
         scoord = [5 0.4 4 20]; % theta_s theta_b hc N
