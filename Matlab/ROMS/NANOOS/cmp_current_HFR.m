@@ -1,0 +1,150 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Comparison between NANOOS and WCOFS models to HFR
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+vari_str = 'current';
+map = 'US_west_HFR';
+
+yyyy = 2024;
+ystr = num2str(yyyy);
+mm = 12;
+mstr = num2str(mm, '%02i');
+
+switch vari_str
+    case 'current'
+        title_str = ['Surface current (', datestr(datenum(yyyy,mm,15), 'mmm yyyy'), ')'];
+
+        filepath_obs = '/data/jungjih/Observations/HFR/monthly/';
+        filename_obs = ['HFR_monthly_', ystr, mstr, '.nc'];
+        file_obs = [filepath_obs, filename_obs];
+        
+        timenum_obs = ncread(file_obs, 'time');
+        lat_obs = ncread(file_obs, 'lat');
+        lon_obs = ncread(file_obs, 'lon');
+        u_obs = ncread(file_obs, 'u');
+        v_obs = ncread(file_obs, 'v');
+        nanindex = find(isnan(u_obs) == 1 & isnan(v_obs) == 1);
+
+        [u_obs, v_obs, lon_scl] = adjust_vector(lon_obs, lat_obs, u_obs, v_obs);
+
+        title_obs = 'HF radar';
+        scale = 0.03;
+        color = 'k';
+
+        scale_value = 10;
+        lat_scale = 46.5;
+        lon_scale = -126.8;
+        [u_scale, v_scale, lon_scl] = adjust_vector(lon_scale, lat_scale, scale_value, scale_value);
+        color_scale = 'r';
+        text_scale = [num2str(scale_value), ' cm/s'];
+end
+
+FS = 12;
+
+figure; hold on; grid on;
+set(gcf, 'Position', [1 200 800 500])
+t = tiledlayout(1,3);
+title(t, {title_str, ''}, 'FontSize', 15);
+
+% Observation
+ax1 = nexttile(1); hold on; grid on;
+plot_map(map, 'mercator', 'l');
+gn = grd('NANOOS');
+[cs, h] = contourm(gn.lat_rho, gn.lon_rho, gn.h, [100 200 1000 2000], 'k');
+
+pobs = quiverm(lat_obs, lon_obs, scale.*v_obs, scale.*u_obs, 0);
+pobs(1).Color = color;
+pobs(2).Color = color;
+
+pscale1 = quiverm(lat_scale, lon_scale, 0, scale.*u_scale, 0);
+pscale1(1).Color = color_scale;
+pscale1(2).Color = color_scale;
+pscale2 = quiverm(lat_scale, lon_scale, scale.*v_scale, 0, 0);
+pscale2(1).Color = color_scale;
+pscale2(2).Color = color_scale;
+pst = textm(lat_scale-.2, lon_scale, text_scale, 'Color', color_scale, 'FontSize', 8);
+
+title(title_obs, 'FontSize', FS);
+
+% plotm(lat_obs2(index_common), lon_obs2(index_common),'.r')
+
+% NANOOS diff
+u_NANOOS = 100*load_models_surf_monthly('NANOOS', 'u', yyyy, mm);
+v_NANOOS = 100*load_models_surf_monthly('NANOOS', 'v', yyyy, mm);
+
+Fn = scatteredInterpolant(gn.lat_rho(:), gn.lon_rho(:), u_NANOOS(:));
+u_NANOOS_interp = Fn(lat_obs, lon_obs);
+Fn = scatteredInterpolant(gn.lat_rho(:), gn.lon_rho(:), v_NANOOS(:));
+v_NANOOS_interp = Fn(lat_obs, lon_obs);
+[u_NANOOS_interp, v_NANOOS_interp, lon_scl] = adjust_vector(lon_obs, lat_obs, u_NANOOS_interp, v_NANOOS_interp);
+u_NANOOS_interp(nanindex) = NaN;
+v_NANOOS_interp(nanindex) = NaN;
+
+u_NANOOS_diff = u_NANOOS_interp - u_obs;
+v_NANOOS_diff = v_NANOOS_interp - v_obs;
+
+ax2 = nexttile(2); hold on; grid on;
+plot_map(map, 'mercator', 'l');
+[cs, h] = contourm(gn.lat_rho, gn.lon_rho, gn.h, [100 200 1000 2000], 'k');
+
+pn = quiverm(lat_obs, lon_obs, scale.*v_NANOOS_interp, scale.*u_NANOOS_interp, 0);
+pn(1).Color = color;
+pn(2).Color = color;
+
+pscale1 = quiverm(lat_scale, lon_scale, 0, scale.*u_scale, 0);
+pscale1(1).Color = color_scale;
+pscale1(2).Color = color_scale;
+pscale2 = quiverm(lat_scale, lon_scale, scale.*v_scale, 0, 0);
+pscale2(1).Color = color_scale;
+pscale2(2).Color = color_scale;
+pst = textm(lat_scale-.2, lon_scale, text_scale, 'Color', color_scale, 'FontSize', 8);
+
+title(['NANOOS'], 'FontSize', FS);
+
+plabel('off')
+
+% WCOFS diff
+gw = grd('WCOFS');
+u_WCOFS = 100*load_models_surf_monthly('WCOFS', 'u', yyyy, mm);
+v_WCOFS = 100*load_models_surf_monthly('WCOFS', 'v', yyyy, mm);
+
+Fw = scatteredInterpolant(gw.lat_rho(:), gw.lon_rho(:), u_WCOFS(:));
+u_WCOFS_interp = Fw(lat_obs, lon_obs);
+Fw = scatteredInterpolant(gw.lat_rho(:), gw.lon_rho(:), v_WCOFS(:));
+v_WCOFS_interp = Fw(lat_obs, lon_obs);
+[u_WCOFS_interp, v_WCOFS_interp, lon_scl] = adjust_vector(lon_obs, lat_obs, u_WCOFS_interp, v_WCOFS_interp);
+u_WCOFS_interp(nanindex) = NaN;
+v_WCOFS_interp(nanindex) = NaN;
+
+u_WCOFS_diff = u_WCOFS_interp - u_obs;
+v_WCOFS_diff = v_WCOFS_interp - v_obs;
+
+ax3 = nexttile(3); hold on; grid on;
+plot_map(map, 'mercator', 'l');
+[cs, h] = contourm(gn.lat_rho, gn.lon_rho, gn.h, [100 200 1000 2000], 'k');
+
+pw = quiverm(lat_obs, lon_obs, scale.*v_WCOFS_interp, scale.*u_WCOFS_interp, 0);
+pw(1).Color = color;
+pw(2).Color = color;
+
+pscale1 = quiverm(lat_scale, lon_scale, 0, scale.*u_scale, 0);
+pscale1(1).Color = color_scale;
+pscale1(2).Color = color_scale;
+pscale2 = quiverm(lat_scale, lon_scale, scale.*v_scale, 0, 0);
+pscale2(1).Color = color_scale;
+pscale2(2).Color = color_scale;
+pst = textm(lat_scale-.2, lon_scale, text_scale, 'Color', color_scale, 'FontSize', 8);
+
+title(['WCOFS'], 'FontSize', FS);
+
+plabel('off')
+
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+
+print(['cmp_current_HFR_', ystr, mstr], '-dpng')

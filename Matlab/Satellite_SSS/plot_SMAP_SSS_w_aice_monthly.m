@@ -7,15 +7,19 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-map = 'Bering';
+map = 'NW_Bering';
 
 vari_str = 'salt';
 yyyy_all = 2015:2023;
-mm = 12;
+
+mm_all = 1:12;
+for mi = 1:length(mm_all)
+
+mm = mm_all(mi);
 mstr = num2str(mm, '%02i');
 
 isice = 0;
-remove_climate = 0;
+remove_climate = 1;
 issave = 0;
 
 climit = [29 34];
@@ -53,7 +57,7 @@ for yi = 1:length(yyyy_all)
    
     % Satellite SSS
     % RSS SMAP v6.0
-    filepath_RSS_70 = ['/data/jungjih/Observations/Satellite_SSS/Global/RSS/v6.0/monthly/', ystr, '/'];
+    filepath_RSS_70 = ['/data/jungjih/Observations/Satellite_SSS/RSS/v6.0/monthly/', ystr, '/'];
 
     % Satellite
     for si = 1:1
@@ -67,20 +71,26 @@ for yi = 1:length(yyyy_all)
         end
 
         file_sat = [filepath_sat, filename_sat.name];
+        try
         lon_sat = double(ncread(file_sat,lons_sat{si}));
         lat_sat = double(ncread(file_sat,lats_sat{si}));
         vari_sat = double(squeeze(ncread(file_sat,varis_sat{si}))');
+        catch
+            lon_sat = NaN;
+            lat_sat = NaN;
+            vari_sat = NaN;
+        end
 
         if remove_climate == 1
-            filepath_climate = '/data/jungjih/Observations/Satellite_SSS/Global/RSS/v6.0/climate/';
-            filename_climate = ['RSS_smap_SSS_L3_monthly_climate_', mstr, '_FNL_v06.0.nc'];
+            filepath_climate = '/data/jungjih/Observations/Satellite_SSS/RSS/v6.0/climate/';
+            filename_climate = ['RSS_smap_SSS_L3_climate_', mstr, '_FNL_v06.0.nc'];
             file_climate = [filepath_climate, filename_climate];
             vari_climate = double(squeeze(ncread(file_climate,varis_sat{si}))');
 
             vari_sat = vari_sat - vari_climate;
 
-            climit = [-2 2];
-            interval = 0.5;
+            %climit = [-2 2]; interval = 0.5;
+            climit = [-1 1]; interval = 0.2;
             contour_interval = climit(1):interval:climit(2);
             num_color = diff(climit)/interval;
             color_tmp = redblue;
@@ -108,7 +118,7 @@ for yi = 1:length(yyyy_all)
         nexttile(yi); hold on;
 
         plot_map(map, 'mercator', 'l')
-        contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+        contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
        
         %         T = pcolorm(lat_sat,lon_sat,vari_sat); shading flat
         % Convert lat/lon to figure (axis) coordinates
@@ -131,6 +141,8 @@ for yi = 1:length(yyyy_all)
         if strcmp(map, 'Gulf_of_Anadyr')
             textm(65.9, -178, [title_str], 'FontSize', 15)
             set(gcf, 'Position', [1 200 1100 900])
+        elseif strcmp(map, 'NW_Bering')
+            textm(65, -198, [title_str], 'FontSize', 15)
         else
             textm(65, -205, [title_str], 'FontSize', 20)
         end
@@ -158,3 +170,6 @@ t.Padding = 'compact';
 t.TileSpacing = 'compact';
 
 print([savename, '_', mstr, '_with_aice_', msistr, '_monthly'],'-dpng');
+
+
+end

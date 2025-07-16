@@ -3,7 +3,7 @@ import copernicusmarine
 
 dataset_id_target = "cmems_obs-sl_glo_phy-ssh_my_allsat-l4-duacs-0.125deg_P1D"
 
-date_range = "*/2024/*"
+date_range = "*/2024/06*"
 
 copernicusmarine.get(
 #   dataset_id=dataset_id_target)

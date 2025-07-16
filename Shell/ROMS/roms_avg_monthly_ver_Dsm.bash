@@ -1,9 +1,9 @@
 #!/bin/bash
-year=2020
-startnum=550
-filepath='/u/jjung18/BSf/Output/Ice/Winter_2019/Dsm2_spng_awdrag'
-filename_head='Winter_2019_Dsm2_spng_avg'
-output_head='Dsm2_spng_avg'
+year=2022
+startnum=1281
+filepath='/u/jjung18/BSf/Output/Ice/Winter_2021/Dsm4_nKC_s7b3'
+filename_head='Winter_2021_Dsm4_nKC_avg'
+output_head='Dsm4'
 
 (( !(year % 4) && ( year % 100 || !(year % 400) ) )) &&
 leapindex=1 || leapindex=0

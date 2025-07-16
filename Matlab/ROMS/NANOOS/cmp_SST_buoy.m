@@ -10,9 +10,9 @@ clear; clc; close all
 vari_str = 'temp';
 map = 'US_west';
 
-yyyy = 2023;
+yyyy = 2024;
 ystr = num2str(yyyy);
-mm = 9;
+mm = 12;
 mstr = num2str(mm, '%02i');
 
 switch vari_str

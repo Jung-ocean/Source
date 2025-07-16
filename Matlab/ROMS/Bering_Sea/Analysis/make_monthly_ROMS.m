@@ -1,0 +1,54 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Make ROMS monthly outputs using daily files
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc
+
+yyyy_all = 2019:2019;
+month_avg = [12:12];
+year_start = 2018;
+month_start = 7;
+exp = 'Dsm4';
+filename_header = 'Dsm4';
+
+for yi = 1:length(yyyy_all)
+    yyyy = yyyy_all(yi); ystr = num2str(yyyy);
+
+    filepath_daily = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
+    datenum_ref = datenum(1968,05,23);
+
+    for mi = 1:length(month_avg)
+        mm = month_avg(mi); mstr = num2str(mm, '%02i');
+        eomdays = eomday(yyyy,mm);
+        filenumbers = [datenum(yyyy,mm,1):datenum(yyyy,mm+1,1)-1] - datenum(year_start,month_start,1) + 1;
+        for fi = 1:length(filenumbers)
+            filenumber = filenumbers(fi); fstr = num2str(filenumber, '%04i');
+            filename = dir([filepath_daily, '*', filename_header, '_avg*', fstr, '*.nc']);
+            if ~isempty(filename)
+                command = ['ln -s ', filepath_daily, filename.name, ' ./'];
+                system(command);
+                ot = ncread(filename.name, 'ocean_time');
+                if isempty(ot)
+                    command = ['rm -f ', filename.name];
+                    system(command);
+                    make_alternative_link(filepath_daily, filename.name, filename.name)
+                end
+            end
+        end
+        
+        command = ['ls *avg* | wc -l'];
+        [status, nfile] = system(command);
+        if str2num(nfile) == eomdays
+            command = ['ncra *avg* ', filename_header, '_', ystr, mstr, '.nc'];
+            system(command)
+        end
+        
+        command = ['rm -f *avg*'];
+        system(command)
+
+        disp([ystr, mstr, '...'])
+    end
+end

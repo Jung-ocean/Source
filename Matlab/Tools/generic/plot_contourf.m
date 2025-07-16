@@ -1,15 +1,20 @@
-function h = plot_contourf(ax, lat, lon, vari, color, climit, contour_interval)
+function h = plot_contourf(ax, x, y, vari, color, climit, contour_interval)
 
 if isempty(ax)
     ax = gca;
 end
-   
-% Convert lat/lon to figure (axis) coordinates
-[x, y] = mfwdtran(lat, lon);
+
 vari(vari < climit(1)) = climit(1);
 vari(vari > climit(2)) = climit(2);
 
-[cs, h] = contourf(ax, x, y, vari, contour_interval, 'LineColor', 'none');
+if ismap == 1
+    % Convert lat/lon to figure (axis) coordinates
+    [xx, yy] = mfwdtran(x, y);
+    [cs, h] = contourf(ax, xx, yy, vari, contour_interval, 'LineColor', 'none');
+else
+    [cs, h] = contourf(ax, x, y, vari, contour_interval, 'LineColor', 'none');
+end
+
 uistack(h, 'bottom');
 colormap(ax, color);
 caxis(ax, climit);

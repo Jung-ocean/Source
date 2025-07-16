@@ -10,9 +10,12 @@ clear; clc; close all
 vari_str = 'salt';
 map = 'US_west';
 
-yyyy = 2024;
+yyyy = 2023;
 ystr = num2str(yyyy);
-mm = 12;
+mm_all = 7:8;
+
+for mi = 1:length(mm_all)
+    mm = mm_all(mi);
 mstr = num2str(mm, '%02i');
 
 switch vari_str
@@ -35,8 +38,8 @@ switch vari_str
         title_obs = 'Buoy';
 
         cm = 'jet';
-        climit = [29 34];
-        interval = .25;
+        climit = [31 33];
+        interval = .1;
         [color, contour_interval] = get_color(cm, climit, interval);
 
         cm2 = 'redblue';
@@ -117,3 +120,5 @@ t.Padding = 'compact';
 t.TileSpacing = 'compact';
 
 print(['cmp_SSS_buoy_', ystr, mstr], '-dpng')
+
+end

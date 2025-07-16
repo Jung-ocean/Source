@@ -19,7 +19,7 @@ Fw = scatteredInterpolant(gw.lat_rho(:), gw.lon_rho(:), 0.*gw.lat_rho(:));
 yyyy_all = 2023:2024;
 timenum = datenum(yyyy_all(1),1,1):datenum(yyyy_all(end),12,31);
 
-filepath_obs = '/data/jungjih/Observations/Satellite_SSS/OISSS/daily/';
+filepath_obs = '/data/jungjih/Observations/Satellite_SSS/OISSS/monthly/';
 
 di = 0;
 for yi = 1:length(yyyy_all)

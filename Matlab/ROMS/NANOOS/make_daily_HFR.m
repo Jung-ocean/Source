@@ -8,7 +8,7 @@
 clear; clc; close all
 
 yyyy_all = 2023:2024;
-filepath = '/data/serofeev/RTDAOW2/Data/HFR/';
+filepath = '/data/jungjih/RTDAOW2/Data/HFR/';
 
 timenum_all = datenum(yyyy_all(1),1,1):datenum(yyyy_all(end),12,31);
 
@@ -25,6 +25,7 @@ for ti = 1:length(timenum_all)
 
         lon = data(:,1);
         lat = data(:,2);
+        prcnt = data(:,3);
         u = data(:,4);
         v = data(:,5);
 
@@ -71,10 +72,10 @@ for ti = 1:length(timenum_all)
 
         ncfile = ['HFR_', datestr(timenum,'yyyymmdd'), '.nc'];
         ncwriteschema(ncfile ,mySchema)
-        nccreate(ncfile, 'u', 'Dimensions', {'data'});
+        nccreate(ncfile, 'u', 'Dimensions', {'data', 'time'});
         ncwriteatt(ncfile,'u','description','Zonal velocity')
         ncwriteatt(ncfile,'u','unit','cm/s')
-        nccreate(ncfile, 'v', 'Dimensions', {'data'});
+        nccreate(ncfile, 'v', 'Dimensions', {'data', 'time'});
         ncwriteatt(ncfile,'v','description','Meridional velocity')
         ncwriteatt(ncfile,'v','unit','cm/s')
         nccreate(ncfile, 'lon', 'Dimensions', {'data'});

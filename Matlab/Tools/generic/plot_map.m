@@ -27,7 +27,7 @@ tightmap
 %setm(gca,'mlabelparallel',50)
 mlabel('FontSize', 8);
 plabel('FontSize', 8);
-if strcmp(casename, 'US_west')
+if strcmp(casename, 'US_west') | strcmp(casename, 'US_west_HFR')
     setm(gca,'MLabelLocation',3)
     setm(gca,'PLabelLocation',3)
     gridm('MlineLocation',1,'PLineLocation',1);

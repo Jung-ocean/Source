@@ -10,9 +10,13 @@ clear; clc; close all
 vari_str = 'salt';
 map = 'US_west';
 
-yyyy = 2023;
+yyyy = 2024;
 ystr = num2str(yyyy);
-mm = 4;
+mm_all = 1:12;
+
+for mi = 1:length(mm_all)
+    mm = mm_all(mi);
+
 mstr = num2str(mm, '%02i');
 
 switch vari_str
@@ -45,8 +49,8 @@ switch vari_str
         title_obs = 'OISSS 2.0';
 
         cm = 'jet';
-        climit = [29 34];
-        interval = .25;
+        climit = [31 33];
+        interval = .1;
         [color, contour_interval] = get_color(cm, climit, interval);
 
         cm2 = 'redblue';
@@ -127,3 +131,5 @@ t.Padding = 'compact';
 t.TileSpacing = 'compact';
 
 print(['cmp_SSS_OISSS_', ystr, mstr], '-dpng')
+
+end

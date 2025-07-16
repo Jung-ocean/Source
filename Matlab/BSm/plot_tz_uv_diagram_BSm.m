@@ -11,19 +11,19 @@ yyyy = 2023;
 ystr = num2str(yyyy);
 mm_start = 1;
 mm_end = 8;
-depth_start = 5;
+depth_start = 10;
 
 issigma = 0;
 ishf = 1;
 
-xlimit = [datenum(yyyy,5,1) datenum(yyyy,8,31)];
+xlimit = [datenum(yyyy,1,1) datenum(yyyy,8,31)];
 ylimit = [-60 0]; % -80
 
 stations = {'M2', 'M4', 'M5', 'M8'};
 names = {'bs2', 'bs4', 'bs5', 'bs8'};
 
 climit = [-20 20];
-interval = 5;
+interval = 4;
 contour_interval = climit(1):interval:climit(2);
 num_color = diff(climit)/interval;
 color_tmp = redblue;
@@ -145,8 +145,8 @@ for si = 3%1:length(stations)
     t.Padding = 'compact';
     t.TileSpacing = 'compact';
 
-    save(['tz_baroclinic_', stations{si}, '_', ystr], 'lat', 'timenum', 'depth', 'u', 'v', 'ubar', 'vbar', 'u_baroclinic', 'v_baroclinic')
-    print(['tz_baroclinic_', stations{si}, '_', ystr], '-dpng')
+    save(['tz_uv_', stations{si}, '_', ystr], 'lat', 'timenum', 'depth', 'u', 'v', 'ubar', 'vbar', 'u_baroclinic', 'v_baroclinic')
+    print(['tz_uv_', stations{si}, '_', ystr], '-dpng')
 
     % Bottom baroclinic current
     figure; hold on; grid on;
@@ -177,5 +177,5 @@ for si = 3%1:length(stations)
     t.Padding = 'compact';
     t.TileSpacing = 'compact';
 
-    print(['baroclinic_', stations{si}, '_bottom_', ystr], '-dpng')
+    print(['bc_', stations{si}, '_bottom_', ystr], '-dpng')
 end

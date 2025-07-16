@@ -10,9 +10,9 @@ clear; clc; close all
 vari_str = 'temp';
 map = 'US_west';
 
-yyyy = 2023;
+yyyy = 2024;
 ystr = num2str(yyyy);
-mm = 7;
+mm = 12;
 mstr = num2str(mm, '%02i');
 
 switch vari_str
@@ -22,7 +22,7 @@ switch vari_str
         title_str = ['SST (', datestr(datenum(yyyy,mm,15), 'mmm yyyy'), ')'];
 
         filepath_obs = '/data/jungjih/Observations/Satellite_SST/OISST/monthly/';
-        filename_obs = ['OISST_', ystr, mstr, '.nc'];
+        filename_obs = ['OISST_monthly_', ystr, mstr, '.nc'];
         file_obs = [filepath_obs, filename_obs];
         lat_obs = double(ncread(file_obs, 'lat'));
         lon_obs = double(ncread(file_obs, 'lon'));

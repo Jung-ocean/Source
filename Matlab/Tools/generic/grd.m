@@ -19,6 +19,19 @@ switch location
         Vtransform = 2;
         grd = roms_get_grid(grd_file,scoord,0,Vtransform);
 
+    case 'BSf_s7b3'
+        grd_file = '/data/jungjih/ROMS_BSf/Grid/BeringSea_Dsm4_wtZop05_grid.nc';
+        % grd_file = '/data/sdurski/ROMS_Setups/Grids/Bering_Sea/BeringSea_DsmV2_grid.nc';
+        % grd_file = '/data/sdurski/ROMS_Setups/Grids/Bering_Sea/BeringSea_Dsm_grid.nc';
+        scoord = [7 3 50 45]; % theta_s theta_b hc N
+
+        disp(' ')
+        disp([ 'Loading ROMS grd for application: ' location])
+        disp([ 'using grid file ' grd_file])
+        disp(' ')
+        Vtransform = 2;
+        grd = roms_get_grid(grd_file,scoord,0,Vtransform);
+
     case 'NANOOS'
         grd_file = '/data/serofeev//RTDAOW2/Prm/grd_ow2km_03_smooth04_lana.nc';
         scoord = [8 2 50 40]; % theta_s theta_b hc N

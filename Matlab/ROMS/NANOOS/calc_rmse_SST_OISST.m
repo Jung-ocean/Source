@@ -10,8 +10,8 @@ clear; clc; close all;
 vari_str = 'temp';
 map = 'US_west';
 
-g = grd('NANOOS');
-Fn = scatteredInterpolant(g.lat_rho(:), g.lon_rho(:), 0.*g.lat_rho(:));
+gn = grd('NANOOS');
+Fn = scatteredInterpolant(gn.lat_rho(:), gn.lon_rho(:), 0.*gn.lat_rho(:));
 
 gw = grd('WCOFS');
 Fw = scatteredInterpolant(gw.lat_rho(:), gw.lon_rho(:), 0.*gw.lat_rho(:));

@@ -16,7 +16,7 @@ mm_end = 8;
 mestr = datestr(datenum(yyyy,mm_end,15), 'mmm');
 
 xlimit = [-0.1 0.1];
-ylimit = [-50 0]; % -80
+ylimit = [-60 0]; % -80
 
 si = 3;
 stations = {'M2', 'M4', 'M5', 'M8'};

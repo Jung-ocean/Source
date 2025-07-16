@@ -13,7 +13,7 @@ mm_start = 1;
 mm_end = 8;
 depth_start = 0;
 
-xlimit = [datenum(yyyy,5,1) datenum(yyyy,8,31)];
+xlimit = [datenum(yyyy,1,1) datenum(yyyy,8,31)];
 ylimit = [-60 0]; % -80
 
 stations = {'M2', 'M4', 'M5', 'M8'};
