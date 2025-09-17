@@ -54,7 +54,7 @@ elseif strcmp(boxName, 'Koryak_coast_basin')
     mask_custom = grd.mask_rho.*double(in);
     mask_custom(grd.mask_rho==0 | grd.h <= 200)=0;
 
-elseif strcmp(boxName,'GOA') || strcmp(boxName,'GOA_10m') || strcmp(boxName,'GOA_50m')
+elseif strcmp(boxName,'GA') || strcmp(boxName,'GA_10m') || strcmp(boxName,'GA_50m')
  % Area of the Gulf of Anadyr
  polygon = [;
      -180.9180   62.3790
@@ -65,9 +65,9 @@ elseif strcmp(boxName,'GOA') || strcmp(boxName,'GOA_10m') || strcmp(boxName,'GOA
      ];
  [in, on] = inpolygon(grd.lon_rho, grd.lat_rho, polygon(:,1), polygon(:,2));
  mask_custom = grd.mask_rho.*double(in);
- if strcmp(boxName,'GOA_10m')
+ if strcmp(boxName,'GA_10m')
      mask_custom(grd.mask_rho==0 | grd.h<=10)=0;
- elseif strcmp(boxName,'GOA_50m')
+ elseif strcmp(boxName,'GA_50m')
       mask_custom(grd.mask_rho==0 | grd.h<=50)=0;
  end
 

@@ -5,13 +5,13 @@
 % J. Jung
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear; clc; %close all
+clear; clc; close all
 
-region = 'M5_50km';
+region = 'Koryak_coast';
 
 exp = 'Dsm4';
 vari_str = 'aice';
-yyyy_all = 2019:2023;
+yyyy_all = 2018:2023;
 mm_all = 1:12;
 
 % Load grid information
@@ -50,6 +50,14 @@ for yi = 1:length(yyyy_all)
             filename_control = dir(filepattern_control);
             if ~isempty(filename_control)
                 file_control = [filepath_control, filename_control.name];
+                if filenum == 0119
+                    file_control = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm4_rhZop05/Sum_2018_Dsm4_rhZop05_avg_0119.nc';
+                elseif filenum == 1640
+                    file_control = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2022/Dsm4_nKC/SumFal_2022_Dsm4_nKC_avg_1640.nc';
+                elseif filenum == 1826
+                    file_control = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
+                end
+
                 vari = ncread(file_control,'aice');
                 if isempty(vari) == 1
                     aice = [aice; NaN];
@@ -66,12 +74,15 @@ for yi = 1:length(yyyy_all)
     end % mi
 end % yi
 
-figure; hold on; grid on
-plot(timenum, aice, '-');
-xticks([datenum(yyyy_all,6,1)]);
-xlim([datenum(yyyy_all(1),1,0) datenum(yyyy_all(end)+1,1,1)])
-datetick('x', 'yyyy', 'keepticks', 'keeplimits')
-
 output_filename = ['aice_ROMS_', region, '_daily.mat'];
 
+figure; hold on; grid on
+set(gcf, 'Position', [1 200 1300 500])
+plot(timenum, aice, '-k', 'LineWidth', 2);
+xticks([datenum(yyyy_all,1,1)]);
+xlim([datenum(yyyy_all(1),1,0) datenum(yyyy_all(end)+1,1,1)])
+datetick('x', 'mm/dd/yy', 'keepticks', 'keeplimits')
+set(gca, 'FontSize', 15)
+
+box on
 save(output_filename, 'timenum', 'aice')

@@ -7,11 +7,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; %close all
 
-region = 'Gulf_of_Anadyr_common';
-area_frac_cutoff = 0.95;
+region = 'Koryak_coast';
+area_frac_cutoff = 0.99;
 % area_frac_cutoff = 0.1;
 
-yyyy_all = 2010:2023;
+yyyy_all = 2010:2024;
 mm_all = 1:12;
 
 % Load grid information

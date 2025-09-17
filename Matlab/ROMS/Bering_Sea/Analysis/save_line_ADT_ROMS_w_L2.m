@@ -41,7 +41,7 @@ for li = 1:length(lines)
     timenum = ADTfile.timenum_all;
     timevec = datevec(timenum);
 
-    h_line = interp2(g.lon_rho, g.lat_rho, g.h, lon_line, lat_line);
+    h_line = interp2(g.lon_rho', g.lat_rho', g.h', lon_line, lat_line);
 
     for ti = 1:size(timevec,1)
 
@@ -53,9 +53,10 @@ for li = 1:length(lines)
         file = [filepath_control, exp, '_avg_', fstr, '.nc'];
 
         if exist(file) == 2
-            zeta = ncread(file,'zeta')';
+            zeta = ncread(file,'zeta');
+            SSS = ncread(file, 'salt', [1 1 g.N 1], [Inf Inf 1 Inf]);
             if ~isempty(zeta) 
-                zeta_line = interp2(g.lon_rho, g.lat_rho, zeta, lon_line, lat_line);
+                zeta_line = interp2(g.lon_rho', g.lat_rho', zeta', lon_line, lat_line);
                 ADT.model{index} = zeta_line';
             else
                 ADT.model{index} = NaN;

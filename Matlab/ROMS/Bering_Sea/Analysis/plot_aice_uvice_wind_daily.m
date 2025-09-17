@@ -5,9 +5,9 @@ map = 'Bering';
 startdate = datenum(2018,7,1);
 reftime = datenum(1968,5,23);
 
-timenum_start = datenum(2020,1,1);
+timenum_start = datenum(2023,1,1);
 tsstr = datestr(timenum_start, 'yyyymmdd');
-timenum_end = datenum(2020,6,30);
+timenum_end = datenum(2023,7,31);
 testr = datestr(timenum_end, 'yyyymmdd');
 
 g = grd('BSf');
@@ -28,7 +28,7 @@ switch map
         text_FS = 15;
 
         color_ice = [1.0000 0.0745 0.6510];
-        interval_ice = 20;
+        interval_ice = 40;
         scale_ice = 3;
         scale_ice_value = 0.4;
         scale_ice_lat = text_ice_lat-0.7;
@@ -97,7 +97,7 @@ cutoff_aice = 0.15;
 h1 = figure;
 set(gcf, 'Position', [1 200 800 500])
 plot_map(map, 'mercator', 'l')
-contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
+contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'Color', [0.8510 0.3255 0.0980]);
 
 t1 = textm(text_ice_lat, text_ice_lon, 'Sea ice', 'Color', color_ice, 'FontSize', text_FS);
 t2 = textm(text_wind_lat, text_wind_lon, 'Wind', 'Color', color_wind, 'FontSize', text_FS);
@@ -114,6 +114,15 @@ for ti = timenum_start:timenum_end
     fstr = num2str(filenum, '%04i');
     filename = [exp, '_avg_', fstr, '.nc'];
     file = [filepath, filename];
+
+    if filenum == 0119
+        file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm4_rhZop05/Sum_2018_Dsm4_rhZop05_avg_0119.nc';
+    elseif filenum == 1640
+        file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2022/Dsm4_nKC/SumFal_2022_Dsm4_nKC_avg_1640.nc';
+    elseif filenum == 1826
+        file = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
+    end
+
     aice = ncread(file, 'aice');
     uice = ncread(file, 'uice');
     vice = ncread(file, 'vice');

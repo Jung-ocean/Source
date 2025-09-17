@@ -32,13 +32,13 @@ if strcmp(sat, 'SMAP')
         vari = NaN;
     end
 
-    disp(['loading SMAP monthly SSS ', ystr, mstr]);
+    disp(['loading SMAP v6.0 monthly SSS ', ystr, mstr]);
 
 elseif strcmp(sat, 'SMOS')
     si = 2;
 
-    filepath_sat = ['/data/jungjih/Observations/Satellite_SSS/CEC/v9/monthly/'];
-    filename_sat = ['SMOS_L3_DEBIAS_LOCEAN_AD_', ystr, mstr, '_EASE_09d_25km_v09.nc'];
+    filepath_sat = ['/data/jungjih/Observations/Satellite_SSS/CEC/v10/monthly/'];
+    filename_sat = ['SMOS_L3_DEBIAS_LOCEAN_AD_', ystr, mstr, '_EASE_09d_25km_v10.nc'];
     file_sat = [filepath_sat, filename_sat];
     
     if exist(file_sat)
@@ -61,5 +61,5 @@ elseif strcmp(sat, 'SMOS')
         vari = NaN;
     end
 
-    disp(['loading SMOS SSS ', ystr, mstr]);
+    disp(['loading SMOS v10 monthly SSS ', ystr, mstr]);
 end

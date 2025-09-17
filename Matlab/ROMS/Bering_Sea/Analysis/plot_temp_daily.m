@@ -7,24 +7,19 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-map = 'Bering';
+map = 'NW_Bering';
 
 exp = 'Dsm4';
 vari_str = 'temp';
-yyyy = 2021;
+yyyy = 2022;
 ystr = num2str(yyyy);
-mm_all = 1:6;
+mm_all = 1:7;
 
 timenum_all = datenum(yyyy,mm_all(1),1):datenum(yyyy,mm_all(end),eomday(yyyy,mm_all(end)));
 
-layer = 45;
-
 isfill = 1;
-if layer < 0
-    dstr = num2str(-layer);
-else
-    dstr = num2str(layer);
-end
+layer = 45;
+dstr = num2str(layer);
 
 filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
 
@@ -60,7 +55,7 @@ for ti = 1:length(timenum_all)
     if layer < 0
         title([num2str(-layer), 'm temperature (', datestr(timenum, 'mmm dd, yyyy'), ')'], 'FontSize', 15);
         if isfill == 1
-            title([num2str(-layer), 'm or bottom salinity (', datestr(timenum, 'mmm dd, yyyy'), ')'], 'FontSize', 15);
+            title([num2str(-layer), 'm or bottom temperature (', datestr(timenum, 'mmm dd, yyyy'), ')'], 'FontSize', 15);
         end
     elseif layer == 45
         title(['SST (', datestr(timenum, 'mmm dd, yyyy'), ')'], 'FontSize', 15);

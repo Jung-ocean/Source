@@ -29,6 +29,8 @@ switch casename
         lon = [-190 -170]; lat = [60 66.3040];
     case 'NE_Pacific'
         lon = [-210 -110]; lat = [25 67];
+    case 'Felicio'
+        lon = [-185 -157]; lat = [49.5 66.5];
 end
 
 end % function load_domain

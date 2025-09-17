@@ -10,7 +10,7 @@ clear; clc; close all
 yyyy_all = 2012:2024;
 mm_all = 1:12;
 
-region = 'M5_50km';
+region = 'Koryak_coast';
 
 filepath_daily = '/data/jungjih/Observations/Sea_ice/ASI/daily_ROMSgrid/';
 
@@ -50,11 +50,12 @@ for yi = 1:length(yyyy_all)
 end % yi
 Fi = Fi/100;
 
-figure; hold on; grid on;
-plot(timenum, Fi, '-o')
-xticks(datenum(yyyy_all,1,15));
-datetick('x', 'yyyy')
-
 output_filename = ['Fi_ASI_', region, '_daily.mat'];
+
+figure; hold on; grid on;
+plot(timenum, Fi, '-k')
+xticks(datenum(yyyy_all,1,1));
+datetick('x', 'mm/dd/yy', 'keepticks', 'keeplimits')
+
 ddd
 save(output_filename, 'timenum', 'Fi')

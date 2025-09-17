@@ -1,155 +1,131 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Plot ROMS zeta and along-track ADT from Satellite
+% Compare ROMS ADT along the specific line to Merged podaac
 %
 % J. Jung
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-map = 'Bering';
-lines = 1:13;
+% Line numbers
+direction = 'a';
+if strcmp(direction, 'p')
+    lines = 3:3; % pline
+else
+    lines = 11:11; % aline
+end
+
+xlimit = [170 177.5];
+climit1 = [-20 20];
+climit2 = climit1;
+
+ADT = load(['ADT_model_obs_', direction, 'line.mat']);
+ADT = ADT.ADT;
+lines_all = cell2mat(ADT.line);
+timenum_all = cell2mat(ADT.time);
 
 isfilter = 0;
 filter_window = 8; % 1 ~ 5.75 km
 
-yyyy_all = 2018:2021;
+h1 = figure; hold on;
+set(gcf, 'Position', [1 1 800 800])
+t = tiledlayout(1,2);
 
-JFM = 1:3;
-AMJ = 4:6;
-JAS = 7:9;
-OND = 10:12;
-
-date.month = [JFM; AMJ; JAS; OND];
-date.label = {'JFM', 'AMJ', 'JAS', 'OND'};
-date.color = {'b', [0 0.4471 0.7412], 'r', [0.8510 0.3255 0.0980]};
-date.linewidth = [3, 1, 3, 1];
-
-% Load grid information
-g = grd('BSf');
-
-% Load ADT
-ADT = load('ADT_model_obs.mat');
-ADT = ADT.ADT;
-lines = cell2array(ADT.line);
-lines_unique = unique(lines);
-timenum_all = cell2array(ADT.time);
-
-for li = 1:length(lines_unique)
-    line = lines_unique(li); lstr = num2str(line, '%02i');
-    lon_line = ADT.lon{li}+360;
-    lat_line = ADT.lat{li};
-
-    h_interp = interp2(g.lon_rho+360, g.lat_rho, g.h, lon_line, lat_line);
-    dist = abs(h_interp - 200);
-    hindex = find(dist == min(dist));
-    while lon_line(hindex) < median(lon_line)
-        h_interp(hindex) = 1000;
-        dist = abs(h_interp - 200);
-        hindex = find(dist == min(dist));
-    end
+for li = 1:length(lines)
     
-    % Figure
-    h1 = figure; hold on;
-    set(gcf, 'Position', [1 1 1800 500])
-    t = tiledlayout(2,2);
+    line = lines(li);
+    lstr = num2str(line, '%02i');
 
-    nexttile(1, [2 1])
-    plot_map('Bering', 'mercator', 'l');
-    [C,h] = contourm(g.lat_rho, g.lon_rho, g.h, [50 200], 'Color', [.7 .7 .7]);
-    pm = plotm(lat_line, lon_line, '-k', 'LineWidth', 2);
-
-    for yi = 1:length(yyyy_all)
-        yyyy = yyyy_all(yi); ystr = num2str(yyyy);
-
-        for mi = 1:size(date.month,1)
-            mms = date.month(mi,:);
-            time_start = datenum(yyyy,mms(1),1)-1;
-            time_end = datenum(yyyy,mms(end)+1,1);
-
-            index = find(lines == line & ...
-                timenum_all > time_start & ...
-                timenum_all < time_end);
-
-            ADT_obs = [];
-            ADT_model = [];
-            for ii = 1:length(index)
-                ADT_obs = [ADT_obs; ADT.obs{index(ii)}];
-                ADT_model = [ADT_model; ADT.model{index(ii)}];
-            end
-
-            if isempty(ADT_model) == 1
-                ADT_obs_season = NaN(size(lon_line));
-                ADT_model_season = NaN(size(lon_line));
-            else
-                ADT_obs_season = mean(ADT_obs,1, 'omitnan');
-                ADT_model_season = mean(ADT_model,1, 'omitnan');
-            end
-
-            if isfilter == 1
-                nanobs = find(isnan(ADT_obs_season)==1);
-                ADT_obs_season_fill = fillmissing(ADT_obs_season,'linear',2,'EndValues','nearest');
-                ADT_obs_season_filt = smoothdata(ADT_obs_season_fill, 'gaussian', filter_window);
-                ADT_obs_season = ADT_obs_season_filt;
-                ADT_obs_season(nanobs) = NaN;
-
-                nanmodel = find(isnan(ADT_model_season)==1);
-                ADT_model_season_fill = fillmissing(ADT_model_season,'linear',2,'EndValues','nearest');
-                ADT_model_season_filt = smoothdata(ADT_model_season_fill, 'gaussian', filter_window);
-                ADT_model_season = ADT_model_season_filt;
-                ADT_model_season(nanmodel) = NaN;
-            end
-
-            nexttile(2);
-            if mi == 1
-                cla; hold on; grid on
-            end
-            p(mi) = plot(lon_line, 100*ADT_obs_season, 'Color', date.color{mi}, 'LineWidth', date.linewidth(mi));
-            if min(dist) < 50
-                plot(zeros(1,201)+lon_line(hindex), -100:100, '-k')
-            end
-            xlim([154 203])
-            ylim([10 70])
-
-            xlabel('Longitude')
-            ylabel('cm')
-
-            title(['Satellite L2 (', ystr, ')'])
-
-            nexttile(4);
-            if mi == 1
-                cla; hold on; grid on
-            end
-
-            plot(lon_line, 100*ADT_model_season, 'Color', date.color{mi}, 'LineWidth', date.linewidth(mi));
-            %     errorbar(lon_line, 100*zeta_mean, 100*zeta_std, 'Color', date.color{mi});
-            if min(dist) < 50
-                plot(zeros(1,201)+lon_line(hindex), -100:100, '-k')
-            end
-            xlim([154 203])
-            ylim([-40 20])
-
-            xlabel('Longitude')
-            ylabel('cm')
-
-            title(['ROMS (', ystr, ')'])
-        end
-
-        l = legend(p, date.label);
-        l.Location = 'NorthWest';
-
-        %     % Make gif
-        %     gifname = ['cmp_line_ADT_L2_seasonally.gif'];
-        %
-        %     frame = getframe(h1);
-        %     im = frame2im(frame);
-        %     [imind,cm] = rgb2ind(im,256);
-        %     if li == 1
-        %         imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
-        %     else
-        %         imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
-        %     end
-        
-        print(['cmp_line_ADT_L2_line_', lstr, '_', ystr], '-dpng')
+    lon_line = ADT.lon{line};
+    lat_line = ADT.lat{line};
+    
+    index = find(lines_all == line);
+    chk = 1;
+    len_data = length(ADT.model{index(chk)});
+    while len_data == 1
+        chk = chk+1;
+        len_data = length(ADT.model{index(chk)});
     end
+
+    timenum_all = [];
+    ADT_obs_all = NaN(len_data, length(index));
+    ADT_model_all = NaN(len_data, length(index));
+    for i = 1:length(index)
+        timenum_all = [timenum_all; ADT.time{index(i)}];
+        ADT_obs_tmp = ADT.obs{index(i)};
+        ADT_model_tmp = ADT.model{index(i)};
+        if isfilter == 1
+            nanind = find(isnan(ADT_obs_tmp) == 1);
+            ADT_obs_tmp = smoothdata(ADT_obs_tmp, 'gaussian', filter_window);
+            ADT_obs_tmp(nanind) = NaN;
+
+            nanind = find(isnan(ADT_model_tmp) == 1);
+            ADT_model_tmp = smoothdata(ADT_model_tmp, 'gaussian', filter_window);
+            ADT_model_tmp(nanind) = NaN;
+        end
+        ADT_obs_all(:,i) = ADT_obs_tmp;
+        ADT_model_all(:,i) = ADT_model_tmp;
+    end
+
+    ADT_obs_all = ADT_obs_all - mean(ADT_obs_all(:), 'omitnan');
+    ADT_model_all = ADT_model_all - mean(ADT_model_all(:), 'omitnan');
+
+lon_plot = lon_line+360;
+
+% Plot observation
+ax1 = nexttile(1); cla; hold on; grid on
+lon_diff = diff(lon_plot);
+index = find(lon_diff > 1.5*median(lon_diff));
+if ~isempty(index)
+    pindex = [0; index; length(lon_plot)];
+    for pi = 1:length(pindex)-1
+        if length(pindex(pi)+1:pindex(pi+1)) > 1
+            pcolor(lon_plot(pindex(pi)+1:pindex(pi+1)), timenum_all, ADT_obs_all(pindex(pi)+1:pindex(pi+1),:)'*100); shading interp
+        end
+    end
+else
+    pcolor(lon_plot, timenum_all, ADT_obs_all'*100); shading flat
 end
+colormap('jet(40)')
+caxis(climit1)
+
+xlim(xlimit)
+ylim([timenum_all(1)-10 timenum_all(end)+10])
+datetick('y', 'mmm dd, yyyy', 'keeplimits')
+
+% Plot model
+ax2 = nexttile(2); cla; hold on; grid on
+lon_diff = diff(lon_plot);
+index = find(lon_diff > 1.5*median(lon_diff));
+if ~isempty(index)
+    pindex = [0; index; length(lon_plot)];
+    for pi = 1:length(pindex)-1
+        if length(pindex(pi)+1:pindex(pi+1)) > 1
+            pcolor(lon_plot(pindex(pi)+1:pindex(pi+1)), timenum_all, ADT_model_all(pindex(pi)+1:pindex(pi+1),:)'*100); shading interp
+        end
+    end
+else
+    pcolor(lon_plot, timenum_all, ADT_model_all'*100); shading flat
+end
+colormap('jet(40)')
+caxis(climit2)
+
+xlim(xlimit)
+ylim([timenum_all(1)-10 timenum_all(end)+10])
+datetick('y', 'mmm dd, yyyy', 'keeplimits')
+yticklabels('')
+
+c = colorbar;
+c.Title.String = 'cm';
+
+xlabel('Longitude')
+
+title([direction, 'line ', num2str(line, '%02i')])
+
+t.TileSpacing = 'compact';
+t.Padding = 'compact';
+dfdf
+pause(1)
+print([direction, 'line_', lstr, '_zeta_ROMS'], '-dpng');
+
+end % li

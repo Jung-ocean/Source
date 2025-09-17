@@ -12,13 +12,13 @@ direction = 'a';
 if strcmp(direction, 'p')
     lines = 1:16; % pline
 else
-    lines = 1:29; % aline
+    lines = 1:13; % aline
 end
 
 ADT = load(['ADT_model_obs_', direction, 'line.mat']);
 ADT = ADT.ADT;
-lines_all = cell2array(ADT.line);
-timenum_all = cell2array(ADT.time);
+lines_all = cell2mat(ADT.line);
+timenum_all = cell2mat(ADT.time);
 
 isfilter = 0;
 filter_window = 8; % 1 ~ 5.75 km
@@ -37,10 +37,11 @@ plot_map('Bering', 'mercator', 'l');
 
 for li = 1:length(lines)
     
-    lstr = num2str(li, '%02i');
+    line = lines(li);
+    lstr = num2str(line, '%02i');
 
-    lon_line = ADT.lon{li};
-    lat_line = ADT.lat{li};
+    lon_line = ADT.lon{line};
+    lat_line = ADT.lat{line};
 
     if li == 1
         p = plotm(lat_line, lon_line, '-k', 'LineWidth', 2);
@@ -50,10 +51,16 @@ for li = 1:length(lines)
         p = plotm(lat_line, lon_line, '-k', 'LineWidth', 2);
     end
     
-    index = find(lines_all == li);
+    index = find(lines_all == line);
+    chk = 1;
+    len_data = length(ADT.model{index(chk)});
+    while len_data == 1
+        chk = chk+1;
+        len_data = length(ADT.model{index(chk)});
+    end
 
     timenum_all = [];
-    ADT_all = NaN(length(ADT.model{index(end)}), length(index));
+    ADT_all = NaN(len_data, length(index));
     for i = 1:length(index)
         timenum_all = [timenum_all; ADT.time{index(i)}];
         ADT_tmp = ADT.model{index(i)};
@@ -80,7 +87,7 @@ if ~isempty(index)
     end
 
 else
-    pcolor(lon_plot, timenum_all, ADT_all'*100); shading interp
+    pcolor(lon_plot, timenum_all, ADT_all'*100); shading flat
 end
 
 ax = gca;
@@ -97,7 +104,7 @@ c.Title.String = 'cm';
 
 xlabel('Longitude')
 
-title([direction, 'line ', num2str(li, '%02i')])
+title([direction, 'line ', num2str(line, '%02i')])
 
 t.TileSpacing = 'compact';
 t.Padding = 'compact';
@@ -105,16 +112,16 @@ t.Padding = 'compact';
 pause(1)
 print([direction, 'line_', lstr, '_zeta_ROMS'], '-dpng');
 
-% Make gif
-gifname = [direction, 'line_zeta_ROMS.gif'];
-
-frame = getframe(h1);
-im = frame2im(frame);
-[imind,cm] = rgb2ind(im,256);
-if li == 1
-    imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
-else
-    imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
-end
+% % Make gif
+% gifname = [direction, 'line_zeta_ROMS.gif'];
+% 
+% frame = getframe(h1);
+% im = frame2im(frame);
+% [imind,cm] = rgb2ind(im,256);
+% if li == 1
+%     imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+% else
+%     imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+% end
 
 end % li

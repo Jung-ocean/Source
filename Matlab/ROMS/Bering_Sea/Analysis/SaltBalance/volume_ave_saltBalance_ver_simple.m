@@ -12,11 +12,11 @@
 clear all;
 ExpID='Dsm4';
 filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', ExpID, '/'];
-aveBoxName='GOA'; % 'ORE4346', 'SCA'
+aveBoxName='GA'; % 'ORE4346', 'SCA'
 issub = 0;
 
-yyyy_all = 2019:2021;
-mm_start = 1;
+yyyy_all = 2019:2022;
+mm_start = 10;
 mm_end = 8;
 startdate = datenum(2018,7,1);
 
@@ -32,11 +32,11 @@ rdir = ncread(riverfile, 'river_direction');
 for r = 1:length(xpos)
     switch rdir(r)
         case 0
-            lon_river(r) = g.lon_u(ypos(r)+1,xpos(r));
-            lat_river(r) = g.lat_u(ypos(r)+1,xpos(r));
+            lon_river(r) = g.lon_u(xpos(r), ypos(r)+1);
+            lat_river(r) = g.lat_u(xpos(r), ypos(r)+1);
         case 1
-            lon_river(r) = g.lon_v(ypos(r),xpos(r)+1);
-            lat_river(r) = g.lat_v(ypos(r),xpos(r)+1);
+            lon_river(r) = g.lon_v(xpos(r)+1, ypos(r));
+            lat_river(r) = g.lat_v(xpos(r)+1, ypos(r));
     end
 end
 polygon = [;
@@ -60,7 +60,7 @@ yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 % fnumEND=218;
 % 2021
 % fnumSTR=1034; fnumEND=1093;
-fnumSTR= datenum(yyyy, mm_start, 1) - startdate + 1; 
+fnumSTR= datenum(yyyy-1, mm_start, 1) - startdate + 1; 
 fnumEND= datenum(yyyy, mm_end+1, 1) - startdate + 1; 
 
 % Outputs will be in 2 files, AVG and HIS (since just one file with inf dim):
@@ -74,7 +74,7 @@ createNewFilesYes=0;
 avg_fileHead=[filepath, ExpID, '_avg_'];
 his_fileHead=[filepath, ExpID, '_his_'];
 % dia_fileHead=[filepath, ExpID, '/Winter_2021_Dsm4_nKC_dia_'];
-grdfile='/data/sdurski/ROMS_Setups/Grids/Bering_Sea/BeringSea_DsmV2_grid.nc';
+grdfile='/data/jungjih/ROMS_BSf/Grid/BeringSea_Dsm4_wtZop05_grid.nc';
 
 Cp=3985; % J/kg/K
 rho0=1025; % kg/m3
@@ -195,7 +195,6 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
  %  z_w=get_z3D_use_zeta(h,zeta,'w',N,Vtransform,Vstretching, ...
  %                       theta_s,theta_b,Tcline);
  z_w = zlevs(h,zeta,theta_s,theta_b,Tcline,N,'w',Vtransform);
- z_w = permute(z_w, [2,3,1]);
  Hz=z_w(:,:,2:end)-z_w(:,:,1:end-1);
  
  % - inst V 
@@ -219,6 +218,14 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
   %   fname=[avg_fileHead int2strPAD(fnum0,4) '.nc'];
   fname=[avg_fileHead num2str(fnum0, '%04i') '.nc'];
   disp(fname);
+  if fnum0 == 0119
+      fname = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm4_rhZop05/Sum_2018_Dsm4_rhZop05_avg_0119.nc';
+  elseif fnum0 == 1640
+      fname = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2022/Dsm4_nKC/SumFal_2022_Dsm4_nKC_avg_1640.nc';
+  elseif fnum0 == 1826
+      fname = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
+  end
+
   t_avg(it)=ncread(fname,'ocean_time');
   zeta_avg=double(ncread(fname,'zeta'));
   T=double(ncread(fname,'salt'));
@@ -246,7 +253,6 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
   %                        theta_s,theta_b,Tcline);
   %   Hz=z_w(:,:,2:end)-z_w(:,:,1:end-1);
   z_w = zlevs(h,zeta_avg,theta_s,theta_b,Tcline,N,'w',Vtransform);
-  z_w = permute(z_w, [2,3,1]);
   Hz=z_w(:,:,2:end)-z_w(:,:,1:end-1);
 
   % volume and volume-ave salt from the time avg fields:

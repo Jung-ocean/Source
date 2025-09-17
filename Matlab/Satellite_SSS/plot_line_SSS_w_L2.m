@@ -1,0 +1,158 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Compare ROMS ADT along the specific line to Merged podaac
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; %close all
+
+sat = 'SMOS';
+
+% Line numbers
+direction = 'a';
+line = 13;
+lstr = num2str(line, '%02i');
+
+isfilter = 0;
+filter_window = 8; % 1 ~ 5.75 km
+
+xlimit = [170 178];
+ylimit = [datenum(2019,1,1) datenum(2022,12,31)];
+climit1 = [20 60];
+climit2 = [31 34];
+
+ADTpath = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/zeta/vs_L2/v5.2/';
+ADT = load([ADTpath, 'ADT_model_obs_', direction, 'line.mat']);
+ADT = ADT.ADT;
+lines_all = cell2mat(ADT.line);
+timenum_ADT = cell2mat(ADT.time);
+lon_line = ADT.lon{line};
+lat_line = ADT.lat{line};
+
+index = find(lines_all == line);
+chk = 1;
+len_data = length(ADT.model{index(chk)});
+while len_data == 1
+    chk = chk+1;
+    len_data = length(ADT.model{index(chk)});
+end
+
+timenum_ADT = [];
+ADT_obs_all = NaN(len_data, length(index));
+for i = 1:length(index)
+    timenum_ADT = [timenum_ADT; ADT.time{index(i)}];
+    ADT_obs_tmp = ADT.obs{index(i)};
+    if isfilter == 1
+        nanind = find(isnan(ADT_obs_tmp) == 1);
+        ADT_obs_tmp = smoothdata(ADT_obs_tmp, 'gaussian', filter_window);
+        ADT_obs_tmp(nanind) = NaN;
+    end
+    ADT_obs_all(:,i) = ADT_obs_tmp;
+end
+
+% SSS
+if strcmp(sat, 'SMAP')
+    SSSpath = '/data/jungjih/Observations/Satellite_SSS/RSS/v6.0/';
+    SSS = load([SSSpath, 'SSS_SMAP_', direction, 'line.mat']);
+elseif strcmp(sat, 'SMOS')
+    SSSpath = '/data/jungjih/Observations/Satellite_SSS/CEC/v9/';
+    SSS = load([SSSpath, 'SSS_SMOS_', direction, 'line.mat']);
+end
+SSS = SSS.SSS;
+lines_all = cell2mat(SSS.line);
+timenum_SSS = cell2mat(SSS.time);
+
+index = find(lines_all == line);
+chk = 1;
+len_data = length(SSS.sat{index(chk)});
+while len_data == 1
+    chk = chk+1;
+    len_data = length(SSS.sat{index(chk)});
+end
+
+timenum_SSS = [];
+SSS_sat_all = NaN(len_data, length(index));
+for i = 1:length(index)
+    timenum_SSS = [timenum_SSS; SSS.time{index(i)}];
+    SSS_sat_tmp = SSS.sat{index(i)};
+    if isfilter == 1
+        nanind = find(isnan(SSS_sat_tmp) == 1);
+        SSS_sat_tmp = smoothdata(SSS_sat_tmp, 'gaussian', filter_window);
+        SSS_sat_tmp(nanind) = NaN;
+    end
+    SSS_sat_all(:,i) = SSS_sat_tmp;
+end
+
+% Plot
+h1 = figure; hold on;
+set(gcf, 'Position', [1 1 800 800])
+t = tiledlayout(1,2);
+title(t, {[direction, 'line ', num2str(line, '%02i')], ''})
+
+lon_plot = lon_line+360;
+
+% Plot observation
+ax1 = nexttile(1); cla; hold on; grid on
+lon_diff = diff(lon_plot);
+index = find(lon_diff > 1.5*median(lon_diff));
+if ~isempty(index)
+    pindex = [0; index; length(lon_plot)];
+    for pi = 1:length(pindex)-1
+        if length(pindex(pi)+1:pindex(pi+1)) > 1
+            pcolor(lon_plot(pindex(pi)+1:pindex(pi+1)), timenum_ADT, ADT_obs_all(pindex(pi)+1:pindex(pi+1),:)'*100); shading interp
+        end
+    end
+else
+    pcolor(lon_plot, timenum_ADT, ADT_obs_all'*100); shading flat
+end
+colormap(ax1, 'jet(40)')
+caxis(climit1)
+
+xlim(xlimit)
+ylim(ylimit)
+datetick('y', 'mmm dd, yyyy', 'keeplimits')
+
+c = colorbar;
+c.Title.String = 'cm';
+
+% SSS_sat_all_mean = mean(SSS_sat_all,2, 'omitnan');
+% SSS_sat_all = SSS_sat_all - SSS_sat_all_mean;
+
+SSS_sat_nan = sum(isnan(SSS_sat_all));
+index = find(SSS_sat_nan ~= size(SSS_sat_all,1));
+timenum_SSS = timenum_SSS(index);
+SSS_sat_all = SSS_sat_all(:,index);
+
+% Plot SSS
+ax2 = nexttile(2); cla; hold on; grid on
+lon_diff = diff(lon_plot);
+index = find(lon_diff > 1.5*median(lon_diff));
+if ~isempty(index)
+    pindex = [0; index; length(lon_plot)];
+    for pi = 1:length(pindex)-1
+        if length(pindex(pi)+1:pindex(pi+1)) > 1
+            pcolor(lon_plot(pindex(pi)+1:pindex(pi+1)), timenum_SSS, SSS_sat_all(pindex(pi)+1:pindex(pi+1),:)'); shading flat
+        end
+    end
+else
+    pcolor(lon_plot, timenum_SSS, SSS_sat_all'); shading flat
+end
+colormap(ax2, 'jet(30)')
+caxis(climit2)
+
+xlim(xlimit)
+ylim(ylimit)
+datetick('y', 'mmm dd, yyyy', 'keeplimits')
+yticklabels('')
+
+c = colorbar;
+c.Title.String = 'psu';
+
+xlabel('Longitude')
+
+t.TileSpacing = 'compact';
+t.Padding = 'compact';
+dfdf
+pause(1)
+print([direction, 'line_', lstr, '_zeta_ROMS'], '-dpng');

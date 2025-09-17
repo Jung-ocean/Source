@@ -1,15 +1,36 @@
-function vari = load_models_profile_daily(model, g, vari_str, datenum_target, lat_target, lon_target, depth_target)
+function vari = load_models_profile_daily(model, g, vari_str, datenum_target, lat_target, lon_target, depth_target, h_obs)
+
+if nargin < 8
+    h_obs = NaN;
+end
 
 yyyymmdd = datestr(datenum_target, 'yyyymmdd');
 
 h = g.h;
 lat = g.lat_rho;
 lon = g.lon_rho;
-
+F = scatteredInterpolant(lon(:), lat(:), ones(size(lon(:))));
 wgs84 = wgs84Ellipsoid("km");
-dist = distance(lat(:),lon(:),lat_target,lon_target,wgs84);
-index = find(dist == min(dist));
-[lonind,latind] = ind2sub(size(g.lat_rho),index);
+if strcmp(vari_str, 'u') | strcmp(vari_str, 'v')
+    f = figure('Visible', 'off');
+    [ll, c] = contour(lon, lat, h, [abs(h_obs) abs(h_obs)]);
+    close(f)
+    dist = distance(ll(2,:),ll(1,:),lat_target,lon_target,wgs84);
+    index = find(dist == min(dist));
+    lat_target_model = ll(2,index);
+    lon_target_model = ll(1,index);
+    
+    lat_u = g.lat_u;
+    lon_u = g.lon_u;
+    Fu = scatteredInterpolant(lon_u(:), lat_u(:), ones(size(lon_u(:))));
+    lat_v = g.lat_v;
+    lon_v = g.lon_v;
+    Fv = scatteredInterpolant(lon_v(:), lat_v(:), ones(size(lon_v(:))));
+else
+    dist = distance(lat(:),lon(:),lat_target,lon_target,wgs84);
+    index = find(dist == min(dist));
+    [lonind,latind] = ind2sub(size(g.lat_rho),index);
+end
 
 switch model
     case 'NANOOS'
@@ -47,21 +68,29 @@ end
 if exist(file)
 
     if strcmp(vari_str, 'u') | strcmp(vari_str, 'v')
-        u_tmp1 = squeeze(ncread(file, 'u', [lonind latind 1 1], [1 1 Inf Inf]));
-        u_tmp2 = squeeze(ncread(file, 'u', [lonind+1 latind 1 1], [1 1 Inf Inf]));
-        u_tmp = (u_tmp1 + u_tmp2)/2;
+        u_model = ncread(file, 'u');
+        v_model = ncread(file, 'v');
 
-        v_tmp1 = squeeze(ncread(file, 'v', [lonind latind 1 1], [1 1 Inf Inf]));
-        v_tmp2 = squeeze(ncread(file, 'v', [lonind latind+1 1 1], [1 1 Inf Inf]));
-        v_tmp = (v_tmp1 + v_tmp2)/2;
+        u_tmp = []; v_tmp = [];
+        for ni = 1:g.N
+            u_2d = u_model(:,:,ni);
+            Fu.Values = u_2d(:);
+            u_tmp(ni,:) = Fu(lon_target_model, lat_target_model);
 
-        angle = ncread(file, 'angle', [lonind latind], [1 1]);
+            v_2d = v_model(:,:,ni);
+            Fv.Values = v_2d(:);
+            v_tmp(ni,:) = Fv(lon_target_model, lat_target_model);
+        end
+        
+        angle_model = ncread(file, 'angle');
+        F.Values = angle_model(:);
+        angle = F(lon_target_model, lat_target_model);
 
         cosa = cos(angle);
         sina = sin(angle);
         u = u_tmp.*cosa - v_tmp.*sina;
         v = v_tmp.*cosa + u_tmp.*sina;
-
+        
         vari_tmp = eval(vari_str);
     elseif strcmp(vari_str, 'pden')
         temp = squeeze(ncread(file, 'temp', [lonind latind 1 1], [1 1 Inf Inf]));
@@ -76,8 +105,10 @@ if exist(file)
         vari_tmp = squeeze(ncread(file, vari_str, [lonind latind 1 1], [1 1 Inf Inf]));
     end
 
-    zeta = ncread(file, 'zeta', [lonind latind 1], [1 1 Inf]);
-    depth = squeeze(zlevs(h(lonind, latind),zeta,g.theta_s,g.theta_b,g.hc,g.N,'r',2));
+    zeta_model = ncread(file, 'zeta');
+    F.Values = zeta_model(:);
+    zeta = F(lon_target_model, lat_target_model);
+    depth = squeeze(zlevs(h_obs,zeta,g.theta_s,g.theta_b,g.hc,g.N,'r',2));
     vari = interp1(depth,vari_tmp,depth_target);
     if min(depth) > depth_target
         disp(['Maximum depth (', num2str(min(depth)), ' m) is shallower than the target depth (', num2str(depth_target), ' m). Bottom value is loaded'])

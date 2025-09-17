@@ -7,10 +7,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
+region = 'NW_Bering';
+
 exp = 'Dsm4';
 vari_str = 'aice';
 yyyy_all = 2023:2023;
-mm_all = 3:5;
+mm_all = 1:6;
 % dd_all = 1:28;
 
 switch vari_str
@@ -55,6 +57,15 @@ for yi = 1:length(yyyy_all)
             fstr = num2str(filenum, '%04i');
             filename = [exp, '_avg_', fstr, '.nc'];
             file = [filepath_control, filename];
+
+            if filenum == 0119
+                file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm4_rhZop05/Sum_2018_Dsm4_rhZop05_avg_0119.nc';
+            elseif filenum == 1640
+                file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2022/Dsm4_nKC/SumFal_2022_Dsm4_nKC_avg_1640.nc';
+            elseif filenum == 1826
+                file = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
+            end
+
             vari_control = ncread(file, 'aice');
             ot = ncread(file, 'ocean_time');
 
@@ -62,19 +73,19 @@ for yi = 1:length(yyyy_all)
             time_title = datestr(timenum, 'mmm dd, yyyy');
 
             % Figure title
-            title(t, {time_title, ''}, 'FontSize', 25);
+            title(t, time_title, 'FontSize', 25);
 
             nexttile(2)
             if mi == 1 && di == 1
-                plot_map('Bering', 'mercator', 'l')
+                plot_map(region, 'mercator', 'l')
                 hold on;
-                contourm(lat, lon, h, [50 75 100 200], 'k');
+                contourm(lat, lon, h, [50 100 200], 'Color', [0.8510 0.3255 0.0980]);
             else
                 delete(T(1));
             end
 
             T(1) = pcolorm(lat,lon,vari_control.*mask);
-            colormap gray
+            colormap(gray(10))
             uistack(T(1),'bottom')
             caxis(climit_model)
             if mi == 1 && di == 1
@@ -82,7 +93,7 @@ for yi = 1:length(yyyy_all)
                 %             c.Title.String = unit;
                 c.Ticks = [climit_model(1):.5:climit_model(end)];
             end
-            title(['ROMS'], 'Interpreter', 'None')
+            title(['ROMS'], 'Interpreter', 'None', 'FontSize', 20)
 
             % Satellite
             filepath_sat = filepath_ASI;
@@ -98,14 +109,14 @@ for yi = 1:length(yyyy_all)
             nexttile(1);
 
             if mi == 1 && di == 1
-                plot_map('Bering', 'mercator', 'l')
+                plot_map(region, 'mercator', 'l')
                 hold on;
-                contourm(lat, lon, h, [50 75 100 200], 'k');
+                contourm(lat, lon, h, [50 100 200], 'Color', [0.8510 0.3255 0.0980]);
             else
                 delete(T(2));
             end
             T(2) = pcolorm(lat,lon,vari_sat.*mask);
-            colormap gray
+            colormap(gray(10))
             uistack(T(2),'bottom')
             caxis(climit_sat)
             if mi == 1 && di == 1
@@ -114,7 +125,7 @@ for yi = 1:length(yyyy_all)
 %                 c.Ticks = [climit_sat(1):.5:climit_sat(end)];
             end
 
-            title('Satellite (ASI)', 'Interpreter', 'None')
+            title('Satellite (ASI)', 'Interpreter', 'None', 'FontSize', 20)
 
             t.TileSpacing = 'compact';
             t.Padding = 'compact';
@@ -123,7 +134,7 @@ for yi = 1:length(yyyy_all)
 %             print(['cmp_', vari_str, '_satellite_daily_', datestr(timenum, 'yyyymmdd')],'-dpng');
 
             % Make gif
-            gifname = ['cmp_', vari_str, '_satellite_daily_', ystr, '.gif'];
+            gifname = ['cmp_', vari_str, '_satellite_daily_', region, '_', ystr, '.gif'];
 
             frame = getframe(h1);
             im = frame2im(frame);

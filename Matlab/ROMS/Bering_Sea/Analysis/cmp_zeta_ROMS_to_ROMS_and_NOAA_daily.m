@@ -14,7 +14,7 @@ filenum_all = 517:729;
 timenum_all = [startdate + filenum_all]-1;
 
 filepath_con = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng/ncks/';
-filepath_exp = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng_awdrag/ncks/';
+filepath_exp = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng/Dsm2_spng_awdrag/ncks/';
 
 filepath_sta = '/data/jungjih/Observations/NOAA_stations/';
 
@@ -32,7 +32,7 @@ for si = 1:length(station_name)
     id_sta = station_ID(si); idstr = num2str(id_sta);
 
     dist = sqrt((g.lon_rho - lon_sta).^2 + abs(g.lat_rho - lat_sta).^2);
-    [latind, lonind] = find(dist == min(dist(:)));
+    [lonind, latind] = find(dist == min(dist(:)));
 
     if si == 1
         latind = latind - 1;
@@ -108,21 +108,21 @@ print('map_stations', '-dpng')
 % kmlwrite('map_station.kml', map_station)
 
 figure; hold on; grid on;
-set(gcf, 'Position', [1 200 1200 600])
+set(gcf, 'Position', [1 200 1300 500])
 t = tiledlayout(2,1);
 for si = 1:length(station_name)
     nexttile(si); hold on; grid on
-    ps = plot(timenum_all, vari_sta(si,:), 'k');
-    pc = plot(timenum_all, vari_con(si,:), 'r');
-    pe = plot(timenum_all, vari_exp(si,:), 'b');
+    ps = plot(timenum_all, 100*vari_sta(si,:), 'k', 'LineWidth', 2);
+    pc = plot(timenum_all, 100*vari_con(si,:), 'r', 'LineWidth', 2);
+    pe = plot(timenum_all, 100*vari_exp(si,:), 'b', 'LineWidth', 2);
   
     xticks([datenum(2019,1:12,1) datenum(2020,1:12,1)])
 
     xlim([timenum_all(1)-1 timenum_all(end)+1])
-    ylim([-1.7 1.7]);
+    ylim([-170 170]);
 
-    datetick('x', 'mmm, yyyy', 'keepticks', 'keeplimits')
-    ylabel('m');
+    datetick('x', 'mmm dd, yyyy', 'keepticks', 'keeplimits')
+    ylabel('cm');
     
     if si == 1
         l = legend([ps, pc, pe], 'NOAA station', 'Control', 'Wind drag only');

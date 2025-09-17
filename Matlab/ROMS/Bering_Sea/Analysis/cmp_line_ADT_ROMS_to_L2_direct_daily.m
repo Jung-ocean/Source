@@ -15,11 +15,11 @@ if strcmp(direction, 'p')
     lines = 1:15; % pline
 else
     %     lines = 1:24; % aline
-    lines = 7:7; % aline
+    lines = 10:10; % aline
 end
 
-yyyy_all = 2019:2022;
-mm = 8;
+yyyy_all = 2020:2020;
+mm = 5;
 
 isQC = 0;
 iscut = 0; % Cut data points near the coastline
@@ -27,9 +27,9 @@ isfilter = 0;
 filter_window = 8; % 1 ~ 5.75 km
 
 % xlimit = [154 203];
-lon_limit = 182;
+lon_limit = 180;
 % xlimit = [175 187.5];
-ylimit = [-25 25];
+ylimit = [-50 50];
 
 % Load grid information
 g = grd('BSf');
@@ -37,9 +37,9 @@ g = grd('BSf');
 % Load ADT
 ADT = load(['ADT_model_obs_', direction, 'line.mat']);
 ADT = ADT.ADT;
-lines_all = cell2array(ADT.line);
+lines_all = cell2mat(ADT.line);
 lines_unique = unique(lines_all);
-timenum_all = cell2array(ADT.time);
+timenum_all = cell2mat(ADT.time);
 
 % Figure
 h1 = figure; hold on; grid on

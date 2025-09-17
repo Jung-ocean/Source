@@ -7,15 +7,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc
 
-yyyy_all = 2010:2023;
+yyyy_all = 2010:2024;
 month_avg = [1:12];
 filename_header = 'SMOS_L3_DEBIAS_LOCEAN_AD_';
-filename_footer = '_EASE_09d_25km_v09';
+filename_footer = '_EASE_09d_25km_v10';
 
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
-    filepath_all = ['/data/jungjih/Observations/Satellite_SSS/Global/CEC/v9/4day/'];
+    filepath_all = ['/data/jungjih/Observations/Satellite_SSS/CEC/v10/4day/'];
 
     eomdays = eomday(yyyy,1:12);
     

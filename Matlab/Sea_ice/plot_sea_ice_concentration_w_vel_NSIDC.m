@@ -8,9 +8,9 @@
 clear; clc; close all
 
 yyyy = 2022; 
-mm_all = 1:2;
+mm_all = 1:6;
 
-region = 'Gulf_of_Anadyr';
+region = 'NW_Bering';
 
 ystr = num2str(yyyy);
 filepath_concentration = ['/data/jungjih/Observations/Sea_ice/NSIDC/'];
@@ -27,9 +27,13 @@ lat_vel = double(ncread(file_vel, 'latitude'));
 u = ncread(file_vel, 'u');
 v = ncread(file_vel, 'v');
 
-h1 = figure; hold on; grid on;
-set(gcf, 'Position', [1 200 800 500])
-plot_map('Gulf_of_Anadyr', 'mercator', 'l');
+scale = 0.1;
+interval = 1;
+color_vel = [0.0588 1.0000 1.0000];
+
+f1 = figure; hold on; grid on;
+set(gcf, 'Position', [1 200 1300 800])
+plot_map(region, 'mercator', 'l');
 
 for mi = 1:length(mm_all)
     mm = mm_all(mi); mstr = num2str(mm, '%02i');
@@ -44,29 +48,63 @@ for mi = 1:length(mm_all)
         u_day = double(squeeze(u(:,:,YTD)));
         v_day = double(squeeze(v(:,:,YTD)));
 
-        ugeo = [cosd(lon_vel).*u_day + sind(lon_vel).*v_day];
-        vgeo = [-sind(lon_vel).*u_day + cosd(lon_vel).*v_day];
+        uice = [cosd(lon_vel).*u_day + sind(lon_vel).*v_day];
+        vice = [-sind(lon_vel).*u_day + cosd(lon_vel).*v_day];
+
+        [uice, vice, lon_scl] = adjust_vector(lon_vel, lat_vel, uice, vice);
 
         p = pcolorm(lat, lon, aice_day);
+        colormap(gray(10));
         uistack(p, 'bottom');
         caxis([0 1]);
         c = colorbar;
 
-        scale = 0.1;
-        q = quiverm(lat_vel, lon_vel, vgeo.*scale, ugeo.*scale, 0);
-        q(1).Color = 'k';
-        q(2).Color = 'k';
+        q = quiverm_J( ...
+            lat_vel(1:interval:end, 1:interval:end), ...
+            lon_vel(1:interval:end, 1:interval:end), ...
+            scale.*vice(1:interval:end, 1:interval:end), ... 
+            scale.*uice(1:interval:end, 1:interval:end), ...
+            0);
+        q(1).Color = color_vel;
+        q(2).Color = color_vel;
+        q(1).LineWidth = 2;
+        q(2).LineWidth = 2;
 
-        qref = quiverm(66, -184, 0, 10*scale, 0);
-        qref(1).Color = 'k';
-        qref(2).Color = 'k';
-        qt = textm(65.7, -184, '10 cm/s');
+        lat_scale = 65;
+        lon_scale = -190;
+        scale_value = 10;
+        [uscale, vscale, lon_scl] = adjust_vector(lon_scale, lat_scale, scale_value, scale_value);
+        qref = quiverm_J(lat_scale, lon_scale, 0, uscale*scale, 0);
+        qref(1).Color = color_vel;
+        qref(2).Color = color_vel;
+        qref(1).LineWidth = 2;
+        qref(2).LineWidth = 2;
+        qref2 = quiverm_J(lat_scale, lon_scale, vscale*scale, 0, 0);
+        qref2(1).Color = color_vel;
+        qref2(2).Color = color_vel;
+        qref2(1).LineWidth = 2;
+        qref2(2).LineWidth = 2;
 
-        title(datestr(datenum(yyyy,mm,dd), 'mmm dd, yyyy'))
+        qt = textm(lat_scale-.5, lon_scale, '10 cm/s', 'FontSize', 15, 'Color', color_vel);
 
-        print(['concentration_w_vel_NSIDC_', datestr(datenum(yyyy,mm,dd), 'yyyymmdd')], '-dpng');
+        title(['NSIDC (', datestr(datenum(yyyy,mm,dd), 'mmm dd, yyyy'), ')'], 'FontSize', 15)
+
+        % Make gif
+        gifname = ['concentration_w_vel_NSIDC_', ystr, '.gif'];
+
+        frame = getframe(f1);
+        im = frame2im(frame);
+        [imind,cm] = rgb2ind(im,256);
+        if di == 1 & mi == 1
+            imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+        else
+            imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+        end
 
         delete(p)
         delete(q)
+        delete(qref)
+        delete(qref2)
+        delete(qt)
     end
 end

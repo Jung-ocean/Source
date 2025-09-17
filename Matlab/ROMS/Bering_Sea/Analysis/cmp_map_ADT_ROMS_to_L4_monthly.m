@@ -10,7 +10,7 @@ clear; clc; close all
 exp = 'Dsm4';
 vari_str = 'zeta';
 yyyy_all = 2019:2022;
-mm = 2;
+mm = 4;
 
 region = 'Bering';
 
@@ -38,7 +38,7 @@ filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
 filepath_control = [filepath_all, exp, '/monthly/'];
 
 % Satellite L4
-filepath_CMEMS = ['/data/jungjih/Observations/Satellite_SSH/CMEMS/monthly/'];
+filepath_CMEMS = ['/data/jungjih/Observations/Satellite_SSH/CMEMS_old/monthly/'];
 
 % Load grid information
 g = grd('BSf');
@@ -63,7 +63,7 @@ for yi = 1:length(yyyy_all)
     if ~exist(file)
         zeta = NaN;
     else
-        zeta = mask.*ncread(file, 'zeta')';
+        zeta = mask.*ncread(file, 'zeta');
     end
     zeta = zeta - mean(zeta(:), 'omitnan');
     vari = zeta*100;

@@ -11,7 +11,7 @@ map = 'Bering';
 
 exp = 'Dsm4';
 vari_str = 'zeta';
-yyyy = 2023;
+yyyy = 2020;
 ystr = num2str(yyyy);
 mm_all = 1:6;
 

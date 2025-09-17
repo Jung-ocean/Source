@@ -9,7 +9,7 @@ clear; clc; close all
 
 exp = 'Dsm4';
 vari_str = 'salt';
-yyyy = 2021;
+yyyy = 2020;
 ystr = num2str(yyyy);
 mm_all = 1:6;
 
@@ -19,9 +19,9 @@ Trans_label = 'Koryak_coast';
 domaxis = [-185.1117 -182.7350 62.1252 60.5932];
 ylimit = [-500 0];
 
-Trans_label = 'Cape_Navarin';
-domaxis = [-181.1100 -178.7333 62.7941 61.2621];
-ylimit = [-200 0];
+% Trans_label = 'Cape_Navarin';
+% domaxis = [-181.1100 -178.7333 62.7941 61.2621];
+% ylimit = [-200 0];
 
 filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
 

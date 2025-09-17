@@ -1,0 +1,126 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Plot ROMS temperature, salinity, velocity vertical section
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+exp = 'Dsm4';
+yyyy = 2023;
+ystr = num2str(yyyy);
+mm_all = 1:7;
+
+timenum_all = datenum(yyyy,mm_all(1),1):datenum(yyyy,mm_all(end),eomday(yyyy,mm_all(end)));
+
+Trans_label = 'Koryak_coast';
+domaxis = [-185.1117 -182.7350 62.1252 60.5932];
+ylimit = [-500 0];
+
+% Trans_label = 'Cape_Navarin';
+% domaxis = [-181.1100 -178.7333 62.7941 61.2621];
+% ylimit = [-200 0];
+
+filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
+
+% Load grid information
+g = grd('BSf');
+
+savename = 'tsv';
+
+f1 = figure; hold on
+t = tiledlayout(1,3);
+t.TileSpacing = 'compact';
+t.Padding = 'compact';
+set(gcf, 'Position', [1 200 1300 500])
+
+for ti = 1:length(timenum_all)
+    
+    timenum = timenum_all(ti);
+    title(t, datestr(timenum, 'mmm dd, yyyy'), 'FontSize', 20)
+
+    % Temperature
+    [x, Yi, data] = load_BSf_vertical(g, 'temp', timenum, domaxis);
+
+    % Figure properties
+    colormap = 'jet';
+    climit = [-2 14];
+    interval = 1;
+    [color, contour_interval] = get_color(colormap, climit, interval);
+    unit = '^oC';
+
+    ax1 = nexttile(1);
+    p1 = plot_contourf([], x, Yi, data, color, climit, contour_interval);
+    xlim([min(x(:,1)) max(x(:,1))])
+    ylim(ylimit)
+    xticks(unique(floor(x(:,1))));
+    xlabel('Longitude');
+    ylabel('Depth (m)');
+    set(gca, 'FontSize', 12)
+    c = colorbar;
+    c.Title.String = unit;
+    title(['Temperature'], 'FontSize', 15);
+
+    % Salinity
+    [x, Yi, data] = load_BSf_vertical(g, 'salt', timenum, domaxis);
+
+    % Figure properties
+    colormap = 'jet';
+    climit = [29 34];
+    interval = 0.25;
+    [color, contour_interval] = get_color(colormap, climit, interval);
+    unit = 'psu';
+
+    ax2 = nexttile(2);
+    p2 = plot_contourf([], x, Yi, data, color, climit, contour_interval);
+    xlim([min(x(:,1)) max(x(:,1))])
+    ylim(ylimit)
+    xticks(unique(floor(x(:,1))));
+    xlabel('Longitude');
+    ylabel('');
+    set(gca, 'FontSize', 12)
+    c = colorbar;
+    c.Title.String = unit;
+    title(['Salinity'], 'FontSize', 15);
+    yticklabels('')
+
+    % Normal velocity
+    [x, Yi, data] = load_BSf_vertical(g, 'v_n', timenum, domaxis);
+
+    % Figure properties
+    colormap = 'redblue';
+    climit = [-50 50];
+    interval = 5;
+    [color, contour_interval] = get_color(colormap, climit, interval);
+    unit = 'cm/s';
+
+    ax3 = nexttile(3);
+    p3 = plot_contourf([], x, Yi, data*100, color, climit, contour_interval);
+    xlim([min(x(:,1)) max(x(:,1))])
+    ylim(ylimit)
+    xticks(unique(floor(x(:,1))));
+    xlabel('Longitude');
+    ylabel('');
+    set(gca, 'FontSize', 12)
+    c = colorbar;
+    c.Title.String = unit;
+    title(['Normal velocity'], 'FontSize', 15);
+    yticklabels('')
+
+    % Make gif
+    gifname = ['vert_', savename, '_', Trans_label, '_', ystr, '_daily', '.gif'];
+
+    frame = getframe(f1);
+    im = frame2im(frame);
+    [imind,cm] = rgb2ind(im,256);
+    if ti == 1
+        imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+    else
+        imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+    end
+    
+    delete(p1)
+    delete(p2)
+    delete(p3)
+end

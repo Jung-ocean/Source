@@ -20,13 +20,13 @@ else
 %     lines = 1:24; % aline
     lines = 4:13; % aline
 %     lon_limit = 190;
-    lon_limit = 202.5;
+    lon_limit = 180;
 %     ylimit = [-30 30];
     ylimit = [-50 50];
 end
 
 yyyy_all = 2019:2022;
-mm = 11;
+mm = 7;
 
 ismap = 0;
 isQC = 0;
@@ -43,9 +43,9 @@ g = grd('BSf');
 % Load ADT
 ADT = load(['ADT_model_obs_', direction, 'line.mat']);
 ADT = ADT.ADT;
-lines_all = cell2array(ADT.line);
+lines_all = cell2mat(ADT.line);
 lines_unique = unique(lines_all);
-timenum_all = cell2array(ADT.time);
+timenum_all = cell2mat(ADT.time);
 
 % Figure
 h1 = figure; hold on; grid on

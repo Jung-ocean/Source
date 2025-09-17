@@ -180,5 +180,20 @@ switch region
         mask(hind) = NaN;
         area(hind) = NaN;
 
+    case 'Koryak_coast'
+        polygon = [;
+            -188.8807   62.6
+            -181.0028   62.6
+            -181.0028   56
+            -188.8807   56
+            -188.8807   62.6
+            ];
+        [in, on] = inpolygon(g.lon_rho, g.lat_rho, polygon(:,1), polygon(:,2));
+        mask = mask.*in./in;
+        area = area.*mask;
+
+        hind = find(g.h > 200);
+        mask(hind) = NaN;
+        area(hind) = NaN;
 end
 end

@@ -1,0 +1,74 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Plot ROMS varaible seasonal
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+exp = 'Dsm4';
+vari_str = 'SSS';
+
+region = 'Felicio';
+
+yyyy = 2019;
+ystr = num2str(yyyy);
+mm_seasonal = 8:10;
+mm_start = mm_seasonal(1);
+mm_end = mm_seasonal(end);
+mstr = (datestr(datenum(yyyy,mm_seasonal,1), 'm'))';
+
+switch vari_str
+    case 'zeta'
+        climit = [-0.2 0.2];
+        interval = 0.025;
+        unit = 'm';
+        title_str = 'zeta';
+    case 'SST'
+        climit = [5 14];
+        interval = 0.5;
+        unit = '^oC';
+        title_str = 'SST';
+    case 'SSS'
+        climit = [32.4 33];
+        interval = 0.05;
+        unit = 'psu';
+        title_str = 'SSS';
+end
+num_color = diff(climit)/interval;
+
+% Load grid information
+g = grd('BSf');
+lon = g.lon_rho;
+lat = g.lat_rho;
+h = g.h;
+mask = g.mask_rho./g.mask_rho;
+
+% Model
+filepath = ['/data/jungjih/ROMS_BSf/Output/Multi_year/', exp, '/seasonal/'];
+filename = ['Dsm4_2019_', mstr, '.nc'];
+file = [filepath, filename];
+if strcmp(vari_str, 'zeta')
+    vari = ncread(file, vari_str);
+elseif strcmp(vari_str, 'SST')
+    vari = ncread(file, 'temp', [1 1 g.N 1], [Inf Inf 1 Inf]);
+elseif strcmp(vari_str, 'SSS')
+    vari = ncread(file, 'salt', [1 1 g.N 1], [Inf Inf 1 Inf]);
+end
+
+figure; hold on;
+set(gcf, 'Position', [1 200 800 800])
+title(['ROMS ', title_str, ' (', datestr(datenum(yyyy,mm_start,1), 'mmm'), ' - ', datestr(datenum(yyyy,mm_end,1), 'mmm, yyyy'), ')'], 'FontSize', 15);
+plot_map(region, 'mercator', 'l');
+contourm(g.lat_rho, g.lon_rho, g.h, [200 1000], 'k')
+p = contourfm(g.lat_rho, g.lon_rho, vari);
+uistack(p, 'bottom')
+caxis(climit)
+colormap(turbo(num_color))
+c = colorbar;
+c.Title.String = unit;
+c.FontSize = 12;
+c.Ticks = climit(1):2*interval:climit(end);
+
+print([vari_str, '_', ystr, '_', mstr], '-dpng')

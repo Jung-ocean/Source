@@ -2,7 +2,7 @@ clear; clc; close all
 
 yyyy = 2022; ystr = num2str(yyyy);
 
-region = 'GOA';
+region = 'GA';
 days = 1;
 
 ismap = 0;

@@ -8,7 +8,7 @@
 clear; clc; close all
 
 % Line numbers
-direction = 'a';
+direction = 'p';
 if strcmp(direction, 'p')
     lines = 1:15; % pline
 else
@@ -20,7 +20,7 @@ filter_window = 8; % 1 ~ 5.75 km
 
 % User defined variables
 filepath = '/data/jungjih/Observations/Satellite_SSH/Merged/Merged_MMv5.2_podaac/data/';
-filenum_all = 949:1116;
+filenum_all = 820:1154;
 lon_range = [-205.9832 -156.8640]; lat_range = [49.1090 66.3040]; % Bering Sea
 
 % DTU15 data
@@ -45,6 +45,7 @@ for li = 1:length(lines)
     
     timenum_all = [];
     ADT_all = [];
+    SSHA_all = [];
 for fi = 1:length(filenum_all)
     filenum = filenum_all(fi); fstr = num2str(filenum, '%04i');
     file_target = dir([filepath, '*', fstr, '*.nc']);
@@ -84,6 +85,7 @@ for fi = 1:length(filenum_all)
     end
     adt = mdt + ssha;
     adt_line = adt(index_lines);
+    ssha_line = ssha(index_lines);
     
     time_line = time(index_lines);
     lat_line = lat(index_lines);
@@ -105,6 +107,7 @@ for fi = 1:length(filenum_all)
     end
 
     ADT_all = [ADT_all; adt_line'];
+    SSHA_all = [SSHA_all; ssha_line'];
 end % fi
 
 lon_plot = lon_line+360;
@@ -146,6 +149,6 @@ else
     imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
 end
 
-save(['ADT_', direction, 'line_', lstr, '.mat'], 'lon_line', 'lat_line', 'timenum_all', 'ADT_all')
+save(['ADT_', direction, 'line_', lstr, '.mat'], 'lon_line', 'lat_line', 'timenum_all', 'ADT_all', 'SSHA_all')
 
 end % li
