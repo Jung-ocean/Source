@@ -1,78 +1,32 @@
-function [timenum_all, vari_all] = load_SSS_sat_1d(sat, datenum_start, datenum_end, lat_target, lon_target)
-
-lons_sat = {'lon', 'lon'};
-lons_360ind = [360, 180];
-lats_sat = {'lat', 'lat'};
-varis_sat = {'sss_smap', 'SSS'};
+function [timenum_all, vari_all] = load_SSS_sat_1d(sat, version, datenum_start, datenum_end, lat_target, lon_target)
 
 timenum_all = [];
 vari_all = [];
+for di = datenum_start:datenum_end
+    datenum_target = di;
+    timenum_all = [timenum_all; datenum_target];
+    [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_daily(sat, version, datenum_target);
 
-if strcmp(sat, 'SMAP')
-    si = 1;
-
-    for di = datenum_start:datenum_end
-        datenum_target = di;
-        ystr = datestr(datenum_target, 'yyyy');
-        yyyy = str2num(ystr);
-        filenum = datenum_target - datenum(yyyy,1,1) + 1;
-        fstr = num2str(filenum, '%03i');
-
-        filepath_sat = ['/data/jungjih/Observations/Satellite_SSS/RSS/v6.0/8day_running/', ystr, '/'];
-        filename_sat = ['RSS_smap_SSS_L3_8day_running_', ystr, '_', fstr, '_FNL_v06.0.nc'];
-
-        file_sat = [filepath_sat, filename_sat];
-        if exist(file_sat)
-
-            lon_sat = double(ncread(file_sat,lons_sat{si}));
-            lat_sat = double(ncread(file_sat,lats_sat{si}));
-            vari_sat = double(squeeze(ncread(file_sat,varis_sat{si})));
-
-            lon_sat = lon_sat - lons_360ind(si);
-
-            vari_tmp = interp2(lat_sat, lon_sat, vari_sat, lat_target, lon_target);
-
-            timenum_all = [timenum_all; datenum_target];
-            vari_all = [vari_all; vari_tmp];
+    if isscalar(vari_sat)
+        vari_all = [vari_all; NaN];
+    else
+        if strcmp(sat, 'SMOS_BEC')
+            lat_sat2 = lat_sat;
+            lon_sat2 = lon_sat;
+            if ~exist('F')
+                F = scatteredInterpolant(lat_sat2(:), lon_sat2(:), 0.*lat_sat2(:));
+            end
+            F.Values = vari_sat(:);
         else
-            timenum_all = [timenum_all; datenum_target];
-            vari_all = [vari_all; NaN];
+            if ~exist('F')
+                [lat_sat2, lon_sat2] = meshgrid(lat_sat, lon_sat);
+                F = griddedInterpolant(lat_sat2', lon_sat2', 0.*lat_sat2');
+            end
+            F.Values = vari_sat';
         end
 
-        disp(['loading SMAP SSS ', datestr(datenum_target, 'yyyymmdd')]);
+        vari_tmp = F(lat_target, lon_target);
+        vari_all = [vari_all; vari_tmp];
     end
 
-elseif strcmp(sat, 'SMOS')
-    si = 2;
-
-    for di = datenum_start:datenum_end
-        datenum_target = di;
-        yyyymmdd = datestr(datenum_target, 'yyyymmdd');
-
-        filepath_sat = ['/data/jungjih/Observations/Satellite_SSS/CEC/v9/4day/'];
-        filename_sat = ['SMOS_L3_DEBIAS_LOCEAN_AD_', yyyymmdd, '_EASE_09d_25km_v09.nc'];
-
-        file_sat = [filepath_sat, filename_sat];
-        if exist(file_sat)
-
-            lon_sat = double(ncread(file_sat,lons_sat{si}));
-            lat_sat = double(ncread(file_sat,lats_sat{si}));
-            vari_sat = double(squeeze(ncread(file_sat,varis_sat{si})));
-
-            index1 = find(lon_sat > 0); index2 = find(lon_sat < 0);
-            vari_sat = [vari_sat(index1,:); vari_sat(index2,:)];
-
-            lon_sat = lon_sat - lons_360ind(si);
-
-            vari_tmp = interp2(lat_sat, lon_sat, vari_sat, lat_target, lon_target);
-
-            timenum_all = [timenum_all; datenum_target];
-            vari_all = [vari_all; vari_tmp];
-        else
-            timenum_all = [timenum_all; datenum_target];
-            vari_all = [vari_all; NaN];
-        end
-
-        disp(['loading SMOS SSS ', datestr(datenum_target, 'yyyymmdd')]);
-    end
 end

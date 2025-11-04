@@ -33,7 +33,7 @@ figure; hold on;
 set(gcf, 'Position', [1 200 500 800])
 plot_map('US_west', 'mercator', 'l')
 plotm(lat_target, lon_target, 'xk', 'MarkerSize', 25, 'LineWidth', 3);
-print(['location_point'], '-dpng');
+print(['location_atm_point'], '-dpng');
 
 for vi = 1:length(varis_org)
        

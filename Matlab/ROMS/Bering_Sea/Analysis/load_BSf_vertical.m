@@ -11,7 +11,13 @@ if filenum == 1826
 end
 
 zeta = ncread(file, 'zeta');
-depth = zlevs(g.h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'r',2);
+if strcmp(vari_str, 'w')
+    depth = zlevs(g.h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'w',2);
+    N = g.N+1;
+else
+    depth = zlevs(g.h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'r',2);
+    N = g.N;
+end
 
 if strcmp(vari_str, 'v_n')
     wgs84 = wgs84Ellipsoid("km");
@@ -23,7 +29,7 @@ if strcmp(vari_str, 'v_n')
     
     u = ncread(file, 'u');
     v = ncread(file, 'v');
-    for ni = 1:g.N
+    for ni = 1:N
         u_tmp = u(:,:,ni);
         v_tmp = v(:,:,ni);
 
@@ -57,17 +63,17 @@ lat2=lat(x2(1),y2(1));lon2=lon(x2(1),y2(1));
 if (lon2-lon1) >= (lat2-lat1)+.1
     lon_line=[min(lon1,lon2):0.05:max(lon1,lon2)];
     lat_line=(lon_line-lon1)/((lon2-lon1)/(lat2-lat1))+lat1;
-    x=repmat(lon_line,g.N,1)';
+    x=repmat(lon_line,N,1)';
     x_label='Longitude (^oE)';
 else
     lat_line=[min(lat1,lat2):0.05:max(lat1,lat2)];
     lon_line=(lat_line-lat1)*((lon2-lon1)/(lat2-lat1))+lon1;
-    x=repmat(lat_line,g.N,1)';
+    x=repmat(lat_line,N,1)';
     x_label='Latitude (^oN)';
 end
 
-data=zeros(length(lat_line),g.N);
-for k=1:1:g.N
+data=zeros(length(lat_line),N);
+for k=1:1:N
     lon_range=lon(min(x1,x2):max(x1,x2),min(y1,y2):max(y1,y2));
     lat_range=lat(min(x1,x2):max(x1,x2),min(y1,y2):max(y1,y2));
     data_range=squeeze(vari(min(x1,x2):max(x1,x2),min(y1,y2):max(y1,y2),k));

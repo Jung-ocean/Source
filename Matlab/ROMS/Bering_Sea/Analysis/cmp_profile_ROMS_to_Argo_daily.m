@@ -14,8 +14,8 @@ plot_whole_map = 0;
 %   64 68 73 84 89 96 102 128 133 ];
 % Argo_num_all = [34 43 45 46 47 54 56 57 58 59 ...
 %     73 84 89 96 102 133];
-Argo_num_all = [4 36 46 47 54 58 59];
-% Argo_num_all = 46;
+% Argo_num_all = [4 36 46 47 54 58 59];
+Argo_num_all = 46;
 
 for Ai = 1:length(Argo_num_all)
 
@@ -189,7 +189,8 @@ for Ai = 1:length(Argo_num_all)
         nexttile(t,3); cla; hold on; grid on;
         po = plot(temp_obs, z_obs, '-r', 'LineWidth', 2);
         pm = plot(temp_model, z_model, '-k', 'LineWidth', 2);
-        xlim([min(min(temp_obs), min(temp_model))-.5 max(max(temp_obs), max(temp_model))+.5])
+%         xlim([min(min(temp_obs), min(temp_model))-.5 max(max(temp_obs), max(temp_model))+.5])
+        xlim([-1 5])
         xticks([-3:1:15])
         set(gca, 'XTickLabelRotation', 0);
         ylim([-500 0])
@@ -206,7 +207,8 @@ for Ai = 1:length(Argo_num_all)
         nexttile(t,4); cla; hold on; grid on;
         plot(salt_obs, z_obs, '-r', 'LineWidth', 2);
         plot(salt_model, z_model, '-k', 'LineWidth', 2);
-        xlim([min(min(salt_obs), min(salt_model))-.1 34.4])
+%         xlim([min(min(salt_obs), min(salt_model))-.1 34.4])
+        xlim([32.5 34.5])
         xticks([28:.5:36])
         set(gca, 'XTickLabelRotation', 0);
         ylim([-500 0])
@@ -220,7 +222,8 @@ for Ai = 1:length(Argo_num_all)
         nexttile(t,5); cla; hold on; grid on;
         plot(pden_obs-1000, z_obs, '-r', 'LineWidth', 2);
         plot(pden_model-1000, z_model, '-k', 'LineWidth', 2);
-        xlim([min(min(pden_obs-1000), min(pden_model-1000))-.1 27.2])
+%         xlim([min(min(pden_obs-1000), min(pden_model-1000))-.1 27.2])
+        xlim([26 27.2])
         xticks([20:.5:30])
         ylim([-500 0])
         xlabel('\sigma_\theta (kg/m^3)')

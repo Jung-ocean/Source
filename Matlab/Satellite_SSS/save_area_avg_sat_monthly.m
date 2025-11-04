@@ -1,18 +1,35 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Save area-averaged SMOS SSS monthly
+% Save area-averaged sat SSS monthly
 %
 % J. Jung
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear; clc; %close all
+clear; clc; close all
 
-region = 'Koryak_coast';
-area_frac_cutoff = 0.99;
+sat = 'SMAP';
+
+region = 'Gulf_of_Anadyr_common';
+area_frac_cutoff = 1;
 % area_frac_cutoff = 0.1;
 
-yyyy_all = 2010:2024;
-mm_all = 1:12;
+mm_all = 7:7;
+mstr = num2str(mm_all, '%02i');
+
+switch sat
+    case 'SMAP'
+        yyyy_all = 2015:2025;
+        version = 6;
+    case 'SMOS'
+        yyyy_all = 2010:2024;
+        version = 9;
+    case 'CMEMS'
+        yyyy_all = 2019:2022;
+        version = 0;
+    case 'SMOS_BEC'
+        yyyy_all = 2011:2022;
+        version = 4;
+end
 
 % Load grid information
 g = grd('BSf');
@@ -20,7 +37,7 @@ lon = g.lon_rho;
 lat = g.lat_rho;
 
 if strcmp(region, 'Gulf_of_Anadyr_common') | strcmp(region, 'Koryak_coast_common')
-    load mask_common.mat
+    load(['mask_common_', mstr, '.mat'])
     dx = 1./g.pm; dy = 1./g.pn;
     mask = mask_common./mask_common;
     area = dx.*dy.*mask;
@@ -39,7 +56,10 @@ for yi = 1:length(yyyy_all)
         mstr = num2str(mm, '%02i');
         timenum = [timenum; datenum(yyyy,mm,15)];
 
-        [SSS_tmp, err_tmp] = load_area_avg_SSS_sat_monthly('SMOS', yyyy, mm, g, mask, area, area_frac_cutoff);
+        if strcmp(sat, 'SMOS') & yyyy == 2024
+            version = 10;
+        end
+        [SSS_tmp, err_tmp] = load_area_avg_SSS_sat_monthly(sat, version, yyyy, mm, g, mask, area, area_frac_cutoff);
         SSS = [SSS; SSS_tmp];
         err = [err; SSS_tmp];
 
@@ -53,8 +73,8 @@ xticks(datenum(yyyy_all,1,15));
 datetick('x', 'yyyy', 'keepticks', 'keeplimits')
 
 if length(mm_all) == 1
-    output_filename = ['SSS_SMOS_', region, '_', num2str(mm_all, '%02i'), '.mat'];
+    output_filename = ['SSS_', sat, '_', region, '_', num2str(mm_all, '%02i'), '.mat'];
 else
-    output_filename = ['SSS_SMOS_', region, '.mat'];
+    output_filename = ['SSS_SMAP_', region, '.mat'];
 end
 save(output_filename, 'timenum', 'SSS', 'err', 'area_frac_cutoff')

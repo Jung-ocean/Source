@@ -7,13 +7,22 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-exp = 'Dsm4';
-region = 'Koryak_coast';
+exp = 'Dsm4_LCda';
+region = 'Koryak_coast_basin';
 title_str = strrep(region, '_', ' ');
 
-xlimit = [datenum(2018,10,1)-1 datenum(2023,7,31)+1];
+ismap = 1;
+isCICE = 1;
+isROMS = 1;
 
-ismap = 0;
+yyyy = 2020;
+ystr = num2str(yyyy);
+
+if yyyy == 9999
+    xlimit = [datenum(2018,10,1)-1 datenum(2023,7,31)+1];
+else
+    xlimit = [datenum(yyyy-1,10,1)-1 datenum(yyyy,7,31)+1];
+end
 
 if ismap == 1
     g = grd('BSf');
@@ -35,21 +44,48 @@ figure; hold on; grid on
 set(gcf, 'Position', [1 200 1300 500])
 
 % ROMS sea ice concentration
+if strcmp(exp, 'Dsm4')
 load(['/data/jungjih/ROMS_BSf/Output/Multi_year/', exp, '/aice/', region, '/aice_ROMS_', region, '_daily.mat'])
+else
+load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/', exp, '/aice/', region, '/aice_ROMS_', region, '_daily.mat'])
+end
 pm = plot(timenum, aice, '-k', 'LineWidth', 2);
 
 % ASI sea ice concentration
 load(['/data/jungjih/Observations/Sea_ice/ASI/figures/', region, '/Fi_ASI_', region, '_daily.mat'])
 po = plot(timenum, Fi, '-r', 'LineWidth', 2);
 
-xticks([datenum(2012:2024,1,1)]);
+if yyyy == 9999
+    xticks([datenum(2012:2024,1,1)]);
+else
+    xticks([datenum(yyyy-1,10:12,1), datenum(yyyy,1:7,1)]);
+end
 xlim(xlimit)
+ylim([0 1])
 datetick('x', 'mm/dd/yy', 'keepticks', 'keeplimits')
-set(gca, 'FontSize', 15)
+set(gca, 'FontSize', 14)
 box on
 
 l = legend([po, pm], 'Observation (ASI)', 'Model (ROMS)');
 l.Location = 'NorthWest';
 l.FontSize = 20;
-adfasdf
-print(['cmp_area_avg_aice_', region, '_daily'], '-dpng')
+
+title(['Sea ice fraction (', strrep(region, '_', ' '), ')'], 'FontSize', 15)
+
+if isCICE == 1
+% CICE sea ice concentration
+load(['/data/jungjih/Models/CICE/aice/', region, '/aice_CICE_', region, '_daily.mat'])
+pc = plot(timenum, aice, '-g', 'LineWidth', 2);
+
+l = legend([po, pm, pc], 'Observation (ASI)', 'Model (ROMS)', 'Model (CICE)');
+end
+
+if isROMS == 1
+    exp2 = 'Dsm4';
+    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/', exp2, '/aice/', region, '/aice_ROMS_', region, '_daily.mat'])
+    pm2 = plot(timenum, aice, '--', 'Color', [.7 .7 .7], 'LineWidth', 2);
+    l = legend([po, pm2, pm, pc], 'Observation (ASI)', 'Model (ROMS control)', 'Model (ROMS LCda)', 'Model (CICE)');
+    l.FontSize = 15;
+end
+
+print(['cmp_area_avg_aice_', region, '_daily_', ystr], '-dpng')

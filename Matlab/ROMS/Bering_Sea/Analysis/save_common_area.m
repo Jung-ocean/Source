@@ -5,10 +5,17 @@
 % J. Jung
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear; clc; close all
+clear; clc; %close all
 
-yyyy_all = 2015:2023;
+yyyy_all = 2025:-1:2010;
 mm = 7;
+mstr = num2str(mm, '%02i');
+
+isdaily = 0;
+if isdaily == 1
+    dd = 10;
+    dstr = num2str(dd, '%02i');
+end
 
 depth_cutoff = 0;
 
@@ -41,28 +48,47 @@ for yi = 1:length(yyyy_all)
     mstr = num2str(mm, '%02i');
 
     % SMAP
-    [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_monthly('SMAP', yyyy, mm);
-    if yi == 1
-        [lat_sat2, lon_sat2] = meshgrid(lat_sat, lon_sat);
-        Fsmap = griddedInterpolant(lat_sat2', lon_sat2', 0.*lat_sat2');
+    if isdaily == 1
+        [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_daily('SMAP', 6, datenum(yyyy, mm, dd));
+    else
+        [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_monthly('SMAP', 6, yyyy, mm);
     end
-    Fsmap.Values = vari_sat';
+    if ~isscalar(vari_sat)
+        if ~exist('Fsmap')
+            [lat_sat2, lon_sat2] = meshgrid(lat_sat, lon_sat);
+            Fsmap = griddedInterpolant(lat_sat2', lon_sat2', 0.*lat_sat2');
+        end
+        Fsmap.Values = vari_sat';
 
-    vari_sat_interp = Fsmap(g.lat_rho, g.lon_rho);
-    mask_sat = double(~isnan(vari_sat_interp));
-    mask_common = mask_common.*mask_sat.*mask;
+        %vari_sat_interp = griddata(lat_sat, lon_sat, vari_sat, g.lat_rho, g.lon_rho);
+        vari_sat_interp = Fsmap(g.lat_rho, g.lon_rho);
+        mask_sat = double(~isnan(vari_sat_interp));
+        mask_common = mask_common.*mask_sat.*mask;
+    end
 
     % SMOS
-    [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_monthly('SMOS', yyyy, mm);
-    if yi == 1
-        [lat_sat2, lon_sat2] = meshgrid(lat_sat, lon_sat);
-        Fsmos = griddedInterpolant(lat_sat2', lon_sat2', 0.*lat_sat2');
+    if isdaily == 1
+        di = dd;
+        vari_sat = NaN;
+        while isscalar(vari_sat)
+            di = di+1;
+            [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_daily('SMOS', 9, datenum(yyyy, mm, di));
+        end
+    else
+        [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_monthly('SMOS', 9, yyyy, mm);
     end
-    Fsmos.Values = vari_sat';
+    if ~isscalar(vari_sat)
+        if ~exist('Fsmos')
+            [lat_sat2, lon_sat2] = meshgrid(lat_sat, lon_sat);
+            Fsmos = griddedInterpolant(lat_sat2', lon_sat2', 0.*lat_sat2');
+        end
+        Fsmos.Values = vari_sat';
 
-    vari_sat_interp = Fsmos(g.lat_rho, g.lon_rho);
-    mask_sat = double(~isnan(vari_sat_interp));
-    mask_common = mask_common.*mask_sat.*mask;
+        %vari_sat_interp = griddata(lat_sat, lon_sat, vari_sat, g.lat_rho, g.lon_rho);
+        vari_sat_interp = Fsmos(g.lat_rho, g.lon_rho);
+        mask_sat = double(~isnan(vari_sat_interp));
+        mask_common = mask_common.*mask_sat.*mask;
+    end
 end
 
 mask_common(g.h < depth_cutoff) = 0;
@@ -70,7 +96,11 @@ mask_common(g.h < depth_cutoff) = 0;
 figure; hold on;
 pcolor(g.lon_rho, g.lat_rho, mask_common);
 shading flat
-contour(g.lon_rho, g.lat_rho, g.h, [200 1000 2000 3000], 'k')
+contour(g.lon_rho, g.lat_rho, g.h, [50 100 200], 'k')
 caxis([0 1])
 
-save mask_common.mat mask_common
+if isdaily == 1
+    save(['mask_common_', mstr, '_', dstr, '.mat'], 'mask_common', 'depth_cutoff', 'isdaily', 'dd')
+else
+    save(['mask_common_', mstr, '.mat'], 'mask_common', 'depth_cutoff')
+end

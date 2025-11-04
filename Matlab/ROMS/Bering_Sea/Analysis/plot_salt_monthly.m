@@ -7,16 +7,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-map = 'NW_Bering';
+map = 'Gulf_of_Anadyr';
 
 exp = 'Dsm4';
 vari_str = 'salt';
 yyyy_all = 2019:2023;
-mm = 5;
+mm = 1;
 mstr = num2str(mm, '%02i');
 
 isfill = 1;
-layer = -200;
+layer = 45;
 if layer < 0
     dstr = num2str(-layer);
 else
@@ -93,12 +93,12 @@ for yi = 1:length(yyyy_all)
 
     nexttile(yi); hold on
     plot_map(map, 'mercator', 'l')
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
 
 %     p = pcolorm(g.lat_rho, g.lon_rho, vari_bar.*g.mask_rho./g.mask_rho); shading flat
     p = plot_contourf([], g.lat_rho, g.lon_rho, vari, color, climit, contour_interval);
     plot_map(map, 'mercator', 'l')
-    if yi == 4
+    if yi == length(yyyy_all)
         c = colorbar;
         c.Title.String = unit;
     end

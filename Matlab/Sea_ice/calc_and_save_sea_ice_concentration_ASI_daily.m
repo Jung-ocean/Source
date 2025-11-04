@@ -10,12 +10,27 @@ clear; clc; close all
 yyyy_all = 2012:2024;
 mm_all = 1:12;
 
-region = 'Koryak_coast';
+region = 'Koryak_coast_basin';
+ismap = 1;
 
 filepath_daily = '/data/jungjih/Observations/Sea_ice/ASI/daily_ROMSgrid/';
 
 g = grd('BSf');
 [mask, area] = mask_and_area(region, g);
+
+if ismap == 1
+    mask(isnan(mask)) = 0;
+    % Area plot
+    figure; hold on;
+    set(gcf, 'Position', [1 200 800 500])
+    plot_map('Bering', 'mercator', 'l');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k')
+    [c,h] = contourfm(g.lat_rho, g.lon_rho, mask, [1 1], '--r', 'LineWidth', 2);
+    set(h.Children(2), 'FaceColor', 'r')
+    set(h.Children(2), 'FaceAlpha', 0.2)
+    set(h.Children(3), 'FaceColor', 'none')
+    print(['area_' region], '-dpng')
+end
 
 Fi = [];
 timenum = [];

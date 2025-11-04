@@ -15,12 +15,10 @@ else
     lines = 1:24; % aline
 end
 
-isfilter = 0;
-filter_window = 8; % 1 ~ 5.75 km
-
 % User defined variables
 filepath = '/data/jungjih/Observations/Satellite_SSH/Merged/Merged_MMv5.2_podaac/data/';
-filenum_all = 820:1154;
+% filenum_all = 820:1154;
+filenum_all = 1:1154;
 lon_range = [-205.9832 -156.8640]; lat_range = [49.1090 66.3040]; % Bering Sea
 
 % DTU15 data
@@ -49,6 +47,12 @@ for li = 1:length(lines)
 for fi = 1:length(filenum_all)
     filenum = filenum_all(fi); fstr = num2str(filenum, '%04i');
     file_target = dir([filepath, '*', fstr, '*.nc']);
+    if isempty(file_target)
+        timenum_all = [timenum_all; NaN];
+        ADT_all = [ADT_all; NaN.*ADT_all(1,:)];
+        SSHA_all = [SSHA_all; NaN.*SSHA_all(1,:)];
+        continue
+    end
     filename = file_target.name;
     file = [filepath, filename];
 
@@ -67,22 +71,18 @@ for fi = 1:length(filenum_all)
 
     index_lines = find(ismember(lon, lon_target) == 1 & ismember(lat, lat_target) == 1);
 
-    %mssh = ncread(file, 'mssh').*1e-3; % units = mm to m
-    %mssh = mssh(val);
-    %geoid = geoidheight(lat,lon); % units = m, EGM96 Geopotential Model
-    %mdt = mssh - geoid;
-    
-%   mdt = griddata(lon_DTU15, lat_DTU15, mdt_DTU15, lon, lat);
-    load(['mdt_', num2str(length(lon)), '.mat']);
+    filename_mdt = ['mdt_', num2str(length(lon)), '.mat'];
+    if exist(filename_mdt)
+        load(filename_mdt);
+    else
+        mdt = griddata(lon_DTU15, lat_DTU15, mdt_DTU15, lon, lat);
+        save(filename_mdt, 'mdt');
+    end
     
     ssha = ncread(file, 'ssha').*1e-3; % units = mm to m
     ssha = ssha(val);
     nanind = find(isnan(ssha) == 1);
-    
-    if isfilter == 1
-        ssha = smoothdata(ssha, 'gaussian', filter_window);
-        ssha(nanind) = NaN;
-    end
+      
     adt = mdt + ssha;
     adt_line = adt(index_lines);
     ssha_line = ssha(index_lines);
@@ -97,7 +97,7 @@ for fi = 1:length(filenum_all)
         nexttile(1)
         if li == 1
             plot_map('Bering', 'mercator', 'l');
-            [C,h] = contourm(g.lat_rho, g.lon_rho, g.h, [50 200], 'Color', [.7 .7 .7]);
+            [C,h] = contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
 %             cl = clabelm(C,h); set(cl, 'BackgroundColor', 'none');
             p = plotm(lat_line, lon_line, '-k', 'LineWidth', 2);
         else
@@ -120,7 +120,7 @@ colormap(ax, 'parula')
 
 %xlim([lon_plot(1)-0.1 lon_plot(end)+0.1])
 xlim([154 203])
-ylim([timenum_all(1)-10 timenum_all(end)+10])
+% ylim([timenum_all(1)-10 timenum_all(end)+10])
 datetick('y', 'mmm dd, yyyy', 'keeplimits')
 
 caxis([20 60])
@@ -137,17 +137,17 @@ t.Padding = 'compact';
 pause(1)
 saveas(gcf, [direction, 'line_', lstr, '_ADT_Merged_MMv5.2_podaac.png']);
 
-% Make gif
-gifname = [direction, 'line_ADT_Merged_MMv5.2_podaac.gif'];
-
-frame = getframe(h1);
-im = frame2im(frame);
-[imind,cm] = rgb2ind(im,256);
-if li == 1
-    imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
-else
-    imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
-end
+% % Make gif
+% gifname = [direction, 'line_ADT_Merged_MMv5.2_podaac.gif'];
+% 
+% frame = getframe(h1);
+% im = frame2im(frame);
+% [imind,cm] = rgb2ind(im,256);
+% if li == 1
+%     imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+% else
+%     imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+% end
 
 save(['ADT_', direction, 'line_', lstr, '.mat'], 'lon_line', 'lat_line', 'timenum_all', 'ADT_all', 'SSHA_all')
 

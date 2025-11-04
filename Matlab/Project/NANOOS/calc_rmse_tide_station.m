@@ -10,8 +10,8 @@ clear; clc
 yyyy = 2025;
 ystr = num2str(yyyy);
 
-datenum_start = datenum(yyyy,1,1);
-datenum_end = datenum(yyyy,6,30);
+datenum_start = datenum(yyyy,7,1);
+datenum_end = datenum(yyyy,9,27);
 
 constituents = {'M2', 'S2', 'K1', 'O1', 'MSF'};
 

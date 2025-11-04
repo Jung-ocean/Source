@@ -11,7 +11,7 @@ map = 'Bering';
 exp = 'Dsm4';
 
 % Line numbers
-direction = 'p';
+direction = 'a';
 if strcmp(direction, 'p')
     lines = 1:15; % pline
 else
@@ -29,7 +29,7 @@ month_start = 7;
 g = grd('BSf');
 
 % Satellite
-filepath_sat = ['/data/jungjih/Observations/Satellite_SSH/Merged/Merged_MMv5.2_podaac/ADT_line_no_filter/'];
+filepath_sat = ['/data/jungjih/Observations/Satellite_SSH/Merged/Merged_MMv5.2_podaac/'];
 
 index = 1;
 for li = 1:length(lines)
@@ -49,8 +49,14 @@ for li = 1:length(lines)
 
         filenumber = timenum_tmp - datenum(year_start,month_start,1) + 1;
         fstr = num2str(filenumber, '%04i');
-
         file = [filepath_control, exp, '_avg_', fstr, '.nc'];
+        if filenumber == 0119
+            file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm4_rhZop05/Sum_2018_Dsm4_rhZop05_avg_0119.nc';
+        elseif filenumber == 1640
+            file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2022/Dsm4_nKC/SumFal_2022_Dsm4_nKC_avg_1640.nc';
+        elseif filenumber == 1826
+            file = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
+        end
 
         if exist(file) == 2
             zeta = ncread(file,'zeta');

@@ -7,16 +7,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-map = 'Eastern_Bering';
+map = 'Gulf_of_Anadyr';
 
 exp = 'Dsm4';
 vari_str = 'temp';
-yyyy_all = 2019:2022;
-mm = 1;
+yyyy_all = 2019:2023;
+mm = 9;
 mstr = num2str(mm, '%02i');
 
-isfill = 0;
-layer = 45;
+isfill = 1;
+layer = -200;
 if layer < 0
     dstr = num2str(-layer);
 else
@@ -30,7 +30,7 @@ filepath_streamfunction = ['/data/jungjih/ROMS_BSf/Output/Multi_year/', exp, '/t
 g = grd('BSf');
 
 % Figure properties
-interval = 2;
+interval = 1;
 climit = [-2 12];
 num_color = diff(climit)/interval;
 contour_interval = climit(1):interval:climit(end);
@@ -55,8 +55,8 @@ switch map
 end
 
 figure;
-set(gcf, 'Position', [1 200 1500 450])
-t = tiledlayout(1,4);
+set(gcf, 'Position', [1 200 1800 600])
+t = tiledlayout(1,5);
 % Figure title
 
 if layer < 0
@@ -74,22 +74,21 @@ for yi = 1:length(yyyy_all)
 
     filename = [exp, '_', ystr, mstr, '.nc'];
     file = [filepath, filename];
-    zeta = ncread(file, 'zeta')';
+    zeta = ncread(file, 'zeta');
     
     z = zlevs(g.h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'r',2);
     temp_sigma = squeeze(ncread(file, 'temp'));
-    temp_sigma = permute(temp_sigma, [3 2 1]);
     
     if layer < 0
         vari_sigma = temp_sigma;
-        vari_bottom = squeeze(vari_sigma(1,:,:));
-        vari = vinterp(vari_sigma,z,layer);
+        vari_bottom = squeeze(vari_sigma(:,:,1));
+        vari = vinterp_J(vari_sigma,z,layer);
 
         if isfill == 1
             vari(isnan(vari) == 1) = vari_bottom(isnan(vari) == 1);
         end
     else
-        vari = squeeze(temp_sigma(layer,:,:));
+        vari = squeeze(temp_sigma(:,:,layer));
     end
 
     nexttile(yi); hold on
@@ -97,9 +96,9 @@ for yi = 1:length(yyyy_all)
     contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
 
 %     p = pcolorm(g.lat_rho, g.lon_rho, vari_bar.*g.mask_rho./g.mask_rho); shading flat
-    p = plot_contourf(g.lat_rho, g.lon_rho, vari, contour_interval, climit, color);
+    p = plot_contourf([], g.lat_rho, g.lon_rho, vari, color, climit, contour_interval);
     plot_map(map, 'mercator', 'l')
-    if yi == 4
+    if yi == length(yyyy_all)
         c = colorbar;
         c.Title.String = unit;
     end

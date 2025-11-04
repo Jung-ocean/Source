@@ -1,0 +1,4 @@
+https://www.d.umn.edu/~smkelly/software.html
+
+MODES_FS.m
+uses a spectral algorithm to compute hydrostatic normal vertical modes with a free-surface (or rigid-lid), flat bottom, and arbitrary stratification.

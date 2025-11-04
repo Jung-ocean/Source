@@ -1,0 +1,151 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Plot sats SSS monthly
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+map = 'Gulf_of_Anadyr';
+[lon, lat] = load_domain(map);
+
+vari_str = 'salt';
+yyyy_all = 2019:2022;
+mm = 7;
+mstr = num2str(mm, '%02i');
+dd_all = [28 26 25 28];
+dstr = replace(num2str(dd_all), '  ', '_');
+
+remove_climate = 0;
+
+% Load grid information
+g = grd('BSf');
+
+% Figure properties
+climit = [29 34];
+interval = 0.25;
+[color, contour_interval] = get_color('jet', climit, interval);
+unit = 'psu';
+savename = 'SSS';
+text1_lat = 65.9;
+text1_lon = -184.8;
+text2_lat = 65.9;
+text2_lon = -178;
+text_FS = 15;
+
+figure;
+set(gcf, 'Position', [1 200 1000 900])
+t = tiledlayout(4,4);
+
+for yi = 1:length(yyyy_all)
+    yyyy = yyyy_all(yi); ystr = num2str(yyyy);
+    dd = dd_all(yi);
+    timenum = datenum(yyyy,mm,dd);
+    title_str = datestr(timenum, 'mmm dd, yyyy');
+
+    % SMAP SSS
+    [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_daily('SMAP', 6, timenum);
+    index_lon = find(lon_sat < max(max(lon))+1 & lon_sat > min(min(lon))-1);
+    index_lat = find(lat_sat < max(max(lat))+1 & lat_sat > min(min(lat))-1);
+    vari_sat_part = vari_sat(index_lon,index_lat);
+    [lat_sat2, lon_sat2] = meshgrid(lat_sat(index_lat), lon_sat(index_lon));
+
+    % SMAP plot
+    nexttile(yi); hold on;
+
+    plot_map(map, 'mercator', 'l')
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
+
+    T = plot_contourf([], lat_sat2,lon_sat2,vari_sat_part,color,climit,contour_interval);
+
+    textm(text1_lat, text1_lon, 'SMAP', 'FontSize', text_FS)
+%     textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+    plabel('FontSize', 10);
+    if yi ~= 1
+        plabel off
+    end
+    mlabel off
+    title(title_str, 'FontSize', text_FS)
+
+    % SMOS SSS
+    [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_daily('SMOS', 9, timenum);
+    index_lon = find(lon_sat < max(max(lon))+1 & lon_sat > min(min(lon))-1);
+    index_lat = find(lat_sat < max(max(lat))+1 & lat_sat > min(min(lat))-1);
+    vari_sat_part = vari_sat(index_lon,index_lat);
+    [lat_sat2, lon_sat2] = meshgrid(lat_sat(index_lat), lon_sat(index_lon));
+
+    % SMOS plot
+    nexttile(yi+4); hold on;
+
+    plot_map(map, 'mercator', 'l')
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
+
+    T = plot_contourf([], lat_sat2,lon_sat2,vari_sat_part,color,climit,contour_interval);
+
+    textm(text1_lat-.3, text1_lon, {'SMOS', 'CEC'}, 'FontSize', text_FS)
+%     textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+    plabel('FontSize', 10);
+    if yi ~= 1
+        plabel off
+    end
+    mlabel off
+
+    % CMEMS SSS
+    [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_daily('CMEMS', 0, timenum);
+    index_lon = find(lon_sat < max(max(lon))+1 & lon_sat > min(min(lon))-1);
+    index_lat = find(lat_sat < max(max(lat))+1 & lat_sat > min(min(lat))-1);
+    vari_sat_part = vari_sat(index_lon,index_lat);
+    [lat_sat2, lon_sat2] = meshgrid(lat_sat(index_lat), lon_sat(index_lon));
+
+    % CMEMS plot
+    nexttile(yi+8); hold on;
+
+    plot_map(map, 'mercator', 'l')
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
+
+    T = plot_contourf([], lat_sat2,lon_sat2,vari_sat_part,color,climit,contour_interval);
+
+    textm(text1_lat, text1_lon, 'CMEMS', 'FontSize', text_FS-2)
+%     textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+    plabel('FontSize', 10);
+    if yi ~= 1
+        plabel off
+    end
+    mlabel off
+
+    % SMOS BEC SSS
+    [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_daily('SMOS_BEC', 4, timenum);
+    F = scatteredInterpolant(lat_sat(:), lon_sat(:), vari_sat(:));
+    lat_sat_regular = [min(min(lat))-1:0.25:max(max(lat))+1]';
+    lon_sat_regular = [min(min(lon))-1:0.25:max(max(lon))+1]';
+    [lat_sat2, lon_sat2] = meshgrid(lat_sat_regular, lon_sat_regular);
+    vari_sat_part = F(lat_sat2, lon_sat2);
+    
+    % SMOS BEC plot
+    nexttile(yi+12); hold on;
+
+    plot_map(map, 'mercator', 'l')
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
+
+    T = plot_contourf([], lat_sat2,lon_sat2,vari_sat_part,color,climit,contour_interval);
+
+    textm(text1_lat-.3, text1_lon, {'SMOS', 'BEC'}, 'FontSize', text_FS)
+%     textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+    plabel('FontSize', 10);
+    mlabel('FontSize', 10)
+    if yi ~= 1
+        plabel off
+    end
+
+end % yi
+
+c = colorbar;
+c.Layout.Tile = 'east';
+c.Title.String = unit;
+c.FontSize = 15;
+
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+
+print([savename, '_sats_', mstr, '_', dstr, '_daily'],'-dpng');

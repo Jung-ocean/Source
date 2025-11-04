@@ -4,16 +4,16 @@ clear all
 % addpath(genpath('/home/grindylow/sdurski/matlab_tools/ROMS_general_tools'));
 
 exp = 'Dsm4';
-region = 'Koryak_coast';
-yyyy = 2023;
-mm_all = 1:11;
+region = 'Gulf_of_Anadyr_NW_SE';
+yyyy = 2022;
+mm_all = 1:12;
 
 ln_scl=110000;
 lt_scl=ln_scl.*cos(60/180*pi);
 
 % From ROMS
-file_i.dir='/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm2_spng';
-file_i.prefix='Dsm2_spng_avg';
+file_i.dir='/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm4';
+file_i.prefix='Dsm4_avg';
 %file_i=Rfile_collect_2(file_i,datenum(1968,5,23));
 %save(sprintf('%s/%s_file_info.mat',file_i.dir,file_i.prefix),'-v7.3','file_i');
 load(sprintf('%s/MAT_files/%s_file_info.mat',file_i.dir,file_i.prefix));

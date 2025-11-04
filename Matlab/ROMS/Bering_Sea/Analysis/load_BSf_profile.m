@@ -17,7 +17,12 @@ filenum = timenum - datenum(2018,7,1) + 1;
 fstr = num2str(filenum, '%04i');
 filename = ['Dsm4_avg_', fstr, '.nc'];
 file = [filepath, filename];
-if filenum == 1826
+
+if filenum == 0119
+    file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm4_rhZop05/Sum_2018_Dsm4_rhZop05_avg_0119.nc';
+elseif filenum == 1640
+    file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2022/Dsm4_nKC/SumFal_2022_Dsm4_nKC_avg_1640.nc';
+elseif filenum == 1826
     file = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
 end
 disp(file)
@@ -25,15 +30,16 @@ if exist(file)
     try
         zeta = ncread(file, 'zeta', [lonind latind 1], [1 1 Inf]);
         z = squeeze(zlevs(h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'r',2));
-        pres = sw_pres(abs(z), lat);
+        pres = gsw_p_from_z(z,lat);
         temp_sigma = squeeze(ncread(file, 'temp', [lonind latind 1 1], [1 1 Inf Inf]));
         salt_sigma = squeeze(ncread(file, 'salt', [lonind latind 1 1], [1 1 Inf Inf]));
         salt_sigma(salt_sigma < 0) = 0;
 
-        pden = sw_pden_ROMS(salt_sigma, temp_sigma, pres, 0);
-        drho = pden(2:end) - pden(1:end-1);
-        dz = z(2:end) - z(1:end-1);
-        [n2,q,p_ave] = sw_bfrq(salt_sigma,temp_sigma,pres,lat);
+        SA = salt_sigma;
+        pt = temp_sigma;
+        CT = gsw_CT_from_pt(SA,pt);
+        pden = gsw_rho(SA,CT,0);
+        [n2, p_mid] = gsw_Nsquared(SA,CT,pres,lat);
 
         ubar_tmp = ncread(file, 'ubar', [lonind-1 latind 1], [2 1 Inf]);
         ubar = mean(ubar_tmp);

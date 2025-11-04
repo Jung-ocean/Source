@@ -1,6 +1,6 @@
 clear; clc; close all
 
-region = 'Koryak_coast_basin';
+region = 'GOA';
 yyyy_all = 2019:2023;
 dt = 60*60*24;
 refdate = datenum(1968,5,23);
@@ -89,7 +89,7 @@ plot(0:length(dyn)+1, zeros([1,length(dyn)+2]), '-k')
 
 t.TileSpacing = 'compact';
 t.Padding = 'compact';
-
+asdfasdf
 print(['volume_and_terms_' region], '-dpng')
 
 if ismap == 1

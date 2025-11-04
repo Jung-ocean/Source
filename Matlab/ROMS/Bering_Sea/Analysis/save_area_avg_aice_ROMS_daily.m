@@ -9,7 +9,7 @@ clear; clc; close all
 
 region = 'Koryak_coast';
 
-exp = 'Dsm4';
+exp = 'Dsm4_LCda';
 vari_str = 'aice';
 yyyy_all = 2018:2023;
 mm_all = 1:12;
@@ -50,12 +50,14 @@ for yi = 1:length(yyyy_all)
             filename_control = dir(filepattern_control);
             if ~isempty(filename_control)
                 file_control = [filepath_control, filename_control.name];
+                if strcmp(exp, 'Dsm4')
                 if filenum == 0119
                     file_control = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm4_rhZop05/Sum_2018_Dsm4_rhZop05_avg_0119.nc';
                 elseif filenum == 1640
                     file_control = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2022/Dsm4_nKC/SumFal_2022_Dsm4_nKC_avg_1640.nc';
                 elseif filenum == 1826
                     file_control = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
+                end
                 end
 
                 vari = ncread(file_control,'aice');

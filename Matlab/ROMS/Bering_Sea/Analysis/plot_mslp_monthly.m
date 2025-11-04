@@ -7,16 +7,17 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-map = 'NE_Pacific';
+map = 'Bering';
+[lon, lat] = load_domain(map);
 
 vari_str = 'msl';
 yyyy_all = 2019:2022;
-mm = 8;
+mm = 5;
 mstr = num2str(mm, '%02i');
 
 ERA5_filepath = '/data/jungjih/Models/ERA5/monthly/';
 
-iswind = 1;
+iswind = 0;
 
 switch map
     case 'Eastern_Bering'
@@ -44,9 +45,10 @@ Cd = 1.25e-3;
 rhoair = 1.225;
 
 % Figure properties
-color = 'jet';
 climit = [990 1030];
-contour_interval = climit(1):10:climit(2);
+interval = 2;
+[color, contour_interval] = get_color('jet', climit, interval);
+% contour_interval = climit(1):4:climit(2);
 unit = 'hPa';
 savename = 'mslp';
 
@@ -54,11 +56,11 @@ figure;
 if strcmp(map, 'NE_Pacific')
     set(gcf, 'Position', [1 200 1900 450])
 else
-    set(gcf, 'Position', [1 200 1500 450])
+    set(gcf, 'Position', [1 200 1800 500])
 end
 
-
 t = tiledlayout(1,4);
+title(t, {'ERA5 mean sea level pressure', ''}, 'FontSize', 20)
 
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
@@ -66,23 +68,25 @@ for yi = 1:length(yyyy_all)
 
     ERA5_filename = ['ERA5_', ystr, mstr, '.nc'];
     ERA5_file = [ERA5_filepath, ERA5_filename];
-    ERA5_lon = double(ncread(ERA5_file, 'longitude'));
+    ERA5_lon = double(ncread(ERA5_file, 'longitude'))-360;
     ERA5_lat = double(ncread(ERA5_file, 'latitude'));
-    ERA5_msl = double(ncread(ERA5_file, vari_str)')/100;
+    ERA5_msl = double(ncread(ERA5_file, vari_str))/100;
+
+    lonind = find(ERA5_lon > lon(1)-1 & ERA5_lon < lon(2)+1);
+    latind = find(ERA5_lat > lat(1)-1 & ERA5_lat < lat(2)+1);
+    [lat2, lon2] = meshgrid(ERA5_lat(latind), ERA5_lon(lonind));
+    ERA5_msl_part = ERA5_msl(lonind, latind);
 
     nexttile(yi); hold on;
     plot_map(map, 'mercator', 'l')
-    p = pcolorm(ERA5_lat, ERA5_lon, ERA5_msl); shading flat
-    colormap(color)
-    caxis(climit)
-    uistack(p, 'bottom')
-    plot_map(map, 'mercator', 'l')
+%     p = pcolorm(ERA5_lat, ERA5_lon, ERA5_msl); shading flat
+    p = plot_contourf([], lat2, lon2, ERA5_msl_part, color, climit, contour_interval);
+    p.LineColor = 'k';
 
-    [cs, h] = contourm(ERA5_lat, ERA5_lon, ERA5_msl, contour_interval, 'k');
-    cl = clabelm(cs, h);
-    set(cl,'BackgroundColor', 'none', 'Edgecolor', 'none')
-
-    title(['ERA5 MSLP (', title_str, ')'])
+%     [cs, h] = contourm(ERA5_lat, ERA5_lon, ERA5_msl, contour_interval, 'k');
+%     cl = clabelm(cs, h);
+%     set(cl,'BackgroundColor', 'none', 'Edgecolor', 'none')
+    title([title_str], 'FontSize', 15)
 
     if iswind == 1
         ERA5_uwind = ncread(ERA5_file, 'u10')';
@@ -115,10 +119,11 @@ for yi = 1:length(yyyy_all)
     if yi == 4
         c = colorbar;
         c.Title.String = unit;
+        c.Ticks = climit(1):interval*2:climit(end);
     end
 end % yi
 
 t.Padding = 'compact';
 t.TileSpacing = 'compact';
 
-print([savename, '_', mstr, '_monthly'],'-dpng');
+print([savename, '_', map, '_', mstr, '_monthly'],'-dpng');

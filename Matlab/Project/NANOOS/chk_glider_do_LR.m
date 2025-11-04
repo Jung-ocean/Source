@@ -1,0 +1,136 @@
+clear; clc; close all
+
+load fit_do_glider_LR_2021_2024_4_9_200m.mat
+
+datenum_start = datenum(2023,07,26);
+dsstr = datestr(datenum_start, 'yyyymmdd');
+datenum_end = datenum(2023,07,28);
+destr = datestr(datenum_end, 'yyyymmdd');
+
+filepath = '/data/jungjih/Observations/Glider_ERDDAP/';
+[filenames, timenums] = load_glider_filenames;
+fnum = 14;
+
+lat = [];
+lon = [];
+timenum = [];
+timevec = [];
+depth = [];
+do = [];
+temp = [];
+salt = [];
+pt0 = [];
+SA = [];
+pden = [];
+n2_bot10 = [];
+
+filename = filenames{fnum};
+file = [filepath, filename];
+type = 'ERDDAP';
+glider = load_glider(file, type);
+
+lat = [lat; glider.lat];
+lon = [lon; glider.lon];
+timenum = [timenum; glider.timenum];
+timevec = [timevec; datevec(timenum)];
+depth = [depth; -abs(glider.depth)];
+do = [do; glider.do];
+temp = [temp; glider.temp];
+salt = [salt; glider.salt];
+pt0 = [pt0; glider.pt0];
+SA = [SA; glider.SA];
+pden = [pden; glider.pden];
+n2_bot10 = [n2_bot10; glider.n2_bot10];
+
+ETOPO = load_ETOPO('US_west');
+h = interp2(ETOPO.lat, ETOPO.lon, ETOPO.h, lat, lon);
+
+% Plot
+tindex = find(timenum > datenum_start & timenum < datenum_end);
+lon_target = lon(tindex);
+depth_target = depth(tindex);
+do_target = do(tindex);
+h_target = h(tindex);
+
+figure;
+set(gcf, 'Position', [1 200 500 900])
+t = tiledlayout(4,1);
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+
+nexttile(1); hold on;
+scatter(lon_target, depth_target, 10, do_target);
+plot(lon_target, -h_target, 'k');
+xlim([-125 -124])
+ylim([-200 0])
+xticklabels('')
+ylabel('Depth (m)')
+colormap jet
+caxis([0 61])
+c = colorbar;
+c.Title.String = '\mumol/kg';
+title('Dissolved oxygen (DO)')
+ax = axis;
+
+ax2 = nexttile(2); hold on;
+prob = zeros(size(lon));
+for hi = 1:length(hbins)-1
+    index = find(...
+        h < 200 & ... % over continental shelf break (~ 200 m)
+        ... % depth < -h+10 & ... % near bottom (< 10 m above the bottom)
+        h > hbins(hi) & ...
+        h <= hbins(hi+1));
+    x1 = SA(index);
+    x1_norm = (x1 - meanstd1(hi,1))./meanstd1(hi,2);
+    x2 = pt0(index);
+    x2_norm = (x2 - meanstd2(hi,1))./meanstd2(hi,2);
+    X_tmp = [x1_norm x2_norm];
+    X_tmp(:,end+1) = 1;
+    params_tmp = params_all(hi,:);
+    prob_tmp = logisticfun(X_tmp*params_tmp');
+    prob(index) = prob_tmp;
+end
+prob_target = prob(tindex);
+scatter(lon_target, depth_target, 10, prob_target);
+colormap(ax2, jet(10))
+plot(lon_target, -h_target, 'k');
+xlim([-125 -124])
+ylim([-200 0])
+xticklabels('')
+ylabel('Depth (m)')
+axis(ax);
+caxis([0 1]);
+c = colorbar;
+title('Probability of DO < 61 \mumol/kg')
+
+nexttile(3); hold on; grid on;
+lon_unique = unique(lon_target);
+do_mean = [];
+prob_mean = [];
+for li = 1:length(lon_unique)
+    lon_tmp = lon_unique(li);
+    index = find(...
+        lon_target == lon_tmp & ...
+        h_target < 200 & ... % over continental shelf break (~ 200 m)
+        depth_target < -h_target+10); % near bottom (< 10 m above the bottom)
+    do_mean(li) = mean(do_target(index), 'omitnan');
+    prob_mean(li) = mean(prob_target(index), 'omitnan');
+end
+
+plot(lon_unique, do_mean, '-k', 'LineWidth', 2);
+plot(lon_unique, 61*ones(size(lon_unique)), '-k');
+xlim([-125 -124])
+ylim([0 250])
+xticklabels('')
+ylabel('\mumol/kg')
+title('Near bottom DO')
+
+nexttile(4); hold on; grid on;
+plot(lon_unique, prob_mean, '-r', 'LineWidth', 2);
+plot(lon_unique, .5*ones(size(lon_unique)), '-r');
+xlim([-125 -124])
+ylim([0 1])
+xlabel('')
+title('Near bottom probability')
+
+print(['chk_', filename(1:end-4), '_', dsstr, '_', destr], '-dpng')

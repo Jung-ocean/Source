@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Plot ROMS zeta and along-track ADT from Satellite monthly 4 years
+% Plot ROMS zeta and along-track ADT from Satellite monthly 5 years
 %
 % J. Jung
 %
@@ -18,15 +18,15 @@ if strcmp(direction, 'p')
     ylimit = [-50 50];
 else
 %     lines = 1:24; % aline
-    lines = 4:13; % aline
+    lines = 5:5; % aline
 %     lon_limit = 190;
-    lon_limit = 180;
+    lon_limit = 185;
 %     ylimit = [-30 30];
-    ylimit = [-50 50];
+    ylimit = [-30 10];
 end
 
-yyyy_all = 2019:2022;
-mm = 7;
+yyyy_all = 2019:2023;
+mm = 8;
 
 ismap = 0;
 isQC = 0;
@@ -41,7 +41,8 @@ filter_window = 8; % 1 ~ 5.75 km
 g = grd('BSf');
 
 % Load ADT
-ADT = load(['ADT_model_obs_', direction, 'line.mat']);
+filepath = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/zeta/vs_L2/v5.2/';
+ADT = load([filepath, 'ADT_model_obs_', direction, 'line.mat']);
 ADT = ADT.ADT;
 lines_all = cell2mat(ADT.line);
 lines_unique = unique(lines_all);
@@ -50,7 +51,7 @@ timenum_all = cell2mat(ADT.time);
 % Figure
 h1 = figure; hold on; grid on
 set(gcf, 'Position', [1 200 1500 300])
-t = tiledlayout(1,4);
+t = tiledlayout(1,5);
 
 for li = 1:length(lines)
     line = lines(li); lstr = num2str(line, '%02i');
@@ -204,7 +205,6 @@ for li = 1:length(lines)
             l.FontSize = 15;
             end
 
-        print(['cmp_line_ADT_L2_direct_', direction, 'line_', lstr, '_', datestr(timenum, 'mm')], '-dpng')
         %     % Make gif
         %     gifname = ['cmp_line_ADT_L2_seasonally.gif'];
         %
@@ -216,6 +216,7 @@ for li = 1:length(lines)
         %     else
         %         imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
         %     end
-
     end
+    asdf
+    print(['cmp_line_ADT_L2_direct_', direction, 'line_', lstr, '_', datestr(timenum, 'mm')], '-dpng')
 end

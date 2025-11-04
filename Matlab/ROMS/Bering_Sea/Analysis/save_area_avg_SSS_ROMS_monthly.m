@@ -12,10 +12,11 @@ region = 'Gulf_of_Anadyr_common';
 exp = 'Dsm4';
 vari_str = 'salt';
 yyyy_all = 2019:2022;
-mm_all = 1:12;
+mm_all = 7:7;
+mstr = num2str(mm_all, '%02i');
 layer = 45;
 
-ismap = 0;
+ismap = 1;
 isice = 0;
 aice_value = 0.4;
 
@@ -26,7 +27,7 @@ dy=1./g.pn;
 dxdy = dx.*dy;
 
 if strcmp(region, 'Gulf_of_Anadyr_common') | strcmp(region, 'Koryak_coast_common')
-    load mask_common.mat
+    load(['mask_common_', mstr, '.mat'])
     dx = 1./g.pm; dy = 1./g.pn;
     mask = mask_common./mask_common;
     area = dx.*dy.*mask;
@@ -41,13 +42,13 @@ if ismap == 1
     
     figure; hold on;
     set(gcf, 'Position', [1 200 800 500])
-    plot_map('NW_Bering', 'mercator', 'l');
-    contourm(g.lat_rho, g.lon_rho, g.h, [200 1000], 'k')
+    plot_map('Gulf_of_Anadyr', 'mercator', 'l');
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k')
     [c,h] = contourfm(g.lat_rho, g.lon_rho, mask_map, [1 1], '--r', 'LineWidth', 2);
     set(h.Children(2), 'FaceColor', 'r')
     set(h.Children(2), 'FaceAlpha', 0.2)
     set(h.Children(3), 'FaceColor', 'none')
-    print(['region_' region], '-dpng')
+    print(['region_' region, '_', mstr], '-dpng')
 end
 
 % Model

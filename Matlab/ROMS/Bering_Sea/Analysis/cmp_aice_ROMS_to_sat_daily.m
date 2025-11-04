@@ -7,11 +7,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-region = 'NW_Bering';
+region = 'Bering';
 
 exp = 'Dsm4';
 vari_str = 'aice';
-yyyy_all = 2023:2023;
+yyyy_all = 2022:2022;
 mm_all = 1:6;
 % dd_all = 1:28;
 

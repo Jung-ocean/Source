@@ -1,10 +1,13 @@
-function [timenum_all, vari_all] = load_BSf_3d(g, vari_str, layer, datenum_start, datenum_end, lat_target, lon_target);
+function [timenum_all, vari_all] = load_BSf_1d(g, vari_str, layer, datenum_start, datenum_end, lat_target, lon_target)
 
 filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm4/'];
 
+lstr = num2str(layer);
+latstr = num2str(lat_target);
+lonstr = num2str(lon_target);
+
 lon = g.lon_rho;
 lat = g.lat_rho;
-
 F = scatteredInterpolant(lat(:),lon(:),0.*lat(:));
 
 timenum_all = [];
@@ -17,6 +20,14 @@ for di = datenum_start:datenum_end
 
     filename = ['Dsm4_avg_', fstr, '.nc'];
     file = [filepath, filename];
+    
+    if filenum == 0119
+        file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm4_rhZop05/Sum_2018_Dsm4_rhZop05_avg_0119.nc';
+    elseif filenum == 1640
+        file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2022/Dsm4_nKC/SumFal_2022_Dsm4_nKC_avg_1640.nc';
+    elseif filenum == 1826
+        file = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
+    end
 
     if exist(file)
         try
@@ -36,5 +47,5 @@ for di = datenum_start:datenum_end
         vari_all = [vari_all; NaN];
     end
 
-    disp(['loading ROMS ', vari_str, ' ', dstr]);
+    disp(['loading ROMS ', vari_str, ' layer = ',lstr, ' lat = ', latstr, ' lon = ', lonstr, ' on ', dstr]);
 end
