@@ -1,0 +1,80 @@
+clear; clc
+
+file_avg = '/data/jungjih/Models/NANOOS/yearly/NANOOS_yearly_2024.nc';
+
+g = grd('NANOOS');
+lat = g.lat_rho;
+lon = g.lon_rho;
+H = g.h;
+H_3d = repmat(H, [1 1 g.N]);
+
+% Similar to World Ocean Atlas standard depth levels (~ 5500 m)
+depth_interp = [0:5:100 125:25:500 550:50:2000 2100:100:7500]';
+depth_interp = -flipud(depth_interp);
+
+% Tidally averaged field
+zeta_avg = ncread(file_avg, 'zeta');
+temp_avg = ncread(file_avg, 'temp');
+salt_avg = ncread(file_avg, 'salt');
+z_avg = zlevs(H,zeta_avg,g.theta_s,g.theta_b,g.hc,g.N,'r',2);
+z_w = zlevs(H,zeta_avg,g.theta_s,g.theta_b,g.hc,g.N,'w',2);
+dz = z_w(:,:,2:end) - z_w(:,:,1:end-1);
+
+SA = salt_avg;
+pt = temp_avg;
+CT = gsw_CT_from_pt(SA,pt);
+pden_avg = gsw_rho(SA,CT,0);
+
+% Background density
+index = find(H_3d < 200); % To use density field deeper than 200 m only
+pden_avg_200 = pden_avg;
+pden_avg_200(index) = NaN;
+
+z_vec = reshape(z_avg,[],g.N);
+Acol = reshape(pden_avg,[],g.N);
+A_z = NaN(size(z_vec,1), length(depth_interp));
+for k = 1:size(Acol,1)
+
+    zk = z_vec(k,:)';
+    Ak = Acol(k,:)';
+
+    if all(isnan(Ak))
+        continue
+    end
+
+    A_z(k,:) = interp1(zk, Ak, depth_interp, 'linear', NaN);
+end
+A_z = reshape(A_z, [size(lat) length(depth_interp)]);
+
+
+pden_interp = NaN([size(g.lat_rho), length(depth_interp)]);
+for i = 1:size(lon,1)
+    lat_tmp = repmat(lat(i,:), [g.N 1])';
+    z_tmp = squeeze(z_avg(i,:,:));
+    pden_tmp = squeeze(pden_avg_200(i,:,:));
+
+    index = find(isnan(pden_tmp) == 0);
+    F = scatteredInterpolant(111*1000*lat_tmp(index), z_tmp(index), pden_tmp(index));
+    F.ExtrapolationMethod = 'none';
+
+    lat_interp = repmat(lat(i,:), [length(depth_interp) 1])';
+    z_interp = repmat(depth_interp, [1 size(lat_tmp,1)])';
+    pden_interp_tmp = F(111*1000*lat_interp, z_interp);
+    try
+        pden_interp(i,:,:) = pden_interp_tmp;
+    catch
+        pden_interp(i,:,:) = NaN;
+    end
+
+    disp(['Background density ', num2str(i), ' / ', num2str(size(lon,1)), ' ...']);
+end
+
+% Background density only a function of z
+rhob = squeeze(mean(mean(pden_interp, 1, 'omitnan'), 2, 'omitnan'));
+rhob_fill = fillmissing(rhob, 'nearest');
+depth_extra = [-10000; depth_interp; 5];
+rhob_extra = [rhob_fill(1); rhob_fill; rhob_fill(end)];
+
+
+
+save('ROMS_avg_pden.mat', 'zeta_avg', 'pden_avg', 'z_avg', 'dz', 'depth_extra', 'rhob_extra');

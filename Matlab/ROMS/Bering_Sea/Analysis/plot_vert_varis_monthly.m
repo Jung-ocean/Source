@@ -8,12 +8,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-exp = 'Dsm4';
-yyyy = 2018;
+model = 'NANOOS';
+yyyy = 2024;
 ystr = num2str(yyyy);
-mm_all = 8:8;
+mm_all = 1:12;
 
-Trans_label = 'Gulf_of_Anadyr';
+% Load grid information
+g = grd('NANOOS');
+
+Trans_label = 'Columbia_River';
 ismap = 0;
 
 switch Trans_label
@@ -28,15 +31,27 @@ switch Trans_label
         ylimit = [-100 0];
         FS = 10;
         TFS = 12;
-end
+    case 'Columbia_River'
+        map = 'US_west';
+        domaxis = [-124.6394 -123.95 45.9946 45.9946];
+        hcontours = [200 200];
+        ylimit = [-200 0];
+        xlabels = 'Longitude (^oE)';
+        FS = 10;
+        TFS = 12;
 
-% Load grid information
-g = grd('BSf');
+        temp_limit = [5 18];
+        temp_interval = 1;
+        salt_limit = [29 34.5];
+        salt_interval = 0.25;
+        pden_limit = [20 27];
+        pden_interval = 0.5;
+end
 
 if ismap == 1
     figure; 
-    plot_map('Gulf_of_Anadyr', 'mercator', 'l')
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+    plot_map(map, 'mercator', 'l')
+    contourm(g.lat_rho, g.lon_rho, g.h, hcontours, 'k');
     plotm([domaxis(3:4)], [domaxis(1:2)], '-r', 'LineWidth', 2)
     print(['line_', Trans_label], '-dpng')
 end
@@ -44,7 +59,7 @@ end
 savename = 'varis';
 
 f1 = figure; hold on
-t = tiledlayout(5,1);
+t = tiledlayout(3,1);
 t.TileSpacing = 'compact';
 t.Padding = 'compact';
 set(gcf, 'Position', [1 200 600 900])
@@ -56,31 +71,15 @@ for mi = 1:length(mm_all)
     timenum = datenum(yyyy,mm,15);
     title(t, datestr(timenum, 'mmm, yyyy'), 'FontSize', 15)
 
-    % zeta
-    [x, data] = load_BSf_line_2d_monthly(g, 'zeta', yyyy, mm, domaxis);
-    data = data.*100; % m to cm
-    nexttile(1); hold on; grid on;
-    p1 = plot(x, data, 'k', 'LineWidth', 2);
-    xlim([domaxis(1) domaxis(2)])
-    xticklabels('');
-    ylim([-20 10])
-    ylabel('cm')
-    set(gca, 'FontSize', FS)
-    title('zeta', 'FontSize', TFS)
-    
-
     % Temperature
-    [x, Yi, data] = load_BSf_vertical_monthly(g, 'temp', yyyy, mm, domaxis);
+    [x, Yi, data] = load_models_vertical_monthly(model, g, 'temp', yyyy, mm, domaxis);
     
     % Figure properties
-    colormap = 'jet';
-    climit = [-2 12];
-    interval = 1;
-    [color, contour_interval] = get_color(colormap, climit, interval);
+    [color, contour_interval] = get_color('jet', temp_limit, temp_interval);
     unit = '^oC';
 
-    ax2 = nexttile(2);
-    p2 = plot_contourf([], x, Yi, data, color, climit, contour_interval);
+    ax1 = nexttile(1);
+    p1 = plot_contourf([], x, Yi, data, color, temp_limit, contour_interval);
     xlim([domaxis(1) domaxis(2)])
     xticklabels('');
     ylim(ylimit)
@@ -88,21 +87,18 @@ for mi = 1:length(mm_all)
     set(gca, 'FontSize', FS)
     c = colorbar;
     c.Title.String = unit;
-    c.Ticks = [climit(1):interval*2:climit(2)];
-    title(['Temperature (interval = ', num2str(interval), ' ', unit, ')'], 'FontSize', TFS);
+    c.Ticks = [temp_limit(1):temp_interval*2:temp_limit(2)];
+    title(['Temperature (interval = ', num2str(temp_interval), ' ', unit, ')'], 'FontSize', TFS);
 
     % Salinity
-    [x, Yi, data] = load_BSf_vertical_monthly(g, 'salt', yyyy, mm, domaxis);
+    [x, Yi, data] = load_models_vertical_monthly(model, g, 'salt', yyyy, mm, domaxis);
 
     % Figure properties
-    colormap = 'jet';
-    climit = [29 34];
-    interval = 0.25;
-    [color, contour_interval] = get_color(colormap, climit, interval);
+    [color, contour_interval] = get_color('jet', salt_limit, salt_interval);
     unit = 'psu';
 
-    ax3 = nexttile(3);
-    p3 = plot_contourf([], x, Yi, data, color, climit, contour_interval);
+    ax2 = nexttile(2);
+    p2 = plot_contourf([], x, Yi, data, color, salt_limit, contour_interval);
     xlim([domaxis(1) domaxis(2)])
     xticklabels('');
     ylim(ylimit)
@@ -110,60 +106,56 @@ for mi = 1:length(mm_all)
     set(gca, 'FontSize', FS)
     c = colorbar;
     c.Title.String = unit;
-    c.Ticks = [climit(1):interval*4:climit(2)];
-    title(['Salinity (interval = ', num2str(interval), ' ', unit, ')'], 'FontSize', TFS);
+    c.Ticks = [salt_limit(1):salt_interval*2:salt_limit(2)];
+    title(['Salinity (interval = ', num2str(salt_interval), ' ', unit, ')'], 'FontSize', TFS);
 
     % Potential density
-    [x, Yi, data] = load_BSf_vertical_monthly(g, 'pden', yyyy, mm, domaxis);
+    [x, Yi, data] = load_models_vertical_monthly(model, g, 'pden', yyyy, mm, domaxis);
     data = data - 1000;
 
     % Figure properties
-    colormap = 'jet';
-    climit = [22.5 27.5];
-    interval = 0.25;
-    [color, contour_interval] = get_color(colormap, climit, interval);
+    [color, contour_interval] = get_color('jet', pden_limit, pden_interval);
     unit = '\sigma_\theta';
 
-    ax4 = nexttile(4);
-    p4 = plot_contourf([], x, Yi, data, color, climit, contour_interval);
+    ax3 = nexttile(3);
+    p3 = plot_contourf([], x, Yi, data, color, pden_limit, contour_interval);
     xlim([domaxis(1) domaxis(2)])
-    xticklabels('');
+    xlabel(xlabels);
+%     xticklabels('');
     ylim(ylimit)
     ylabel('Depth (m)');
     set(gca, 'FontSize', FS)
     c = colorbar;
     c.Title.String = unit;
-    c.Ticks = [climit(1):interval*4:climit(2)];
-    title(['Potential density (interval = ', num2str(interval), ' ', unit, ')'], 'FontSize', TFS);
+    c.Ticks = [pden_limit(1):pden_interval*2:pden_limit(2)];
+    title(['Potential density (interval = ', num2str(pden_interval), ' ', unit, ')'], 'FontSize', TFS);
 
-    % Normal velocity
-    [x, Yi, data] = load_BSf_vertical_monthly(g, 'v_n', yyyy, mm, domaxis);
-    data = data.*100; % m/s to cm/s
-
-    % Figure properties
-    colormap = 'redblue';
-    climit = [-15 15];
-    interval = 3;
-    [color, contour_interval] = get_color(colormap, climit, interval);
-    unit = 'cm/s';
-
-    ax5 = nexttile(5);
-    p5 = plot_contourf([], x, Yi, data, color, climit, contour_interval);
-    xlim([domaxis(1) domaxis(2)])
-    xlabel('Longitude');
-    ylim(ylimit)
-    ylabel('Depth (m)');
-    set(gca, 'FontSize', FS)
-    c = colorbar;
-    c.Title.String = unit;
-    c.Ticks = [climit(1):interval*2:climit(2)];
-    title(['Normal velocity (interval = ', num2str(interval), ' ', unit, ')'], 'FontSize', TFS);
-
+%     % Normal velocity
+%     [x, Yi, data] = load_BSf_vertical_monthly(g, 'v_n', yyyy, mm, domaxis);
+%     data = data.*100; % m/s to cm/s
+% 
+%     % Figure properties
+%     colormap = 'redblue';
+%     climit = [-15 15];
+%     interval = 3;
+%     [color, contour_interval] = get_color(colormap, climit, interval);
+%     unit = 'cm/s';
+% 
+%     ax5 = nexttile(5);
+%     p5 = plot_contourf([], x, Yi, data, color, climit, contour_interval);
+%     xlim([domaxis(1) domaxis(2)])
+%     xlabel('Longitude');
+%     ylim(ylimit)
+%     ylabel('Depth (m)');
+%     set(gca, 'FontSize', FS)
+%     c = colorbar;
+%     c.Title.String = unit;
+%     c.Ticks = [climit(1):interval*2:climit(2)];
+%     title(['Normal velocity (interval = ', num2str(interval), ' ', unit, ')'], 'FontSize', TFS);
+    pause(3)
     print(['vert_varis_', ystr, mstr], '-dpng')
     
     delete(p1)
     delete(p2)
     delete(p3)
-    delete(p4)
-    delete(p5)
 end

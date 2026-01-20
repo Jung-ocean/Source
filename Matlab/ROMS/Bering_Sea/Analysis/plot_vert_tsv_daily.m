@@ -7,14 +7,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-exp = 'Dsm4';
+ismap = 0;
+
+exp = 'Dsm4_mk2';
 yyyy = 2023;
 ystr = num2str(yyyy);
-mm_all = 1:7;
+mm_all = 1:6;
 
 timenum_all = datenum(yyyy,mm_all(1),1):datenum(yyyy,mm_all(end),eomday(yyyy,mm_all(end)));
 
-Trans_label = 'Koryak_coast';
+Trans_label = 'Koryak_coast1';
 domaxis = [-185.1117 -182.7350 62.1252 60.5932];
 ylimit = [-500 0];
 
@@ -22,12 +24,20 @@ ylimit = [-500 0];
 % domaxis = [-181.1100 -178.7333 62.7941 61.2621];
 % ylimit = [-200 0];
 
-filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
-
 % Load grid information
 g = grd('BSf');
 
 savename = 'tsv';
+
+if ismap == 1
+    % Area plot
+    figure; hold on;
+    set(gcf, 'Position', [1 200 800 500])
+    plot_map('NW_Bering', 'mercator', 'l');
+    contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k')
+    plotm([domaxis(3:4)], [domaxis(1:2)], '-r', 'LineWidth', 4);
+    print(['line_' Trans_label], '-dpng')
+end
 
 f1 = figure; hold on
 t = tiledlayout(1,3);
@@ -41,7 +51,7 @@ for ti = 1:length(timenum_all)
     title(t, datestr(timenum, 'mmm dd, yyyy'), 'FontSize', 20)
 
     % Temperature
-    [x, Yi, data] = load_BSf_vertical(g, 'temp', timenum, domaxis);
+    [x, Yi, data] = load_BSf_vertical(exp, g, 'temp', timenum, domaxis);
 
     % Figure properties
     colormap = 'jet';
@@ -63,7 +73,7 @@ for ti = 1:length(timenum_all)
     title(['Temperature'], 'FontSize', 15);
 
     % Salinity
-    [x, Yi, data] = load_BSf_vertical(g, 'salt', timenum, domaxis);
+    [x, Yi, data] = load_BSf_vertical(exp, g, 'salt', timenum, domaxis);
 
     % Figure properties
     colormap = 'jet';
@@ -85,12 +95,12 @@ for ti = 1:length(timenum_all)
     title(['Salinity'], 'FontSize', 15);
     yticklabels('')
 
-    % Normal velocity
-    [x, Yi, data] = load_BSf_vertical(g, 'v_n', timenum, domaxis);
+    % Tangential velocity
+    [x, Yi, data] = load_BSf_vertical(exp, g, 'u_t', timenum, domaxis);
 
     % Figure properties
     colormap = 'redblue';
-    climit = [-50 50];
+    climit = [-20 20];
     interval = 5;
     [color, contour_interval] = get_color(colormap, climit, interval);
     unit = 'cm/s';
@@ -105,7 +115,7 @@ for ti = 1:length(timenum_all)
     set(gca, 'FontSize', 12)
     c = colorbar;
     c.Title.String = unit;
-    title(['Normal velocity'], 'FontSize', 15);
+    title(['Cross-shore velocity'], 'FontSize', 15);
     yticklabels('')
 
     % Make gif

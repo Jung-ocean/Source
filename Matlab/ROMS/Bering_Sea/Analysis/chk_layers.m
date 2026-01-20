@@ -2,13 +2,13 @@ clear; clc; close all
 
 g = grd('BSf');
 
-theta_s = 7;
-theta_b = 3;
-hc = 100;
+theta_s = 2;
+theta_b = 0;
+hc = 50;
 N = g.N;
 
-depths = [10, 50, 100, 500, 1000, 2000, 3000, 4000];
-ylimit = [-150 0];
+depths = [10, 50, 75, 100, 500, 1000, 2000, 3000, 4000];
+ylimit = [-100 0];
 
 figure; 
 set(gcf, 'Position', [1 200 1300 800])
@@ -43,5 +43,5 @@ xticklabels(num2cell(depths))
 set(gca, 'FontSize', 15)
 
 title(['\theta_s = ', num2str(theta_s), '    \theta_b = ', num2str(theta_b), '    hc = ', num2str(hc), ' m'], 'FontSize', 20)
-
+asdf
 print(['layer_theta_s_', num2str(theta_s), '_theta_b_', num2str(theta_b), '_hc_', num2str(hc), 'm'], '-dpng')

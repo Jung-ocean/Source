@@ -234,4 +234,4 @@ end
 fff
 % set(gcf, 'Position', [1 1 1700 900])
 
-exportgraphics(gcf,'figure_cmp_salt.png','Resolution',150) 
+exportgraphics(gcf,'figure_cmp_salt.tif','Resolution',300) 

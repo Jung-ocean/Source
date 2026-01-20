@@ -10,12 +10,12 @@ clear; clc
 yyyy_all = 2010:2024;
 month_avg = [1:12];
 filename_header = 'SMOS_L3_DEBIAS_LOCEAN_AD_';
-filename_footer = '_EASE_09d_25km_v10';
+filename_footer = '_EASE_Arctic_09d_v02';
 
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
-    filepath_all = ['/data/jungjih/Observations/Satellite_SSS/CEC/v10/4day/'];
+    filepath_all = ['/data/jungjih/Observations/Satellite_SSS/CEC/Arctic/v2/9day/'];
 
     eomdays = eomday(yyyy,1:12);
     

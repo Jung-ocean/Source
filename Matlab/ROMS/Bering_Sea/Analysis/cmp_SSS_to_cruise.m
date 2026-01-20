@@ -12,7 +12,7 @@ g = grd('BSf');
 startdate = datenum(2018,7,1);
 filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
 
-ismonthly = 1;
+ismonthly = 0;
 if ismonthly == 1
     filename_last = '_monthly';
 else
@@ -45,9 +45,7 @@ end
 
 climit = [29 34];
 interval = 0.25;
-contour_interval = climit(1):interval:climit(2);
-num_color = diff(climit)/interval;
-color = jet(num_color);
+[color, contour_interval] = get_color('jet', climit, interval);
 unit = 'psu';
 
 polygon = [;
@@ -60,27 +58,25 @@ polygon = [;
 
 climit2 = [-2 2];
 interval2 = 0.5;
-contour_interval2 = climit2(1):interval2:climit2(2);
-num_color2 = diff(climit2)/interval2;
-color_tmp2 = redblue;
-color2 = color_tmp2(linspace(1,length(color_tmp2),num_color2),:);
-close all
+[color2, contour_interval2] = get_color('redblue', climit2, interval2);
 
 h1 = figure; hold on; grid on;
 t = tiledlayout(2,2);
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
 set(gcf, 'Position', [1 200 900 800])
 nexttile(1)
 plot_map('Gulf_of_Anadyr', 'mercator', 'l');
-contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
+contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
 nexttile(2)
 plot_map('Gulf_of_Anadyr', 'mercator', 'l');
-contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
+contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
 nexttile(3)
 plot_map('Gulf_of_Anadyr', 'mercator', 'l');
-contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
+contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
 nexttile(4)
 plot_map('Gulf_of_Anadyr', 'mercator', 'l');
-contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
+contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
 
 ms = 70;
 
@@ -126,58 +122,11 @@ for fi = 1:length(files)
     title(['in-situ (', titles{fi}, ')']);
     title(t, {[datestr(min(timenum_all(in)), 'mmm dd, yyyy'), ' - ',  datestr(max(timenum_all(in)), 'mmm dd, yyyy')], ''})
 
-    % ROMS
-    ax2 = nexttile(2);
-
-    ot = zeros;
-    SST_model = zeros;
-    SSS_model = zeros;
-    for ti = 1:length(timenum_all)
-        timenum = floor(timenum_all(ti));
-        ystr = datestr(timenum, 'yyyy');
-        mstr = datestr(timenum, 'mm');
-        filenum = timenum - startdate + 1;
-        fstr = num2str(filenum, '%04i');
-        if ismonthly == 1
-            filepath = ['/data/jungjih/ROMS_BSf/Output/Multi_year/', exp, '/monthly/'];
-            filename = [exp, '_', ystr, mstr, '.nc'];
-            title('ROMS (monthly) - in-situ')
-        else
-            filename = [exp, '_avg_', fstr, '.nc'];
-            title('ROMS (daily) - in-situ')
-        end
-        file = [filepath, filename];
-        if exist(file)
-            SST = ncread(file, 'temp', [1, 1, g.N, 1], [Inf, Inf, 1, Inf])';
-            SSS = ncread(file, 'salt', [1, 1, g.N, 1], [Inf, Inf, 1, Inf])';
-            ot(ti) = ncread(file, 'ocean_time')/60/60/24 + datenum(1968,5,23);
-
-            lat_mean = lat(ti);
-            lon_mean = lon(ti);
-
-            SST_model(ti) = interp2(g.lon_rho, g.lat_rho, SST, lon_mean, lat_mean);
-            SSS_model(ti) = interp2(g.lon_rho, g.lat_rho, SSS, lon_mean, lat_mean);
-        else
-            ot(ti) = NaN;
-            SST_model(ti) = NaN;
-            SSS_model(ti) = NaN;
-        end
-    end
-
-    pm = scatterm(lat, lon, ms, SSS_model-salt, 'Filled', 'MarkerEdgeColor', 'k');
-    colormap(ax2, color2)
-    caxis(climit2);
-    c2 = colorbar;
-    c2.Title.String = unit;
-
-    if f1_mm_ind == 8 && fi == 1
-        ind_rmse = find(lat > 62.5 & lon < -173 & isnan(SSS_model) == 0);
-        RMSE_ROMS = sqrt( mean( (SSS_model(ind_rmse)-salt(ind_rmse)).^2 ) );
-        trmse(1) = textm(65.7, -184.7, {'RMSE', 'near the GA', [num2str(RMSE_ROMS, '%.2f'), ' psu']}, 'FontSize', 12);
-    end
+    plabel('FontSize', 12);
+    mlabel('off');
 
     %SMAP
-    ax3 = nexttile(3);
+    ax2 = nexttile(2);
     if ismonthly == 1
         data_SMAP = load(['./SMAP/SSS_SMAP_', filename_obs, '_monthly.mat']);
         title('SMAP (monthly) - in-situ')
@@ -185,6 +134,9 @@ for fi = 1:length(files)
         data_SMAP = load(['./SMAP/SSS_SMAP_', filename_obs, '.mat']);
         title('SMAP (daily 8-day running) - in-situ')
     end
+    plabel('off');
+    mlabel('off');
+
     lat_SMAP = data_SMAP.lat_SMAP;
     lon_SMAP = data_SMAP.lon_SMAP;
     SSS_SMAP = data_SMAP.SSS_SMAP;
@@ -195,26 +147,29 @@ for fi = 1:length(files)
     end
 
     psmap = scatterm(lat_SMAP, lon_SMAP, ms, SSS_SMAP-salt, 'Filled', 'MarkerEdgeColor', 'k');
-    colormap(ax3, color2)
+    colormap(ax2, color2)
     caxis(climit2);
-    c3 = colorbar;
-    c3.Title.String = unit;
+    c2 = colorbar;
+    c2.Title.String = unit;
 
-    if f1_mm_ind == 8 && fi == 1
-        ind_rmse = find(lat > 62.5 & lon < -173 & isnan(SSS_SMAP) == 0);
-        RMSE_SMAP = sqrt( mean( (SSS_SMAP(ind_rmse)-salt(ind_rmse)).^2 ) );
-        trmse(2) = textm(65.7, -184.7, {'RMSE', 'near the GA', [num2str(RMSE_SMAP, '%.2f'), ' psu']}, 'FontSize', 12);
-    end
+%     if f1_mm_ind == 8 && fi == 1
+%         ind_rmse = find(lat > 62.5 & lon < -173 & isnan(SSS_SMAP) == 0);
+%         RMSE_SMAP = sqrt( mean( (SSS_SMAP(ind_rmse)-salt(ind_rmse)).^2 ) );
+%         trmse(2) = textm(65.7, -184.7, {'RMSE', 'near the GA', [num2str(RMSE_SMAP, '%.2f'), ' psu']}, 'FontSize', 12);
+%     end
 
     %SMOS
-    ax4 = nexttile(4);
+    ax3 = nexttile(3);
     if ismonthly == 1
         data_SMOS = load(['./SMOS/SSS_SMOS_', filename_obs, '_monthly.mat']);
         title('SMOS (monthly) - in-situ')
     else
         data_SMOS = load(['./SMOS/SSS_SMOS_', filename_obs, '.mat']);
-        title('SMOS (4-day or the closest date) - in-situ')
+        title('SMOS CEC (4-day or closest) - in-situ')
     end
+    plabel('FontSize', 12);
+    mlabel('FontSize', 12);
+
     lat_SMOS = data_SMOS.lat_SMOS;
     lon_SMOS = data_SMOS.lon_SMOS;
     SSS_SMOS = data_SMOS.SSS_SMOS;
@@ -225,19 +180,45 @@ for fi = 1:length(files)
     end
 
     psmos = scatterm(lat_SMOS, lon_SMOS, ms, SSS_SMOS-salt, 'Filled', 'MarkerEdgeColor', 'k');
-    colormap(ax4, color2)
+    colormap(ax3, color2)
     caxis(climit2);
-    c4 = colorbar;
-    c4.Title.String = unit;
     
-    if f1_mm_ind == 8 && fi == 1
-        ind_rmse = find(lat > 62.5 & lon < -173 & isnan(SSS_SMOS) == 0);
-        RMSE_SMOS = sqrt( mean( (SSS_SMOS(ind_rmse)-salt(ind_rmse)).^2 ) );
-        trmse(3) = textm(65.7, -184.7, {'RMSE', 'near the GA', [num2str(RMSE_SMOS, '%.2f'), ' psu']}, 'FontSize', 12);
+%     if f1_mm_ind == 8 && fi == 1
+%         ind_rmse = find(lat > 62.5 & lon < -173 & isnan(SSS_SMOS) == 0);
+%         RMSE_SMOS = sqrt( mean( (SSS_SMOS(ind_rmse)-salt(ind_rmse)).^2 ) );
+%         trmse(3) = textm(65.7, -184.7, {'RMSE', 'near the GA', [num2str(RMSE_SMOS, '%.2f'), ' psu']}, 'FontSize', 12);
+%     end
+
+    %SMOS_BEC
+    ax4 = nexttile(4);
+    if ismonthly == 1
+        data_SMOS_BEC = load(['./SMOS_BEC/SSS_SMOS_BEC_', filename_obs, '_monthly.mat']);
+        title('SMOS BEC (monthly) - in-situ')
+    else
+        data_SMOS_BEC = load(['./SMOS_BEC/SSS_SMOS_BEC_', filename_obs, '.mat']);
+        title('SMOS BEC (daily 9-day running) - in-situ')
+    end
+    plabel('off');
+    mlabel('FontSize', 12);
+
+    lat_SMOS_BEC = data_SMOS_BEC.lat_SMOS_BEC;
+    lon_SMOS_BEC = data_SMOS_BEC.lon_SMOS_BEC;
+    SSS_SMOS_BEC = data_SMOS_BEC.SSS_SMOS_BEC;
+    if exist('index')
+        lat_SMOS_BEC = lat_SMOS_BEC(index);
+        lon_SMOS_BEC = lon_SMOS_BEC(index);
+        SSS_SMOS_BEC = SSS_SMOS_BEC(index);
     end
 
-    t.Padding = 'compact';
-    t.TileSpacing = 'compact';
+    psmos_bec = scatterm(lat_SMOS_BEC, lon_SMOS_BEC, ms, SSS_SMOS_BEC-salt, 'Filled', 'MarkerEdgeColor', 'k');
+    colormap(ax4, color2)
+    caxis(climit2);
+    
+%     if f1_mm_ind == 8 && fi == 1
+%         ind_rmse = find(lat > 62.5 & lon < -173 & isnan(SSS_SMOS_BEC) == 0);
+%         RMSE_SMOS_BEC = sqrt( mean( (SSS_SMOS_BEC(ind_rmse)-salt(ind_rmse)).^2 ) );
+%         trmse(4) = textm(65.7, -184.7, {'RMSE', 'near the GA', [num2str(RMSE_SMOS_BEC, '%.2f'), ' psu']}, 'FontSize', 12);
+%     end
 
     if fi == 1 && exist('index')
         print(['cmp_SSS_to_cruise_', filename_obs, '_', num2str(f1_mm_ind), filename_last], '-dpng')
@@ -246,7 +227,7 @@ for fi = 1:length(files)
     else
         print(['cmp_SSS_to_cruise_', filename_obs, filename_last], '-dpng')
     end
-
+asdf
     delete(pc)
     %     delete(tc)
     delete(pm)
@@ -256,5 +237,5 @@ for fi = 1:length(files)
     if f1_mm_ind == 8 && fi == 1
         delete(trmse)
     end
-    df
+    
 end

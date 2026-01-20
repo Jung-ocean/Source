@@ -114,4 +114,4 @@ end
 plot(0:length(thermo)+1, zeros([1,length(thermo)+2]), '-k')
 box on
 asdf
-exportgraphics(gcf,'figure_term_balance_ice_volume.png','Resolution',150)
+exportgraphics(gcf,'figure_term_balance_ice_volume.tif','Resolution',300)

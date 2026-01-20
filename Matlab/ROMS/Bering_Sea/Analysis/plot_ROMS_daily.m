@@ -7,16 +7,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-yyyy = 2022;
-mm_all = 1:5;
+yyyy = 2019;
+mm_all = 1:2;
 
-vari_str = 'aice';
-layer = 45;
+vari_str = 'salt';
+layer = -200;
 casename = 'Bering';
 
-ind_contour = 0;
-ind_png = 1;
-ind_gif = 1;
+iscontour = 0;
+ispng = 0;
+isgif = 1;
 
 % Model
 filepath = '/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm2_spng/';
@@ -84,7 +84,7 @@ for di = 1:eomday(yyyy,mm)
     c = colorbar;
     c.Title.String = unit;
 
-    if ind_contour == 1
+    if iscontour == 1
         vari_contour = vari;
         vari_contour(isnan(vari_contour) == 1) = -10;
         [cs,h] = contourm(g.lat_rho, g.lon_rho, vari_contour, contour_interval, '-k', 'LineWidth', 4);
@@ -105,11 +105,11 @@ for di = 1:eomday(yyyy,mm)
 %     lat_point = lat(index);
 %     pt = plotm(lat_point, lon_point, '.k', 'MarkerSize', 15);
 
-    if ind_png == 1
+    if ispng == 1
         print([vari_str, '_layer_', num2str(layer), '_', casename, '_', datestr(timenum, 'yyyymmdd')], '-dpng')
     end
 
-    if ind_gif == 1
+    if isgif == 1
         % Make gif
         gifname = [vari_str, '_layer_', num2str(layer), '_', casename, '_', datestr(timenum, 'yyyy'), '.gif'];
 
@@ -121,11 +121,11 @@ for di = 1:eomday(yyyy,mm)
         else
             imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
         end
-    end % ind_gifrsync -av --include '*/' --include '*.png' --include '*.gif' --include '*.jpg' --exclude '*' --delete /data/jungjih/* ./data/
+    end % ind_gif
 
     delete(p)
 %     delete(pt)
-    if ind_contour == 1
+    if iscontour == 1
         delete(cl); delete(h);
     end
 end

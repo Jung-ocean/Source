@@ -60,7 +60,7 @@ function [SSS, err] = load_area_avg_SSS_sat_monthly(sat, version, yyyy, mm, g, m
 [lat_sat, lon_sat, err_sat] = load_SSS_err_sat_2d_monthly(sat, version, yyyy, mm);
 [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_monthly(sat, version, yyyy, mm);
 
-if strcmp(sat, 'SMOS_BEC')
+if strcmp(sat, 'SMOS_BEC') | strcmp(sat, 'SMOS_Arctic')
     lat_sat2 = lat_sat;
     lon_sat2 = lon_sat;
     F = scatteredInterpolant(lat_sat2(:), lon_sat2(:), vari_sat(:));

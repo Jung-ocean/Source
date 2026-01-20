@@ -1,0 +1,34 @@
+function fill_between(x,y1,y2,c1,c2)
+
+hold on;
+
+pind = find(y1 > y2 & isnan(y1) == 0 & isnan(y2) == 0);
+diff_pind = diff(pind);
+jump = find(diff_pind > 1);
+
+ind_start = 1;
+for ji = 1:length(jump)
+
+    if ji == lengt
+
+    ind_end = jump(ji);
+
+fill([timenum(pindex); flip(timenum(pindex))], [SSS(pindex); flip(SSS_mean_repeat(pindex))], 'r', 'EdgeColor', 'none')
+
+
+
+    ind_start = jump(ji+1)
+end
+
+
+
+
+
+
+
+
+
+
+
+
+end

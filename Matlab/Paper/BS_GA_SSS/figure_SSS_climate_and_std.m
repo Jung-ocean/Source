@@ -1,6 +1,7 @@
 clear; clc; close all
 
 map = 'Gulf_of_Anadyr';
+[lon, lat] = load_domain(map);
 
 mm = 7;
 mstr = num2str(mm, '%02i');
@@ -11,10 +12,9 @@ g = grd('BSf');
 
 % Satellite
 lons_sat = {'lon', 'lon'};
-lons_360ind = [360 180];
+lons_360ind = [360 360];
 lats_sat = {'lat', 'lat'};
-varis_sat = {'sss_smap', 'SSS'};
-titles_sat = {'RSS SMAP SSS', 'CEC SMOS SSS'};
+varis_sat = {'sss_smap', 'sss'};
 
 % Figure properties
 climit = [29 34];
@@ -50,10 +50,10 @@ end
 file_sat = [filepath_sat, filename_sat.name];
 lon_sat = double(ncread(file_sat,lons_sat{si}));
 lat_sat = double(ncread(file_sat,lats_sat{si}));
-vari_sat = double(squeeze(ncread(file_sat,varis_sat{si}))');
+vari_sat = double(squeeze(ncread(file_sat,varis_sat{si})));
 
 file_std = ['/data/jungjih/Observations/Satellite_SSS/RSS/v6.0/std/RSS_smap_SSS_L3_std_', mstr, '_FNL_v06.0.nc'];
-std_sat = double(squeeze(ncread(file_std,varis_sat{si}))');
+std_sat = double(squeeze(ncread(file_std,varis_sat{si})));
 
 lon_sat = lon_sat - lons_360ind(si);
 
@@ -61,9 +61,9 @@ latind = find(40<lat_sat & lat_sat <80);
 lonind = find(-250<lon_sat & lon_sat <-100);
 lat_sat = lat_sat(latind);
 lon_sat = lon_sat(lonind);
-vari_sat = vari_sat(latind,lonind);
-std_sat = std_sat(latind,lonind);
-[lon2, lat2] = meshgrid(lon_sat, lat_sat);
+vari_sat = vari_sat(lonind, latind);
+std_sat = std_sat(lonind, latind);
+[lat2, lon2] = meshgrid(lat_sat, lon_sat);
 
 % SMAP plot
 ax1 = subplot('Position', [0.05 .55 .2 .4]); hold on;
@@ -71,7 +71,6 @@ plot_map(map, 'mercator', 'l')
 contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k');
 
 % Convert lat/lon to figure (axis) coordinates
-[lon2, lat2] = meshgrid(lon_sat, lat_sat);
 [x, y] = mfwdtran(lat2, lon2);  % Convert lat/lon to projected x, y coordinates
 vari_sat(vari_sat < climit(1)) = climit(1);
 [cs, T] = contourf(x, y, vari_sat, contour_interval, 'LineColor', 'none');
@@ -104,11 +103,11 @@ mlabel('FontSize', 12)
 
 % SMOS SSS
 si = 2;
-% CEC SMOS v9.0
-filepath_CEC = ['/data/jungjih/Observations/Satellite_SSS/CEC/v9/climate/'];
+% BEC SMOS v4.0
+filepath_BEC = ['/data/jungjih/Observations/Satellite_SSS/BEC/Arctic/v4/climate/'];
 
 % Satellite
-filepath_sat = filepath_CEC;
+filepath_sat = filepath_BEC;
 filepattern1_sat = fullfile(filepath_sat, (['*climate_', mstr, '*.nc']));
 
 filename_sat = dir(filepattern1_sat);
@@ -119,24 +118,21 @@ end
 file_sat = [filepath_sat, filename_sat.name];
 lon_sat = double(ncread(file_sat,lons_sat{si}));
 lat_sat = double(ncread(file_sat,lats_sat{si}));
-vari_sat = double(squeeze(ncread(file_sat,varis_sat{si}))');
+vari_sat = double(squeeze(ncread(file_sat,varis_sat{si})));
 
-file_std = ['/data/jungjih/Observations/Satellite_SSS/CEC/v9/std/SMOS_L3_DEBIAS_LOCEAN_AD_std_', mstr, '_EASE_09d_25km_v09.nc'];
-std_sat = double(squeeze(ncread(file_std,varis_sat{si}))');
+file_std = ['/data/jungjih/Observations/Satellite_SSS/BEC/Arctic/v4/std/BEC_SSS___SMOS__ARC_L3__B_std_', mstr, '_25km__9d_REP_v4.0.nc'];
+std_sat = double(squeeze(ncread(file_std,varis_sat{si})));
 
-index1 = find(lon_sat > 0); index2 = find(lon_sat < 0);
-vari_sat = [vari_sat(:,index1) vari_sat(:,index2)];
-std_sat = [std_sat(:,index1) std_sat(:,index2)];
+lon_sat(lon_sat > 0) = lon_sat(lon_sat > 0) - lons_360ind(si);
 
-lon_sat = lon_sat - lons_360ind(si);
-
-latind = find(40<lat_sat & lat_sat <80);
-lonind = find(-250<lon_sat & lon_sat <-100);
-lat_sat = lat_sat(latind);
-lon_sat = lon_sat(lonind);
-vari_sat = vari_sat(latind,lonind);
-std_sat = std_sat(latind,lonind);
-[lon2, lat2] = meshgrid(lon_sat, lat_sat);
+F = scatteredInterpolant(lat_sat(:), lon_sat(:), vari_sat(:));
+lat_sat_regular = [min(min(lat))-1:0.25:max(max(lat))+1]';
+lon_sat_regular = [min(min(lon))-1:0.25:max(max(lon))+1]';
+[lat2, lon2] = meshgrid(lat_sat_regular, lon_sat_regular);
+vari_sat = F(lat2, lon2);
+Fstd = F;
+Fstd.Values = std_sat(:);
+std_sat = Fstd(lat2, lon2);
 
 % SMOS plot
 ax2 = subplot('Position', [.25 .55 .2 .4]); hold on;
@@ -182,4 +178,4 @@ c.FontSize = 12;
 plabel off
 mlabel('FontSize', 12)
 dd
-exportgraphics(gcf,'figure_SSS_climate_and_std.png','Resolution',150) 
+exportgraphics(gcf,'figure_SSS_climate_and_std.tif','Resolution',300) 

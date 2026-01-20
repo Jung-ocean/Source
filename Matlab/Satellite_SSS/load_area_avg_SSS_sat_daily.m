@@ -64,7 +64,7 @@ if isscalar(vari_sat)
     SSS = NaN;
     err = NaN;
 else
-    if strcmp(sat, 'SMOS_BEC')
+    if strcmp(sat, 'SMOS_BEC') | strcmp(sat, 'SMOS_Arctic')
         lat_min = min(g.lat_rho(:));
         lat_max = max(g.lat_rho(:));
         lon_min = min(g.lon_rho(:));

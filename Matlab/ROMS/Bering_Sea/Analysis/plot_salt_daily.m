@@ -9,19 +9,17 @@ clear; clc; close all
 
 map = 'NW_Bering';
 
-exp = 'Dsm4';
+exp = 'Dsm4_mk2';
 vari_str = 'salt';
 yyyy = 2023;
 ystr = num2str(yyyy);
-mm_all = 1:7;
+mm_all = 1:6;
 
 timenum_all = datenum(yyyy,mm_all(1),1):datenum(yyyy,mm_all(end),eomday(yyyy,mm_all(end)));
 
-isfill = 1;
 layer = -200;
+isfill = 1; % Only works when layer < 0
 dstr = num2str(layer);
-
-filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
 
 % Load grid information
 g = grd('BSf');
@@ -29,7 +27,7 @@ g = grd('BSf');
 % Figure properties
 colormap = 'jet';
 % climit = [29 34];
-climit = [31 34];
+climit = [29 34];
 interval = 0.25;
 [color, contour_interval] = get_color(colormap, climit, interval);
 unit = 'psu';
@@ -39,14 +37,14 @@ savename = 'salt';
 f1 = figure; hold on
 set(gcf, 'Position', [1 200 800 500])
 plot_map(map, 'mercator', 'l')
-contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k');
 
 for ti = 1:length(timenum_all)
     
     timenum = timenum_all(ti);
-    vari = load_BSf_3d_layer(g, vari_str, layer, timenum, isfill);
+    vari = load_BSf_3d_layer(exp, g, vari_str, layer, timenum, isfill);
     p = plot_contourf([], g.lat_rho, g.lon_rho, vari, color, climit, contour_interval);
-    plotm([62.1252 60.5932], [-185.1117 -182.7350], '--k', 'LineWidth', 2);
+%     plotm([62.1252 60.5932], [-185.1117 -182.7350], '--k', 'LineWidth', 2);
 
     if ti == 1
         c = colorbar;

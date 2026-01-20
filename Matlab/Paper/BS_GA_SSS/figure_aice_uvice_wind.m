@@ -54,12 +54,12 @@ switch map
 end
 
 % Figure properties
-interval = 0.1;
-climit = [0 1];
+interval = 10;
+climit = [0 100];
 contour_interval = climit(1):interval:climit(2);
 num_color = diff(climit)/interval;
 color = gray(num_color);
-unit = '';
+unit = '%';
 cutoff_aice = 0.15;
 
 f = figure;
@@ -101,10 +101,10 @@ for yi = 1:length(yyyy_all)
         elseif ti == length(timenum_all)
             ot_end = ot;
         end
-        zeta_tmp = ncread(file, 'zeta')';
-        aice_tmp = ncread(file, 'aice')';
-        uice_tmp = ncread(file, 'uice')';
-        vice_tmp = ncread(file, 'vice')';
+        zeta_tmp = ncread(file, 'zeta');
+        aice_tmp = ncread(file, 'aice');
+        uice_tmp = ncread(file, 'uice');
+        vice_tmp = ncread(file, 'vice');
 
         zeta_sum = zeta_sum + zeta_tmp;
         aice_sum = aice_sum + aice_tmp;
@@ -116,7 +116,7 @@ for yi = 1:length(yyyy_all)
     uice = uice_sum./length(timenum_all);
     vice = vice_sum./length(timenum_all);
 
-    vari = aice;
+    vari = 100*aice;
 
     subplot('Position', [.05+.2*(mi-1) .55-.45*(yi-1) .2 .4]); hold on;
     plot_map(map, 'mercator', 'l')
@@ -139,7 +139,7 @@ for yi = 1:length(yyyy_all)
     skip = 1;
     npts = [0 0 0 0];
 
-    [uice_rho,vice_rho,lonred,latred,maskred] = uv_vec2rho(uice,vice,g.lon_rho,g.lat_rho,g.angle,g.mask_rho,skip,npts);
+    [uice_rho,vice_rho,lonred,latred,maskred] = uv_vec2rho_J(uice,vice,g.lon_rho,g.lat_rho,g.angle,g.mask_rho,skip,npts);
     uice_rho = uice_rho.*maskred;
     vice_rho = vice_rho.*maskred;
 
@@ -272,5 +272,5 @@ end % mi
 c = colorbar('Position', [.65 .1 .01 .85]);
 c.Title.String = unit;
 c.FontSize = 12;
-dd
-exportgraphics(gcf,'figure_aice_uvice_wind.png','Resolution',150)
+asdf
+exportgraphics(gcf,'figure_aice_uvice_wind.tif','Resolution',300)

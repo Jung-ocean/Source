@@ -18,6 +18,12 @@ angle = 45;
 
 yyyy_all = 2019:2022;
 mm_all = 4:7;
+mm_start = 4;
+dd_start = 15;
+mm_end = 7;
+dd_end = 28;
+
+labels = {'(a)', '(b)', '(c)', '(d)'};
 
 filepath = '/data/sdurski/ROMS_Setups/Forcing/Atm/Bering_Sea/';
 
@@ -67,20 +73,29 @@ for yi = 1:length(yyyy_all)
         wind_NW = [wind_NW; wind_NW_tmp'];
     end
     ALBSA = load_ALBSA(wtime, 'daily');
-
-    [R, P] = corrcoef(wind_NE, ALBSA);
     
+    ALBSA = movmean(ALBSA,7, 'Endpoints', 'fill');
+    wind_NE = movmean(wind_NE,7, 'Endpoints', 'fill');
+
+    datenum_start = datenum(yyyy,mm_start, dd_start);
+    datenum_end = datenum(yyyy,mm_end, dd_end);
+    tindex = find(wtime > datenum_start-1 & wtime < datenum_end+1);
+
+%     [R, P] = corrcoef(wind_NE(tindex), ALBSA(tindex));
+    [R, P, P_ess, ESS] = calc_ess_and_pvalue(wind_NE(tindex),ALBSA(tindex));
+    [P_ess, ESS]
+
     nexttile(yi); hold on; grid on;
-    p1 = plot(wtime, wind_NE, '-k', 'LineWidth', 2);
-    ylim([-20 20])
+    p1 = plot(wtime(tindex), wind_NE(tindex), '-k', 'LineWidth', 2);
+    ylim([-10 10])
     ylabel('NE wind (m/s)')
     yyaxis right
     set(gca, 'Ycolor', 'r')
-    p2 = plot(wtime, ALBSA, '-r', 'LineWidth', 2);
-    ylim([-700 700]);
-    ylabel('ALBSA');
+    p2 = plot(wtime(tindex), ALBSA(tindex), '-r', 'LineWidth', 2);
+    ylim([-400 400]);
+    ylabel('ALBSA (m)');
     xticks(datenum(yyyy,1:12,1));
-    xlim([wtime(1)-1 wtime(end)+1])
+    xlim([datenum_start-1 datenum_end+1])
     datetick('x', 'mm/dd', 'keepticks', 'keeplimits')
     if yi == length(yyyy_all)
         xlabel('Date')
@@ -89,7 +104,7 @@ for yi = 1:length(yyyy_all)
     end
     set(gca, 'FontSize', 12)
     xtickangle(0)
-    title([ystr, ' (R = ', num2str(R(1,2), '%.2f'), ', p-value = ', num2str(P(1,2), '%.2f'), ')'], 'FontSize', 15)
+    title([labels{yi}, ' ', ystr, ' (R = ', num2str(R, '%.2f'), ', p-value = ', num2str(P_ess, '%.2f'), ')'], 'FontSize', 15)
 end
-
+asdf
 print(['corrcoef_wind_ALBSA'], '-dpng')

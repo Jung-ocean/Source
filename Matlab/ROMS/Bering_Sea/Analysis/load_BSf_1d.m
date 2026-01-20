@@ -47,5 +47,5 @@ for di = datenum_start:datenum_end
         vari_all = [vari_all; NaN];
     end
 
-    disp(['loading ROMS ', vari_str, ' layer = ',lstr, ' lat = ', latstr, ' lon = ', lonstr, ' on ', dstr]);
+    disp(['Loading ROMS ', vari_str, ' layer = ',lstr, ' lat = ', latstr, ' lon = ', lonstr, ' on ', dstr]);
 end

@@ -5,6 +5,7 @@ labels_SMAP = {'a', 'b', 'c', 'd'};
 labels_SMOS = {'e', 'f', 'g', 'h'};
 
 map = 'Gulf_of_Anadyr';
+[lon, lat] = load_domain(map);
 
 exp = 'Dsm4';
 vari_str = 'salt';
@@ -12,7 +13,7 @@ yyyy_all = 2019:2022;
 mm = 7;
 mstr = num2str(mm, '%02i');
 
-remove_climate = 0;
+remove_climate = 1;
 
 % Load grid information
 g = grd('BSf');
@@ -21,10 +22,9 @@ filepath = ['/data/jungjih/ROMS_BSf/Output/Multi_year/', exp, '/monthly/'];
 
 % Satellite
 lons_sat = {'lon', 'lon'};
-lons_360ind = [360 180];
+lons_360ind = [360 360];
 lats_sat = {'lat', 'lat'};
-varis_sat = {'sss_smap', 'SSS'};
-titles_sat = {'RSS SMAP SSS', 'CEC SMOS SSS'};
+varis_sat = {'sss_smap', 'sss'};
 
 % Figure properties
 climit = [29 34];
@@ -152,6 +152,10 @@ for yi = 1:length(yyyy_all)
     textm(text1_lat, text1_lon, 'SMAP', 'FontSize', text_FS)
     textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
 
+    if si == 1 & yi == 1
+        T2019 = T;
+    end
+
     if yi ~= 1
         plabel off
     else
@@ -161,11 +165,11 @@ for yi = 1:length(yyyy_all)
 
     % SMOS SSS
     si = 2;
-    % CEC SMOS v9.0
-    filepath_CEC = ['/data/jungjih/Observations/Satellite_SSS/CEC/v9/monthly/'];
+    % BEC SMOS v4.0
+    filepath_BEC = ['/data/jungjih/Observations/Satellite_SSS/BEC/Arctic/v4/monthly/'];
 
     % Satellite
-    filepath_sat = filepath_CEC;
+    filepath_sat = filepath_BEC;
     filepattern1_sat = fullfile(filepath_sat, (['*', ystr, mstr, '*.nc']));
     filepattern2_sat = fullfile(filepath_sat, (['*', ystr, '_', mstr, '*.nc']));
 
@@ -180,25 +184,21 @@ for yi = 1:length(yyyy_all)
     vari_sat = double(squeeze(ncread(file_sat,varis_sat{si})));
 
     if remove_climate == 1
-        filepath_climate = '/data/jungjih/Observations/Satellite_SSS/CEC/v9/climate/';
-        filename_climate = ['SMOS_L3_DEBIAS_LOCEAN_AD_climate_', mstr, '_EASE_09d_25km_v09.nc'];
+        filepath_climate = '/data/jungjih/Observations/Satellite_SSS/BEC/Arctic/v4/climate/';
+        filename_climate = ['BEC_SSS___SMOS__ARC_L3__B_climate_', mstr, '_25km__9d_REP_v4.0.nc'];
         file_climate = [filepath_climate, filename_climate];
         vari_climate = double(squeeze(ncread(file_climate,varis_sat{si})));
 
         vari_sat = vari_sat - vari_climate;
     end
 
-    index1 = find(lon_sat > 0); index2 = find(lon_sat < 0);
-    vari_sat = [vari_sat(index1,:); vari_sat(index2,:)];
+    lon_sat(lon_sat > 0) = lon_sat(lon_sat > 0) - lons_360ind(si);
 
-    lon_sat = lon_sat - lons_360ind(si);
-
-    latind = find(40 < lat_sat & lat_sat <80);
-    lonind = find(-250 < lon_sat & lon_sat < -100);
-    lat_sat = lat_sat(latind);
-    lon_sat = lon_sat(lonind);
-    vari_sat = vari_sat(lonind,latind);
-    [lat2, lon2] = meshgrid(lat_sat, lon_sat);
+    F = scatteredInterpolant(lat_sat(:), lon_sat(:), vari_sat(:));
+    lat_sat_regular = [min(min(lat))-1:0.25:max(max(lat))+1]';
+    lon_sat_regular = [min(min(lon))-1:0.25:max(max(lon))+1]';
+    [lat2, lon2] = meshgrid(lat_sat_regular, lon_sat_regular);
+    vari_sat = F(lat2, lon2);
 
     % SMOS plot
     subplot('Position', [.02+.16*(yi-1) .38 .15 .25]); hold on;
@@ -235,7 +235,13 @@ c.Title.String = unit;
 c.FontSize = 12;
 ddd
 if remove_climate == 1
-    exportgraphics(gcf,'figure_SSSA_SMAP_SMOS_ROMS.png','Resolution',150) 
+    exportgraphics(gcf,'figure_SSSA_SMAP_SMOS_ROMS.tif','Resolution',300) 
 else
-    exportgraphics(gcf,'figure_SSS_SMAP_SMOS_ROMS.png','Resolution',150) 
+    hFills = T2019.FacePrims;
+    [hFills.ColorType] = deal('truecoloralpha');  % default = 'truecolor'
+    for idx = 1 : numel(hFills)
+        hFills(idx).ColorData(4) = 150;   % default=255
+    end
+
+    exportgraphics(gcf,'figure_SSS_SMAP_SMOS_ROMS.tif','Resolution',300) 
 end

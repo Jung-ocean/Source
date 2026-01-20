@@ -179,4 +179,4 @@ c.Title.String = unit2;
 c.FontSize = 12;
 
 dfdf
-exportgraphics(gcf,'figure_cmp_SST_to_LEO_w_SSS.png','Resolution',150) 
+exportgraphics(gcf,'figure_cmp_SST_to_LEO_w_SSS.tif','Resolution',300) 

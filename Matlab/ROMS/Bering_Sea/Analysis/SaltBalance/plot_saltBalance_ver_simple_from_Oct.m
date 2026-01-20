@@ -1,6 +1,6 @@
 clear; clc; close all
 
-yyyy = 2019; ystr = num2str(yyyy);
+yyyy = 2022; ystr = num2str(yyyy);
 
 region = 'GA';
 days = 1;

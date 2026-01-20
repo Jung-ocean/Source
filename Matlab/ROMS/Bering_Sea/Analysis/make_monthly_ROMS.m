@@ -11,30 +11,34 @@ yyyy_all = 2023:2023;
 month_avg = [12:12];
 year_start = 2018;
 month_start = 7;
-exp = 'Dsm4';
-filename_header = 'Dsm4';
+exp = 'Dsm4_mk2';
+filename_header = 'Dsm4_mk2';
 
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
-    filepath_daily = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
-    datenum_ref = datenum(1968,05,23);
-
     for mi = 1:length(month_avg)
         mm = month_avg(mi); mstr = num2str(mm, '%02i');
+        
         eomdays = eomday(yyyy,mm);
         filenumbers = [datenum(yyyy,mm,1):datenum(yyyy,mm+1,1)-1] - datenum(year_start,month_start,1) + 1;
         for fi = 1:length(filenumbers)
-            filenumber = filenumbers(fi); fstr = num2str(filenumber, '%04i');
-            filename = dir([filepath_daily, '*', filename_header, '_avg*', fstr, '*.nc']);
-            if ~isempty(filename)
-                command = ['ln -s ', filepath_daily, filename.name, ' ./'];
+            filenumber = filenumbers(fi);
+            try
+                file = get_ncfilename(exp, 'avg', filenumber);
+            catch
+                file = [];
+            end
+
+            if ~isempty(file)
+                command = ['ln -s ', file, ' ./'];
                 system(command);
-                ot = ncread(filename.name, 'ocean_time');
+                ot = ncread(file, 'ocean_time');
                 if isempty(ot)
-                    command = ['rm -f ', filename.name];
+                    index = find(ismember(file, '/'));
+                    filename = file(index(end)+1:end);
+                    command = ['rm -f ', filename];
                     system(command);
-                    make_alternative_link(filepath_daily, filename.name, filename.name)
                 end
             end
         end

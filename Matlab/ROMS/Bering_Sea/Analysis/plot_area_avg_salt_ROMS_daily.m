@@ -1,0 +1,102 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Plot ROMS area-averaged salt using .mat file
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+region = 'Koryak_coast';
+title_str = strrep(region, '_', ' ');
+load(['salt_ROMS_', region, '_daily.mat'])
+
+yyyy_all = 2019:2023;
+num_mm = 12;
+plot_mm = 12;
+
+% Calculate climate mean
+SSS_mean = NaN(365,1);
+S_bot_mean = NaN(365,1);
+S_volavg_mean = NaN(365,1);
+for di = 1:365
+    dd = di;
+    timenum_avg = datenum(yyyy_all,1,1) + dd -1;
+    index = find(ismember(timenum, timenum_avg));
+    SSS_mean(di) = mean(SSS(index));
+    S_bot_mean(di) = mean(S_bot(index));
+    S_volavg_mean(di) = mean(S_volavg(index));
+end
+
+index = find(leapyear(yyyy_all) == 1);
+index2 = find(ismember(timenum, datenum(yyyy_all(index), 2, 29)));
+timenum(index2) = [];
+SSS(index2) = [];
+S_bot(index2) = [];
+S_volavg(index2) = [];
+
+% SSS
+figure; 
+set(gcf, 'Position', [1 200 1800 500])
+t = tiledlayout(1,3);
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+nexttile(1); hold on; grid on
+plot(1:365, SSS_mean, '-k', 'LineWidth', 2);
+xlim([0 366])
+ylim([30 33.5])
+xticks(datenum(0,1:12,1))
+datetick('x', 'mm/dd', 'keepticks', 'keeplimits')
+ylabel('psu')
+set(gca, 'FontSize', 12)
+title('Multi-year mean (2019-2023)', 'FontSize', 15)
+
+nexttile(2, [1 2]); hold on; grid on
+SSS_mean_repeat = repmat(SSS_mean, [length(yyyy_all)+1 ,1]);
+p1 = plot(timenum, SSS_mean_repeat, '--k');
+p2 = plot(timenum, SSS, '-k', 'LineWidth', 1);
+fill_between(timenum,SSS,SSS_mean_repeat,'r','b')
+uistack(p1, 'top');
+uistack(p2, 'top');
+xlim([datenum(yyyy_all(1),1,1)-1 datenum(yyyy_all(end),12,31)+1]);
+ylim([30 33.5])
+xticks(datenum(yyyy_all,1,1))
+datetick('x', 'mm/dd/yy', 'keepticks', 'keeplimits')
+ylabel('psu')
+set(gca, 'FontSize', 12)
+title(['Area-averaged SSS (', replace(region, '_', ' '), ')'], 'FontSize', 15)
+
+print(['area_avg_SSS_', region], '-dpng')
+
+% Volume-averaged salinity
+figure; 
+set(gcf, 'Position', [1 200 1800 500])
+t = tiledlayout(1,3);
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+nexttile(1); hold on; grid on
+plot(1:365, S_volavg_mean, '-k', 'LineWidth', 2);
+xlim([0 366])
+ylim([32.4 33.2])
+xticks(datenum(0,1:12,1))
+datetick('x', 'mm/dd', 'keepticks', 'keeplimits')
+ylabel('psu')
+set(gca, 'FontSize', 12)
+title('Multi-year mean (2019-2023)', 'FontSize', 15)
+
+nexttile(2, [1 2]); hold on; grid on
+S_volavg_mean_repeat = repmat(S_volavg_mean, [length(yyyy_all)+1 ,1]);
+p1 = plot(timenum, S_volavg_mean_repeat, '--k');
+p2 = plot(timenum, S_volavg, '-k', 'LineWidth', 1);
+fill_between(timenum,S_volavg,S_volavg_mean_repeat,'r','b')
+uistack(p1, 'top');
+uistack(p2, 'top');
+xlim([datenum(yyyy_all(1),1,1)-1 datenum(yyyy_all(end),12,31)+1]);
+ylim([32.4 33.2])
+xticks(datenum(yyyy_all,1,1))
+datetick('x', 'mm/dd/yy', 'keepticks', 'keeplimits')
+ylabel('psu')
+set(gca, 'FontSize', 12)
+title(['Volume-averaged salinity (', replace(region, '_', ' '), ')'], 'FontSize', 15)
+
+print(['vol_avg_S_', region], '-dpng')

@@ -21,7 +21,7 @@ for yi = 1:length(yyyy_all)
 
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
 
-    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/dia/ver_simple/GOA/saltBalance_', region, '_', ystr, '.mat'])
+    load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/dia/ver_simple/GA/saltBalance_', region, '_', ystr, '.mat'])
 
     Sice = Ssurf - Satm;
     % Uflux_river = Uflux_avg - Uflux_open_avg;
@@ -62,4 +62,4 @@ l.Position = [.1 .07 .85 .05]
 l.NumColumns = 5;
 l.FontSize = 20;
 ddd
-exportgraphics(gcf,'figure_term_balance_salt.png','Resolution',150)
+exportgraphics(gcf,'figure_term_balance_salt.tif','Resolution',300)

@@ -33,7 +33,7 @@ switch location
         grd = roms_get_grid(grd_file,scoord,0,Vtransform);
 
     case 'NANOOS'
-        grd_file = '/data/serofeev//RTDAOW2/Prm/grd_ow2km_03_smooth04_lana.nc';
+        grd_file = '/data/serofeev/RTDAOW2/Prm/grd_ow2km_03_smooth04_lana.nc';
         scoord = [8 2 50 40]; % theta_s theta_b hc N
 
         disp(' ')

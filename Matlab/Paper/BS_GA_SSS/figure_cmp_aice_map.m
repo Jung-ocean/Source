@@ -15,15 +15,15 @@ labels_ROMS = {'e', 'f', 'g', 'h'};
 g = grd('BSf');
 
 filepath = ['/data/jungjih/ROMS_BSf/Output/Multi_year/', exp, '/monthly/'];
-filepath_sat = ['/data/jungjih/Observations/Sea_ice/ASI/monthly_ROMSgrid/'];
+filepath_sat = ['/data/jungjih/Observations/Sea_ice/ASI/AMSR2/monthly_ROMSgrid/'];
 
 % Figure properties
-interval = 0.1;
-climit = [0 1];
+interval = 10;
+climit = [0 100];
 contour_interval = climit(1):interval:climit(2);
 num_color = diff(climit)/interval;
 color = gray(num_color);
-unit = '';
+unit = '%';
 savename = 'cmp_aice';
 text1_lat = 65.9;
 text1_lon = -184.8;
@@ -43,7 +43,7 @@ for yi = 1:length(yyyy_all)
     % Satellite plot
     filename_sat = ['asi-AMSR2-n6250-', ystr, mstr, '-v5.4.nc'];
     file_sat = [filepath_sat, filename_sat];
-    vari_sat = ncread(file_sat, 'z')'/100;
+    vari_sat = ncread(file_sat, 'z');
     
     subplot('Position',[.05 + 0.20*(yi-1),.55,.20,.4])
     plot_map(map, 'mercator', 'l')
@@ -77,7 +77,7 @@ for yi = 1:length(yyyy_all)
     % ROMS plot
     filename = [exp, '_', ystr, mstr, '.nc'];
     file = [filepath, filename];
-    vari = ncread(file, 'aice')'; 
+    vari = 100*ncread(file, 'aice'); 
 
     subplot('Position',[.05 + 0.20*(yi-1),.1,.20,.4])
     plot_map(map, 'mercator', 'l')
@@ -113,4 +113,4 @@ end % yi
 c = colorbar('Position', [.85 .1 .01 .85]);
 c.Title.String = unit;
 
-exportgraphics(gcf,'figure_cmp_aice_map.png','Resolution',150) 
+exportgraphics(gcf,'figure_cmp_aice_map.tif','Resolution',300) 

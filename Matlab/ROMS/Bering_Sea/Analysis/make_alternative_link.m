@@ -1,42 +1,24 @@
 function make_alternative_link(filepath, filename, filename_link)
 
-command = ['ls -ltrh ', filepath, filename];
-[status, output] = system(command);
-index1 = ismember(output, '/');
-index2 = find(index1 == 1);
-filename_origin = output(index2(end)+1:end);
-filenum = str2num(filename_origin(end-7:end-3));
-timenum = datenum(2018,7,1) + filenum;
+fstr = filename(end-6:end-3);
+fnum = str2num(fstr);
+timenum = fnum + datenum(2018,7,1);
 timevec = datevec(timenum);
-yyyy = timevec(1);
-yyyy_m1 = yyyy-1;
-yyyy_p1 = yyyy+1;
-mm = timevec(2);
-season = filename_origin(1:6);
+yyyy = timevec(:,1);
+ystr_m1 = num2str(yyyy-1);
+ystr = num2str(yyyy);
+ystr_p1 = num2str(yyyy+1);
 
-if mm < 10 & strcmp(season, 'Winter')
-    ystr = num2str(yyyy_p1);
-elseif mm > 10 & strcmp(season, 'Winter')
-    ystr = num2str(yyyy);
-elseif mm < 10 & strcmp(season, 'SumFal')
-    ystr = num2str(yyyy_m1);
-elseif mm > 10 & strcmp(season, 'SumFal')    
-    ystr = num2str(yyyy);
-end
-
-file_search = filename_origin(end-11:end-1);
-
-if strcmp(season, 'Winter')
-    filepath_alternative = ['/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_', ystr, '/'];
+if strcmp(filename(1:6), 'SumFal')
+    filepath_new = replace(filepath, {'NoIce', 'SumFal', ystr}, {'Ice', 'Winter', ystr_m1});
+    filename_new = replace(filename, {'SumFal', ystr}, {'Winter', ystr_m1});
 else
-    filepath_alternative = ['/data/sdurski/ROMS_BSf/Output/Ice/Winter_', ystr, '/'];
+    filepath_new = replace(filepath, {'Ice', 'Winter', ystr}, {'NoIce', 'SumFal', ystr});
+    filename_new = replace(filepath, {'Winter', ystr}, {'SumFal', ystr});
 end
-command = ['find ', filepath_alternative, ' -name *', file_search];
-[status, output] = system(command);
-index1 = ismember(output, '/');
-index2 = find(index1 == 1);
-filename_new = output(index2(end)+1:end);
-command = (['ln -s ', output(1:end-1), ' ./', filename_link]);
+
+file = dir([filepath_new, '/*', filename_new]);
+command = (['ln -s ', filepath_new, '/', file.name, ' ./', filename_link]);
 system(command);
 
-disp(['from ', filename_origin, ' to ', filename_new]);
+disp(['from ', filename_new, ' to ', filename_link]);

@@ -7,9 +7,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-region = 'Koryak_coast';
+region = 'Koryak_coast_basin';
+ismap = 0;
 
-exp = 'Dsm4_LCda';
+exp = 'Dsm4_mk2';
 vari_str = 'aice';
 yyyy_all = 2018:2023;
 mm_all = 1:12;
@@ -21,16 +22,21 @@ dy=1./g.pn;
 dxdy = dx.*dy;
 [mask, area] = mask_and_area(region, g);
 
-% figure; hold on;
-% set(gcf, 'Position', [1 200 800 500])
-% plot_map('Bering', 'mercator', 'l')
-% contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k')
-% pcolorm(g.lat_rho, g.lon_rho, mask);
-% print(['region_', region], '-dpng')
+if ismap == 1
+    % Area plot
+    mask_map = mask;
+    mask_map(isnan(mask_map) == 1) = 0;
 
-% Model
-filepath_all = ['/data/sdurski/ROMS_BSf/Output/Multi_year/'];
-filepath_control = [filepath_all, exp, '/'];
+    figure; hold on;
+    set(gcf, 'Position', [1 200 800 500])
+    plot_map('NW_Bering', 'mercator', 'l');
+    contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k')
+    [c,h] = contourfm(g.lat_rho, g.lon_rho, mask_map, [1 1], '--r', 'LineWidth', 2);
+    set(h.Children(2), 'FaceColor', 'r')
+    set(h.Children(2), 'FaceAlpha', 0.2)
+    set(h.Children(3), 'FaceColor', 'none')
+    print(['region_', region], '-dpng')
+end
 
 aice = [];
 timenum = [];
@@ -42,33 +48,16 @@ for yi = 1:length(yyyy_all)
 
         for di = 1:eomday(yyyy,mm)
             dd = di; dstr = num2str(dd, '%02i');
-            timenum = [timenum; datenum(yyyy,mm,dd)];
-            filenum = datenum(yyyy,mm,dd) - datenum(2018,7,1) + 1;
-            fstr = num2str(filenum, '%04i');
+            
+            datenum_target = datenum(yyyy,mm,dd);
+            timenum = [timenum; datenum_target];
 
-            filepattern_control = fullfile(filepath_control,(['*',exp, '_avg_', fstr,'*.nc']));
-            filename_control = dir(filepattern_control);
-            if ~isempty(filename_control)
-                file_control = [filepath_control, filename_control.name];
-                if strcmp(exp, 'Dsm4')
-                if filenum == 0119
-                    file_control = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm4_rhZop05/Sum_2018_Dsm4_rhZop05_avg_0119.nc';
-                elseif filenum == 1640
-                    file_control = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2022/Dsm4_nKC/SumFal_2022_Dsm4_nKC_avg_1640.nc';
-                elseif filenum == 1826
-                    file_control = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
-                end
-                end
-
-                vari = ncread(file_control,'aice');
-                if isempty(vari) == 1
-                    aice = [aice; NaN];
-                else
-                    aice_tmp = sum(vari(:).*area(:), 'omitnan')./sum(area(:), 'omitnan');
-                    aice = [aice; aice_tmp];
-                end
-            else
+            vari = load_BSf_2d_daily(exp, 'aice', datenum_target);
+            if isscalar(vari) == 1 | isempty(vari) == 1
                 aice = [aice; NaN];
+            else
+                aice_tmp = sum(vari(:).*area(:), 'omitnan')./sum(area(:), 'omitnan');
+                aice = [aice; aice_tmp];
             end
 
             disp([ystr, mstr, dstr, '...'])

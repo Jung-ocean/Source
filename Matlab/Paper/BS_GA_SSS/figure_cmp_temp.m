@@ -254,4 +254,4 @@ end
 ddd
 % set(gcf, 'Position', [1 1 1700 900])
 
-exportgraphics(gcf,'figure_cmp_temp.png','Resolution',150)
+exportgraphics(gcf,'figure_cmp_temp.tif','Resolution',300)

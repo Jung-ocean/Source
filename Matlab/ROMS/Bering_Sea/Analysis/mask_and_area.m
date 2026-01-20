@@ -208,7 +208,7 @@ switch region
         mask = mask.*in./in;
         area = area.*mask;
 
-        hind = find(g.h < 200);
+        hind = find(g.h <= 200);
         mask(hind) = NaN;
         area(hind) = NaN;
 

@@ -6,17 +6,17 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear all;
-ExpID='Dsm4';
-filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', ExpID, '/'];
-aveBoxName='Koryak_coast_basin'; % 'ORE4346', 'SCA'
+ExpID='Dsm4_mk2';
+% filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', ExpID, '/'];
+aveBoxName='Koryak_coast';
 issub = 0;
 
-yyyy_all = 2019:2023;
-mm_start = 11;
+g = grd('BSf');
+
+yyyy_all = 2020:2023;
+mm_start = 12;
 mm_end = 7;
 startdate = datenum(2018,7,1);
-
-g = grd('BSf');
 
 for yi = 1:length(yyyy_all)
 
@@ -32,8 +32,8 @@ if mm_start > mm_end
     fnumSTR= datenum(yyyy-1, mm_start, 1) - startdate + 1;
 end
 
-avg_fileHead=[filepath, ExpID, '_avg_'];
-his_fileHead=[filepath, ExpID, '_his_'];
+% avg_fileHead=[filepath, ExpID, '_avg_'];
+% his_fileHead=[filepath, ExpID, '_his_'];
 % dia_fileHead=[filepath, ExpID, '/Winter_2021_Dsm4_nKC_dia_'];
 grdfile=g.grd_file;
 
@@ -82,7 +82,8 @@ end
 
 % Vertical grid parameters:
 % fname1=[his_fileHead int2strPAD(fnumSTR,4) '.nc'];
-fname1=[his_fileHead num2str(fnumSTR, '%04i') '.nc'];
+% fname1=[his_fileHead num2str(fnumSTR, '%04i') '.nc'];
+fname1 = get_ncfilename(ExpID, 'his', fnumSTR);
 % N=read_ncdim(fname1,'s_rho');
 finfo = ncinfo(fname1, 's_rho');
 N = finfo.Size;
@@ -108,7 +109,6 @@ nf=length(fnums);
 dTdt=nan*zeros(nf,1);
 t_avg=nan*zeros(nf,1);
 T_avg=nan*zeros(nf,1);
-aice_avg = nan*zeros(nf,1);
 thermo = nan*zeros(nf,1);
 dyn = nan*zeros(nf,1);
 
@@ -131,7 +131,8 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
   fnum1=fnum0+1;
  end
  %  fname=[his_fileHead int2strPAD(fnum1,4) '.nc'];
- fname=[his_fileHead num2str(fnum1, '%04i') '.nc'];
+%  fname=[his_fileHead num2str(fnum1, '%04i') '.nc'];
+ fname = get_ncfilename(ExpID, 'his', fnum1);
 
  disp(' ');
  disp(fname);
@@ -140,9 +141,8 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
  T = dxdy.*hice; % m^3; ice volume
  
  % - inst V 
- % - area-ave T based on inst volume
- [T1,A1]=aave(T,dxdy,mask_ave);
- T1 = T1.*num_grid;
+ T(mask_ave == 0) = 0;
+ T1 = sum(T(:));
  
  if it>0
   dTdt(it)=(T1-T0)/(t1-t0);
@@ -155,15 +155,9 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
  if it>0
   % read avg fields:
   %   fname=[avg_fileHead int2strPAD(fnum0,4) '.nc'];
-  fname=[avg_fileHead num2str(fnum0, '%04i') '.nc'];
+%   fname=[avg_fileHead num2str(fnum0, '%04i') '.nc'];
+  fname = get_ncfilename(ExpID, 'avg', fnum0);
   disp(fname);
-  if fnum0 == 0119
-      fname = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm4_rhZop05/Sum_2018_Dsm4_rhZop05_avg_0119.nc';
-  elseif fnum0 == 1640
-      fname = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2022/Dsm4_nKC/SumFal_2022_Dsm4_nKC_avg_1640.nc';
-  elseif fnum0 == 1826
-      fname = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
-  end
 
   t_avg(it)=ncread(fname,'ocean_time');
   zeta_avg=double(ncread(fname,'zeta'));
@@ -176,11 +170,12 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
   %   z_w=get_z3D_use_zeta(h,zeta_avg,'w',N,Vtransform,Vstretching, ...
   %                        theta_s,theta_b,Tcline);
   %   Hz=z_w(:,:,2:end)-z_w(:,:,1:end-1);
-  z_r = zlevs(h,zeta_avg,theta_s,theta_b,Tcline,N,'r',Vtransform);
-  z_r_surf = squeeze(z_r(:,:,g.N));
   
-  pres_surf = sw_pres(abs(z_r_surf), lat_rho);
-  rhoo = sw_pden_ROMS(SSS, SST, pres_surf, 0);
+  SA = SSS;
+  pt = SST;
+  CT = gsw_CT_from_pt(SA,pt);
+  pden = gsw_rho(SA,CT,0);
+  rhoo = pden;
 
   hice = double(ncread(fname,'hice'));
   T = dxdy.*hice;
@@ -193,15 +188,13 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
   uice = double(ncread(fname,'uice')); % m/s
   vice = double(ncread(fname,'vice')); % m/s
   
-  [T_avg(it),A_avg]=aave(T,dxdy,mask_ave);
-  T_avg(it) = T_avg(it).*num_grid;
-
-  [aice_avg(it),A_avg]=aave(aice,dxdy,mask_ave);
+  T(mask_ave == 0) = 0;
+  T_avg(it) = sum(T(:));
 
 %   thermo_tmp = dxdy.*(rhoice./rhoo).*(aice.*(wio-wai) + (1-aice).*wao + wfr);
   thermo_tmp = dxdy.*(rhoo./rhoice).*(aice.*(wio-wai) + (1-aice).*wao + wfr);
-  [thermo(it),A_avg]=aave(thermo_tmp,dxdy,mask_ave);
-  thermo(it) = thermo(it).*num_grid;
+  thermo_tmp(mask_ave == 0) =0;
+  thermo(it) = sum(thermo_tmp(:));
 
   [xi_rho,eta_rho]=size(mask_ave);
 
@@ -216,21 +209,22 @@ for it=0:nf % start from 0 to first compute instantaneus V and ave T at t=0
 
   hice_u = rho2u_2d(hice')';
   hice_v = rho2v_2d(hice')';
+  hice_u(mask_u==0) = 0;
+  hice_v(mask_v==0) = 0;
 
-  FU = uice.*hice_u.*dy_u; % m^3/s
-  FV = vice.*hice_v.*dx_v; % m^3/s
+  FU = uice.*hice_u.*dy_u; % Huon; m^3/s
+  FV = vice.*hice_v.*dx_v; % Hvom; m^3/s
 %   FU(mask_u==0)=0;
 %   FV(mask_v==0)=0;
   divU=nan*zeros(xi_rho,eta_rho);
   ii=2:xi_rho-1;
   jj=2:eta_rho-1;
   divU(ii,jj)= FU(ii,jj)-FU(ii-1,jj)+FV(ii,jj)-FV(ii,jj-1);
-  divU = dxdy.*divU; % volume
   divU(mask_ave==0)=0;
+  
   Bflux=sum(sum(divU)); % volume flux outside the ave area, m3/s
 
-  dyn(it) = -Bflux./A_avg;
-  dyn(it) = dyn(it).*num_grid;
+  dyn(it) = -Bflux;
  end
 end
 
@@ -243,8 +237,8 @@ plot(thermo + dyn, '--m')
 save(['ice_volume_Balance_', aveBoxName, '_', ystr, '_new.mat'], ...
     'grd', 'mask_ave', 'dxdy', ...
     't_his', 'T_his', 't_avg', 'T_avg', ...
-    'dTdt', 'aice_avg', 'thermo', 'dyn')
+    'dTdt', 'thermo', 'dyn')
 end
-dd
+
 %res=dTdt-Adv-Qatm-Hdiff;
 %res_opt=dTdt-Adv_opt-Qatm-Hdiff;

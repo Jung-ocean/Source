@@ -1,14 +1,9 @@
-function [x, Yi, data] = load_BSf_vertical(g, vari_str, datenum_target, domaxis)
+function [x, Yi, data] = load_BSf_vertical(exp, g, vari_str, datenum_target, domaxis)
 
 filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm4/'];
 filenum = datenum_target - datenum(2018,7,1) + 1;
-fstr = num2str(filenum, '%04i');
-filename = ['Dsm4_avg_', fstr, '.nc'];
-file = [filepath, filename];
 
-if filenum == 1826
-    file = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
-end
+file = get_ncfilename(exp, 'avg', filenum);
 
 zeta = ncread(file, 'zeta');
 if strcmp(vari_str, 'w')
@@ -19,7 +14,7 @@ else
     N = g.N;
 end
 
-if strcmp(vari_str, 'v_n')
+if strcmp(vari_str, 'v_n') | strcmp(vari_str, 'u_t')
     wgs84 = wgs84Ellipsoid("km");
     angle_section = azimuth(domaxis(3),domaxis(1),domaxis(4),domaxis(2),wgs84);
     angle_section = angle_section - 90; % To make East 0
@@ -42,7 +37,7 @@ if strcmp(vari_str, 'v_n')
     u_t = u_rho.*cosa - v_rho.*sina;
     v_n = v_rho.*cosa + u_rho.*sina;
 
-    vari = v_n;
+    vari = eval(vari_str);
 else
     vari = squeeze(ncread(file, vari_str));
 end

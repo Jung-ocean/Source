@@ -10,10 +10,10 @@ clear; clc; close all
 sat = 'SMOS_BEC';
 
 region = 'Gulf_of_Anadyr_common';
-area_frac_cutoff = 1;
+area_frac_cutoff = 0.99;
 % area_frac_cutoff = 0.1;
 
-maskname = ['common_06_15'];
+maskname = ['common_07_01'];
 
 yyyy_all = 2019:2022;
 mm_all = 6:7;
@@ -58,7 +58,7 @@ if ismap == 1
     set(h.Children(2), 'FaceColor', 'r')
     set(h.Children(2), 'FaceAlpha', 0.2)
     set(h.Children(3), 'FaceColor', 'none')
-    print(['region_' region, '_', maskname], '-dpng')
+    print(['region_', maskname], '-dpng')
 end
 
 SSS = [];

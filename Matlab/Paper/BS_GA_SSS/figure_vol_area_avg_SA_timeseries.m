@@ -1,5 +1,6 @@
 clear; clc; close all
 
+exp = 'Dsm4';
 load(['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/SSS/Gulf_of_Anadyr/SSS_ROMS_Gulf_of_Anadyr.mat'])
 
 colors = {'0.9294 0.6941 0.1255', '0.4667 0.6745 0.1882', 'b', 'r'};
@@ -53,4 +54,4 @@ yticklabels('')
 title(['(b) Volume-averaged salinity anomaly (Gulf of Anadyr)'], 'FontSize', 13)
 box on
 dd
-exportgraphics(gcf,'figure_area_vol_avg_SA_timeseries.png','Resolution',150) 
+exportgraphics(gcf,'figure_area_vol_avg_SA_timeseries.tif','Resolution',300) 

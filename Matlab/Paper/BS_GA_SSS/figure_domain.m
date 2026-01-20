@@ -117,7 +117,7 @@ set(h.Children(2), 'FaceColor', 'none')
 set(h.Children(3), 'FaceColor', 'none')
 
 % Common area plot
-load /data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/SSS/Gulf_of_Anadyr_common/mask_common.mat
+load /data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/SSS/Gulf_of_Anadyr_common/mask_common_07_01.mat
 dx = 1./g.pm; dy = 1./g.pn;
 mask = (mask_common./mask_common);
 area = dx.*dy.*mask;
@@ -133,5 +133,4 @@ set(h.Children(3), 'FaceColor', 'none')
 % lat_line = [64.9931, 63.3551];
 % plotm(lat_line, lon_line, '-g', 'LineWidth', 2)
 
-dd
-exportgraphics(gcf,'figure_domain.png','Resolution',150) 
+exportgraphics(gcf,'figure_domain.tif','Resolution',300) 

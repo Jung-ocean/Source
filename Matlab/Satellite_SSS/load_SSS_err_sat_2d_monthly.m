@@ -3,10 +3,10 @@ function [lat, lon, vari] = load_SSS_err_sat_2d_monthly(sat, version, yyyy, mm)
 ystr = num2str(yyyy);
 mstr = num2str(mm, '%02i');
 
-lons_sat = {'lon', 'lon', 'lon', 'lon'};
-lons_360ind = [360, 180, 360, 360];
-lats_sat = {'lat', 'lat', 'lat', 'lat'};
-varis_sat = {'sss_smap_unc', 'eSSS', 'sos_error', 'uncertainty_sss'};
+lons_sat = {'lon', 'lon', 'lon', 'lon', 'lon'};
+lons_360ind = [360, 180, 360, 360, 360];
+lats_sat = {'lat', 'lat', 'lat', 'lat', 'lat'};
+varis_sat = {'sss_smap_unc', 'eSSS', 'sos_error', 'uncertainty_sss', 'eSSS'};
 
 switch sat
     case 'SMAP'
@@ -33,7 +33,7 @@ switch sat
             vari = NaN;
         end
 
-        disp(['loading SMAP v', vstr, ' monthly SSS err ', ystr, mstr]);
+        disp(['Loading SMAP v', vstr, ' monthly SSS err ', ystr, mstr]);
 
     case 'SMOS'
         si = 2;
@@ -63,7 +63,7 @@ switch sat
             vari = NaN;
         end
 
-        disp(['loading SMOS v', vstr2, ' monthly SSS err ', ystr, mstr]);
+        disp(['Loading SMOS v', vstr2, ' monthly SSS err ', ystr, mstr]);
 
     case 'CMEMS'
         si = 3;
@@ -90,7 +90,7 @@ switch sat
             vari = NaN;
         end
 
-        disp(['loading CMEMS L4 monthly SSS err ', ystr, mstr]);
+        disp(['Loading CMEMS L4 monthly SSS err ', ystr, mstr]);
 
     case 'SMOS_BEC'
         si = 4;
@@ -117,5 +117,33 @@ switch sat
             vari = NaN;
         end
 
-        disp(['loading SMOS_BEC v', vstr2, ' monthly SSS err ', ystr, mstr]);
+        disp(['Loading SMOS_BEC v', vstr2, ' monthly SSS err ', ystr, mstr]);
+
+    case 'SMOS_Arctic'
+        si = 5;
+
+        vstr1 = num2str(version);
+        vstr2 = num2str(version, '%02i');
+        filepath_sat = ['/data/jungjih/Observations/Satellite_SSS/CEC/Arctic/v', vstr1, '/monthly/'];
+        filename_sat = ['SMOS_L3_DEBIAS_LOCEAN_AD_', ystr, mstr, '_EASE_Arctic_09d_v', vstr2, '.nc'];
+        file_sat = [filepath_sat, filename_sat];
+
+        if exist(file_sat)
+            lon_sat = double(ncread(file_sat,lons_sat{si}));
+            lat_sat = double(ncread(file_sat,lats_sat{si}));
+            vari_sat = double(squeeze(ncread(file_sat,varis_sat{si})));
+
+            lon_sat(lon_sat > 0) = lon_sat(lon_sat > 0) - lons_360ind(si);
+
+            lat = lat_sat;
+            lon = lon_sat;
+            vari = vari_sat;
+            disp(['Loading SMOS_Arctic v', vstr2, ' monthly SSS ', ystr, mstr]);
+        else
+            lat = NaN;
+            lon = NaN;
+            vari = NaN;
+            disp(['No data in ', ystr, mstr]);
+        end
+
 end

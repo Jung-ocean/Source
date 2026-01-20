@@ -32,7 +32,7 @@ switch sat
             lat = lat_sat;
             lon = lon_sat;
             vari = vari_sat;
-            disp(['loading SMAP v', vstr, ' daily SSS ', yyyymmdd]);
+            disp(['Loading SMAP v', vstr, ' daily SSS ', yyyymmdd]);
         else
             lat = NaN;
             lon = NaN;
@@ -62,7 +62,7 @@ switch sat
             lat = lat_sat;
             lon = lon_sat;
             vari = vari_sat;
-            disp(['loading SMOS v', vstr2, ' daily SSS ', yyyymmdd]);
+            disp(['Loading SMOS v', vstr2, ' daily SSS ', yyyymmdd]);
         else
             lat = NaN;
             lon = NaN;
@@ -89,7 +89,7 @@ switch sat
             lat = lat_sat;
             lon = lon_sat;
             vari = vari_sat;
-            disp(['loading CMEMS L4 daily SSS ', yyyymmdd]);
+            disp(['Loading CMEMS L4 daily SSS ', yyyymmdd]);
         else
             lat = NaN;
             lon = NaN;
@@ -116,7 +116,7 @@ switch sat
             lat = lat_sat;
             lon = lon_sat;
             vari = vari_sat;
-            disp(['loading SMOS_BEC v', vstr2, ' daily SSS ', yyyymmdd]);
+            disp(['Loading SMOS_BEC v', vstr2, ' daily SSS ', yyyymmdd]);
         else
             lat = NaN;
             lon = NaN;

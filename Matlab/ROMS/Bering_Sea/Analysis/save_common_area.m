@@ -7,13 +7,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; %close all
 
-yyyy_all = 2025:-1:2010;
+yyyy_all = 2019:2022;
 mm = 7;
 mstr = num2str(mm, '%02i');
 
-isdaily = 0;
+isdaily = 1;
 if isdaily == 1
-    dd = 10;
+    dd = 1;
     dstr = num2str(dd, '%02i');
 end
 
@@ -66,23 +66,24 @@ for yi = 1:length(yyyy_all)
         mask_common = mask_common.*mask_sat.*mask;
     end
 
-    % SMOS
+    % SMOS BEC
     if isdaily == 1
         di = dd;
-        vari_sat = NaN;
-        while isscalar(vari_sat)
-            di = di+1;
-            [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_daily('SMOS', 9, datenum(yyyy, mm, di));
-        end
+%         vari_sat = NaN;
+%         while isscalar(vari_sat)
+%             di = di+1;
+        [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_daily('SMOS_BEC', 4, datenum(yyyy, mm, di));
+%         end
     else
-        [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_monthly('SMOS', 9, yyyy, mm);
+        [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_monthly('SMOS_BEC', 4, yyyy, mm);
     end
     if ~isscalar(vari_sat)
         if ~exist('Fsmos')
-            [lat_sat2, lon_sat2] = meshgrid(lat_sat, lon_sat);
-            Fsmos = griddedInterpolant(lat_sat2', lon_sat2', 0.*lat_sat2');
+%             [lat_sat2, lon_sat2] = meshgrid(lat_sat, lon_sat);
+%             Fsmos = griddedInterpolant(lat_sat2', lon_sat2', 0.*lat_sat2');
+            Fsmos = scatteredInterpolant(lat_sat(:), lon_sat(:), 0.*lat_sat(:));
         end
-        Fsmos.Values = vari_sat';
+        Fsmos.Values = vari_sat(:);
 
         %vari_sat_interp = griddata(lat_sat, lon_sat, vari_sat, g.lat_rho, g.lon_rho);
         vari_sat_interp = Fsmos(g.lat_rho, g.lon_rho);

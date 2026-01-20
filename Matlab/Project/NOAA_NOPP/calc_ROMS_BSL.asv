@@ -1,0 +1,131 @@
+clear; clc; close all
+
+isplot = 1;
+
+g = grd('NANOOS');
+timenum_ref = datenum(2005,1,1);
+lat = g.lat_rho;
+lon = g.lon_rho;
+H = g.h;
+rho0 = 1026;
+gconst = 9.8;
+
+datenum_start = datenum(2025,7,1);
+dsstr = datestr(datenum_start, 'yyyymmdd');
+datenum_end = datenum(2025,7,4);
+destr = datestr(datenum_end, 'yyyymmdd');
+
+% Load model variables
+[timenum, zeta, temp, salt] = load_models_varis_for_IT('NANOOS', g, datenum_start, datenum_end);
+
+% Load background density
+avg_pden = load('ROMS_avg_pden.mat');
+depth_extra = avg_pden.depth_extra;
+rhob_extra = avg_pden.rhob_extra;
+
+% BSL Calculation
+BSL = NaN.*zeta;
+for ti = 1:length(timenum)
+    zeta_tmp = zeta(:,:,ti);
+    temp_tmp = temp(:,:,:,ti);
+    salt_tmp = salt(:,:,:,ti);
+
+    % will be integrated from -H to eta (not 0)
+    z = zlevs(H,zeta_tmp,g.theta_s,g.theta_b,g.hc,g.N,'r',2);
+    z_w = zlevs(H,zeta_tmp,g.theta_s,g.theta_b,g.hc,g.N,'w',2);
+    dz = z_w(:,:,2:end) - z_w(:,:,1:end-1);
+
+    SA = salt_tmp;
+    pt = temp_tmp;
+    CT = gsw_CT_from_pt(SA,pt);
+    pden = gsw_rho(SA,CT,0);
+
+    for i = 1:size(lon,1)
+        for j = 1:size(lon,2)
+            eta_tmp = zeta_tmp(i,j); % eta_tmp = zeta_tmp
+            z_tmp = squeeze(z(i,j,:));
+            pden_tmp = squeeze(pden(i,j,:));
+            H_tmp = H(i,j);
+            dz_tmp = squeeze(dz(i,j,:));
+            rhob_tmp = interp1(depth_extra, rhob_extra, z_tmp);
+            rho_prime = pden_tmp - rhob_tmp;
+            
+            % Pressure perturbation, pb is omitted here
+            integrand = rho_prime.*gconst;
+            p = -cumsum(integrand.*dz_tmp);
+            % Depth-averaged
+            pbar = sum(p.*dz_tmp)/sum(dz_tmp);
+            % Baroclinic pressure
+            p_prime = p-pbar;
+            p_surf = p_prime(end);
+            BSL_tmp = p_surf/(rho0*gconst);
+
+%             % Analytical method
+%             integrand = rho_prime.*gconst.*(1+(z_tmp-eta_tmp)./(H_tmp+eta_tmp));
+%             p_surf = -sum(integrand.*dz_tmp);
+%             BSL_tmp = p_surf/(rho0*gconst);
+
+            BSL(i,j,ti) = BSL_tmp;
+        end
+    end
+
+    disp(['BSL calculation ', num2str(ti), ' / ', num2str(length(timenum)), ' ...'])
+end
+
+% Bandpass filter
+fs = 1/2; % cph; 2 hour
+freq_M2 = load_tidal_frequency('M2');
+freq_M2 = freq_M2/24; % cpd to cph
+lf = 0.8*freq_M2;
+hf = 1.2*freq_M2;
+
+BSL_filtered = BSL;
+for i = 1:size(lon,1)
+    for j = 1:size(lon,2)
+        BSL_tmp = squeeze(BSL(i,j,:));
+        if sum(isnan(BSL_tmp)) == 0
+            BSL_filtered(i,j,:) = bandpass_butter4(BSL_tmp, fs, lf, hf, 0);
+        end
+    end
+    disp(['Bandpass filter ', num2str(i), ' / ', num2str(size(lon,1)), ' ...'])
+end
+save(['ROMS_BSL_', dsstr, '_', destr, '.mat'], 'timenum', 'lon', 'lat', 'BSL_filtered');
+
+% Plot
+if isplot == 1
+    g = grd('NANOOS');
+
+    unit = 'cm';
+    climit = [-2 2];
+    interval = [.5];
+    [color, contour_interval] = get_color('redblue', climit, interval);
+
+    f1 = figure; hold on;
+    set(gcf, 'Position', [1 200 500 800])
+    for ti = 1:size(BSL_filtered,3)
+        BSL_tmp = 100*squeeze(BSL_filtered(:,:,ti)); % m to cm
+        if ti == 1
+            plot_map('US_west', 'mercator', 'l')
+            contourm(lat, lon, g.h, [200 1000], 'k');
+
+            c = colorbar;
+            c.Title.String = unit;
+            c.Ticks = contour_interval;
+        end
+        p = plot_contourf([], lat, lon, BSL_tmp, color, climit, contour_interval);
+        title(['ROMS M2 BSL (', datestr(timenum(ti), 'mm/dd/yy HH:MM'), ')'])
+
+        % Make gif
+        gifname = ['ROMS_BSL_', dsstr, '_', destr, '.gif'];
+        frame = getframe(f1);
+        im = frame2im(frame);
+        [imind,cm] = rgb2ind(im,256);
+        if ti == 1
+            imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+        else
+            imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+        end
+
+        delete(p)
+    end
+end

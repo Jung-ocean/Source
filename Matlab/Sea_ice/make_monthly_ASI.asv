@@ -1,0 +1,57 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Make ASI monthly using daily files
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc
+
+yyyy_all = 2012:2012;
+mm_all = [6:6];
+filename_header = 'asi-SSMIS17-n6250-';
+filename_footer = '-v5';
+
+for yi = 1:length(yyyy_all)
+    yyyy = yyyy_all(yi);
+    ystr = num2str(yyyy);
+
+    filepath_all = ['/data/jungjih/Observations/Sea_ice/ASI/SSMIS/daily_polar/'];
+
+    for mi = 1:length(mm_all)
+        mm = mm_all(mi);
+        mstr = num2str(mm, '%02i');
+        files = dir([filepath_all, '*-', ystr, mstr, '*.nc']);
+
+        filenames = [];
+        for fi = 1:length(files)
+            filename = files(fi).name;
+            command = ['ln -s ', filepath_all, filename, ' ./', filename];
+            system(command)
+            filenames{fi} = [filename, ' '];
+        end
+
+        if length(files) == eomday(yyyy,mm)
+            if strcmp([ystr,mstr], '201604')
+                command = ['rm -f *20160415*'];
+                system(command)
+            elseif strcmp([ystr,mstr], '201903')
+                command = ['rm -f *20190318*'];
+                system(command)
+            elseif strcmp([ystr,mstr], '202203')
+                command = ['rm -f *20220302* *20220309* *20220317* *20220320*'];
+                system(command)
+            elseif strcmp([ystr,mstr], '201206')
+                command = ['rm -f *20120613*'];
+                system(command)
+                filenames[13] = [];
+            end
+            filenames = append(filenames{:});
+            command = ['ncea ', filenames, ' ', filename_header, ystr, mstr, filename_footer '.nc'];
+            system(command)
+        end
+
+        command = ['rm -f ', filenames];
+        system(command)
+    end
+end

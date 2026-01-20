@@ -12,20 +12,27 @@ map = 'Gulf_of_Anadyr';
 
 vari_str = 'salt';
 yyyy_all = 2019:2022;
-mm = 7;
+mm = 6;
 mstr = num2str(mm, '%02i');
 
-remove_climate = 0;
+remove_climate = 1;
 
 % Load grid information
 g = grd('BSf');
 
 % Figure properties
+if remove_climate == 1
 climit = [29 34];
 interval = 0.25;
 [color, contour_interval] = get_color('jet', climit, interval);
-unit = 'psu';
 savename = 'SSS';
+else
+climit = [29 34];
+interval = 0.25;
+[color, contour_interval] = get_color('jet', climit, interval);
+savename = 'SSS';
+end
+unit = 'psu';
 text1_lat = 65.9;
 text1_lon = -184.8;
 text2_lat = 65.9;
@@ -42,11 +49,15 @@ for yi = 1:length(yyyy_all)
 
     % SMAP SSS
     [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_monthly('SMAP', 6, yyyy, mm);
+    if remove_climate == 1
+        [lat_tmp, lon_tmp, vari_sat_climate] = load_SSS_sat_2d_climate('SMAP', 6, mm);
+        vari_sat = vari_sat - vari_sat_climate;
+    end
     index_lon = find(lon_sat < max(max(lon))+1 & lon_sat > min(min(lon))-1);
     index_lat = find(lat_sat < max(max(lat))+1 & lat_sat > min(min(lat))-1);
     vari_sat_part = vari_sat(index_lon,index_lat);
     [lat_sat2, lon_sat2] = meshgrid(lat_sat(index_lat), lon_sat(index_lon));
-
+    
     % SMAP plot
     nexttile(yi); hold on;
 
@@ -56,10 +67,20 @@ for yi = 1:length(yyyy_all)
     T = plot_contourf([], lat_sat2,lon_sat2,vari_sat_part,color,climit,contour_interval);
 
     textm(text1_lat, text1_lon, 'SMAP', 'FontSize', text_FS)
-    textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+%     textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+    plabel('FontSize', 10);
+    if yi ~= 1
+        plabel off
+    end
+    mlabel off
+    title(title_str, 'FontSize', text_FS)
 
     % SMOS SSS
     [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_monthly('SMOS', 9, yyyy, mm);
+    if remove_climate == 1
+        [lat_tmp, lon_tmp, vari_sat_climate] = load_SSS_sat_2d_climate('SMOS', 9, mm);
+        vari_sat = vari_sat - vari_sat_climate;
+    end
     index_lon = find(lon_sat < max(max(lon))+1 & lon_sat > min(min(lon))-1);
     index_lat = find(lat_sat < max(max(lat))+1 & lat_sat > min(min(lat))-1);
     vari_sat_part = vari_sat(index_lon,index_lat);
@@ -73,11 +94,20 @@ for yi = 1:length(yyyy_all)
 
     T = plot_contourf([], lat_sat2,lon_sat2,vari_sat_part,color,climit,contour_interval);
 
-    textm(text1_lat, text1_lon, 'SMOS', 'FontSize', text_FS)
-    textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+    textm(text1_lat-.3, text1_lon, {'SMOS', 'CEC'}, 'FontSize', text_FS)
+%     textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+    plabel('FontSize', 10);
+    if yi ~= 1
+        plabel off
+    end
+    mlabel off
 
     % CMEMS SSS
     [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_monthly('CMEMS', 0, yyyy, mm);
+    if remove_climate == 1
+        [lat_tmp, lon_tmp, vari_sat_climate] = load_SSS_sat_2d_climate('CMEMS', 0, mm);
+        vari_sat = vari_sat - vari_sat_climate;
+    end
     index_lon = find(lon_sat < max(max(lon))+1 & lon_sat > min(min(lon))-1);
     index_lat = find(lat_sat < max(max(lat))+1 & lat_sat > min(min(lat))-1);
     vari_sat_part = vari_sat(index_lon,index_lat);
@@ -91,14 +121,23 @@ for yi = 1:length(yyyy_all)
 
     T = plot_contourf([], lat_sat2,lon_sat2,vari_sat_part,color,climit,contour_interval);
 
-    textm(text1_lat, text1_lon, 'CMEMS', 'FontSize', text_FS)
-    textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+    textm(text1_lat, text1_lon, 'CMEMS', 'FontSize', text_FS-2)
+%     textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+    plabel('FontSize', 10);
+    if yi ~= 1
+        plabel off
+    end
+    mlabel off
 
     % SMOS BEC SSS
     [lat_sat, lon_sat, vari_sat] = load_SSS_sat_2d_monthly('SMOS_BEC', 4, yyyy, mm);
+    if remove_climate == 1
+        [lat_tmp, lon_tmp, vari_sat_climate] = load_SSS_sat_2d_climate('SMOS_BEC', 4, mm);
+        vari_sat = vari_sat - vari_sat_climate;
+    end
     F = scatteredInterpolant(lat_sat(:), lon_sat(:), vari_sat(:));
-    lat_sat_regular = [min(min(lat)):0.25:max(max(lat))]';
-    lon_sat_regular = [min(min(lon)):0.25:max(max(lon))]';
+    lat_sat_regular = [min(min(lat))-1:0.25:max(max(lat))+1]';
+    lon_sat_regular = [min(min(lon))-1:0.25:max(max(lon))+1]';
     [lat_sat2, lon_sat2] = meshgrid(lat_sat_regular, lon_sat_regular);
     vari_sat_part = F(lat_sat2, lon_sat2);
     
@@ -111,7 +150,12 @@ for yi = 1:length(yyyy_all)
     T = plot_contourf([], lat_sat2,lon_sat2,vari_sat_part,color,climit,contour_interval);
 
     textm(text1_lat-.3, text1_lon, {'SMOS', 'BEC'}, 'FontSize', text_FS)
-    textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+%     textm(text2_lat, text2_lon, [title_str], 'FontSize', text_FS)
+    plabel('FontSize', 10);
+    mlabel('FontSize', 10)
+    if yi ~= 1
+        plabel off
+    end
 
 end % yi
 

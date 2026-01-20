@@ -7,11 +7,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-sat = 'SMAP';
+sat = 'SMOS_BEC';
 
 region = 'Gulf_of_Anadyr_common';
-area_frac_cutoff = 1;
+area_frac_cutoff = 0.99;
 % area_frac_cutoff = 0.1;
+
+maskname = ['common_07_01'];
 
 mm_all = 7:7;
 mstr = num2str(mm_all, '%02i');
@@ -21,7 +23,7 @@ switch sat
         yyyy_all = 2015:2025;
         version = 6;
     case 'SMOS'
-        yyyy_all = 2010:2024;
+        yyyy_all = 2010:2023;
         version = 9;
     case 'CMEMS'
         yyyy_all = 2019:2022;
@@ -29,6 +31,9 @@ switch sat
     case 'SMOS_BEC'
         yyyy_all = 2011:2022;
         version = 4;
+    case 'SMOS_Arctic'
+        yyyy_all = 2010:2023;
+        version = 2;
 end
 
 % Load grid information
@@ -37,7 +42,8 @@ lon = g.lon_rho;
 lat = g.lat_rho;
 
 if strcmp(region, 'Gulf_of_Anadyr_common') | strcmp(region, 'Koryak_coast_common')
-    load(['mask_common_', mstr, '.mat'])
+    load(['mask_' , maskname, '.mat'])
+%     load(['mask_common_06_15.mat'])
     dx = 1./g.pm; dy = 1./g.pn;
     mask = mask_common./mask_common;
     area = dx.*dy.*mask;
@@ -56,12 +62,12 @@ for yi = 1:length(yyyy_all)
         mstr = num2str(mm, '%02i');
         timenum = [timenum; datenum(yyyy,mm,15)];
 
-        if strcmp(sat, 'SMOS') & yyyy == 2024
-            version = 10;
-        end
+%         if strcmp(sat, 'SMOS') & yyyy == 2024
+%             version = 10;
+%         end
         [SSS_tmp, err_tmp] = load_area_avg_SSS_sat_monthly(sat, version, yyyy, mm, g, mask, area, area_frac_cutoff);
         SSS = [SSS; SSS_tmp];
-        err = [err; SSS_tmp];
+        err = [err; err_tmp];
 
         disp([ystr, mstr])
     end % mi
@@ -75,6 +81,7 @@ datetick('x', 'yyyy', 'keepticks', 'keeplimits')
 if length(mm_all) == 1
     output_filename = ['SSS_', sat, '_', region, '_', num2str(mm_all, '%02i'), '.mat'];
 else
-    output_filename = ['SSS_SMAP_', region, '.mat'];
+    output_filename = ['SSS_', region, '.mat'];
 end
+
 save(output_filename, 'timenum', 'SSS', 'err', 'area_frac_cutoff')

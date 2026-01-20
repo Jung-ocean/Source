@@ -1,0 +1,85 @@
+clear; clc; close all
+
+datenum_start = datenum(2025,7,1);
+dsstr = datestr(datenum_start, 'yyyymmdd');
+datenum_end = datenum(2025,7,4);
+destr = datestr(datenum_end, 'yyyymmdd');
+
+load(['ROMS_BSL_', dsstr, '_', destr, '.mat']);
+load(['ROMS_BC_EF_', dsstr, '_', destr, '.mat']);
+
+g = grd('NANOOS');
+
+unit = 'cm';
+climit = [-1.5 1.5];
+interval = [.3];
+[color, contour_interval] = get_color('redblue', climit, interval);
+
+f1 = figure; hold on;
+set(gcf, 'Position', [1 200 500 800])
+
+for ti = 1:size(BSL_filtered,3)
+    BSL_tmp = 100*squeeze(BSL_filtered(:,:,ti)); % m to cm
+    
+    if ti == 1
+        plot_map('US_west', 'mercator', 'l')
+        contourm(lat, lon, g.h, [200 1000], 'k');
+
+        c = colorbar;
+        c.Title.String = unit;
+        c.Ticks = contour_interval;
+        c.FontSize = 15;
+
+        % Plot EF
+        scale = .004;
+        interval = 10;
+        color_EF = 'k';
+        scale_value = 100;
+        scale_lon = -123;
+        scale_lat = 43;
+
+        % Adjust vector
+        [scale_value_adj, scale_v, lon_scl] = adjust_vector(scale_lon, scale_lat, scale_value, 0);
+        % Zonal
+        qscale = quiverm_J(scale_lat, scale_lon, 0, -scale_value_adj.*scale, 0);
+        qscale(1).Color = color_EF;
+        qscale(2).Color = color_EF;
+        qscale(1).LineWidth = 2;
+        qscale(2).LineWidth = 2;
+        % Meridional
+        qscale = quiverm_J(scale_lat, scale_lon, scale_value.*scale, 0, 0);
+        qscale(1).Color = color_EF;
+        qscale(2).Color = color_EF;
+        qscale(1).LineWidth = 2;
+        qscale(2).LineWidth = 2;
+        textm(scale_lat-0.3, scale_lon-1.2, [num2str(scale_value), ' W/m'], 'FontSize', 12)
+asdf
+        [uEF_M2_adj, vEF_M2_adj, lon_scl] = adjust_vector(g.lon_rho, g.lat_rho, uEF_M2, vEF_M2);
+        qEF = quiverm( ...
+            g.lat_rho(1:interval:end, 1:interval:end), ...
+            g.lon_rho(1:interval:end, 1:interval:end), ...
+            vEF_M2_adj(1:interval:end, 1:interval:end).*scale, ...
+            uEF_M2_adj(1:interval:end, 1:interval:end).*scale, ...
+            0);
+
+        qEF(1).Color = color_EF;
+        qEF(2).Color = color_EF;
+        qEF(1).LineWidth = 2;
+        qEF(2).LineWidth = 2;
+    end
+    pbsl = plot_contourf([], lat, lon, BSL_tmp, color, climit, contour_interval);
+    title(['ROMS M2 BSL (', datestr(timenum(ti), 'mm/dd/yy HH:MM'), ')'], 'FontSize', 15);
+
+    % Make gif
+    gifname = ['ROMS_BSL_and_EF_', dsstr, '_', destr, '.gif'];
+    frame = getframe(f1);
+    im = frame2im(frame);
+    [imind,cm] = rgb2ind(im,256);
+    if ti == 1
+        imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+    else
+        imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+    end
+
+    delete(pbsl)
+end

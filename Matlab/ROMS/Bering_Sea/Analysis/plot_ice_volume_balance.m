@@ -1,6 +1,6 @@
 clear; clc; close all
 
-region = 'GOA';
+region = 'Koryak_coast';
 yyyy_all = 2019:2023;
 dt = 60*60*24;
 refdate = datenum(1968,5,23);
@@ -9,7 +9,7 @@ day_movmean = 7;
 
 ismap = 0;
 
-ylimit = [-10 10];
+ylimit = [-1.1 1.1];
 colors = {'0.9294 0.6941 0.1255', '0.4667 0.6745 0.1882', 'b', 'r', '0.0588 1.0000 1.0000'};
 
 figure;
@@ -27,7 +27,7 @@ for yi = 1:length(yyyy_all)
     p(yi) = plot(timenum_his, movmean(dTdt_cumsum/1e9, day_movmean, 'Endpoints', 'fill'), 'LineWidth', 2, 'Color', colors{yi});
     xticks([datenum(0,11:12,1), datenum(1,1:12,1)])
     xlim([datenum(0,11,1) datenum(1,8,1)])
-    ylim([0 40])
+    ylim([0 11])
     datetick('x', 'mmm', 'keepticks', 'keeplimits')
     ylabel('km^3')
 
@@ -96,11 +96,11 @@ if ismap == 1
     % Area plot
     figure; hold on;
     set(gcf, 'Position', [1 200 800 500])
-    plot_map('Bering', 'mercator', 'l');
-    contourm(grd.lat_rho, grd.lon_rho, grd.h, [50 100 200], 'k')
+    plot_map('NW_Bering', 'mercator', 'l');
+    contourm(grd.lat_rho, grd.lon_rho, grd.h, [200 200], 'k')
     [c,h] = contourfm(grd.lat_rho, grd.lon_rho, mask_ave, [1 1], '--r', 'LineWidth', 2);
     set(h.Children(2), 'FaceColor', 'r')
     set(h.Children(2), 'FaceAlpha', 0.2)
     set(h.Children(3), 'FaceColor', 'none')
-    print(['area_' region], '-dpng')
+    print(['region_' region], '-dpng')
 end
