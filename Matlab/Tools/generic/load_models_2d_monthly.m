@@ -1,7 +1,11 @@
 function vari = load_models_2d_monthly(model, vari_str, layer, yyyy, mm)
 
 lstr = num2str(layer);
-ystr = num2str(yyyy);
+if yyyy == 9999
+    ystr = 'climate';
+else
+    ystr = num2str(yyyy);
+end
 mstr = num2str(mm, '%02i');
 
 switch model
@@ -28,8 +32,13 @@ switch model
         file = [filepath, filename];
 
     case 'Dsm4_mk2'
-        filepath = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/Dsm4_mk2/monthly/';
-        filename = [model, '_', ystr, mstr, '.nc'];
+        if yyyy == 9999
+            filepath = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/Dsm4_mk2/climate/';
+            filename = [model, '_', ystr, '_', mstr, '.nc'];
+        else
+            filepath = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/Dsm4_mk2/monthly/';
+            filename = [model, '_', ystr, mstr, '.nc'];
+        end
         file = [filepath, filename];
 
     case 'BSf_s7b3'
@@ -41,10 +50,10 @@ end
 if exist(file)
     if strcmp(vari_str, 'zeta')
         vari = ncread(file, vari_str);
-        disp(['Loading ', model, ' ', vari_str, ' ', ystr, mstr, '...'])
+        disp(['Loading ', model, ' ', vari_str, ' ', ystr, ' ', mstr, '...'])
     else
         vari = ncread(file, vari_str, [1 1 layer 1], [Inf Inf 1 Inf]);
-        disp(['Loading ', model, ' ', vari_str, ' layer ', lstr, ' ', ystr, mstr, '...'])
+        disp(['Loading ', model, ' ', vari_str, ' layer ', lstr, ' ', ystr, ' ', mstr, '...'])
     end
 else
     vari = NaN(size(depth_target));

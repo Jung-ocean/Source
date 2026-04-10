@@ -5,11 +5,13 @@ ystr = datestr(timenum, 'yyyy');
 yyyy = str2num(ystr);
 mstr = datestr(timenum, 'mm');
 mm = str2num(mstr);
+dstr = datestr(timenum, 'dd');
+dd = str2num(dstr);
 
-lons_sat = {'lon', 'lon', 'lon', 'lon', 'lon'};
-lons_360ind = [360, 180, 360, 360, 360];
-lats_sat = {'lat', 'lat', 'lat', 'lat', 'lat'};
-varis_sat = {'sss_smap', 'SSS', 'sos', 'sss', 'SSS'};
+lons_sat = {'lon', 'lon', 'lon', 'lon', 'lon', 'longitude'};
+lons_360ind = [360, 180, 360, 360, 360, 180];
+lats_sat = {'lat', 'lat', 'lat', 'lat', 'lat', 'latitude'};
+varis_sat = {'sss_smap', 'SSS', 'sos', 'sss', 'SSS', 'sss'};
 
 switch sat
     case 'SMAP'
@@ -150,4 +152,34 @@ switch sat
             vari = NaN;
             disp(['No data on ', yyyymmdd]);
         end
+
+    case 'OISSS'
+        si = 6;
+
+        vstr = num2str(version, '%2.1f');
+        filepath_sat = ['/data/jungjih/Observations/Satellite_SSS/OISSS/v', vstr, '/weekly/'];
+        filename_sat = ['OISSS_L4_multimission_global_7d_v', vstr, '_', ystr, '-', mstr, '-', dstr, '.nc'];
+        file_sat = [filepath_sat, filename_sat];
+
+        if exist(file_sat)
+            lon_sat = double(ncread(file_sat,lons_sat{si}));
+            lat_sat = double(ncread(file_sat,lats_sat{si}));
+            vari_sat = double(squeeze(ncread(file_sat,varis_sat{si})));
+
+            index1 = find(lon_sat > 0); index2 = find(lon_sat < 0);
+            vari_sat = [vari_sat(index1,:); vari_sat(index2,:)];
+
+            lon_sat = lon_sat - lons_360ind(si);
+
+            lat = lat_sat;
+            lon = lon_sat;
+            vari = vari_sat;
+            disp(['Loading OISSS v', vstr, ' daily SSS ', yyyymmdd]);
+        else
+            lat = NaN;
+            lon = NaN;
+            vari = NaN;
+            disp(['No data on ', yyyymmdd]);
+        end
+
 end

@@ -10,10 +10,10 @@
 clear; clc; close all
 
 % User defined variables
-yyyy_all = [9999, 2013:2023]; % 9999 = climate
+yyyy_all = [9999, 2018:2025]; % 9999 = climate
 filepath_all = '/data/jungjih/Models/GloFAS/';
 river_source_points = 'river_source_points.mat';
-river = 'Anadyr';
+river = 'Yukon';
 dist_radius = 0.3;
 %
 
@@ -30,7 +30,7 @@ lon_target = lon_point(index);
 figure; hold on; grid on;
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
-    filepath = [filepath_all, ystr, '/'];
+    filepath = [filepath_all, 'daily/', ystr, '/'];
     if yyyy == 9999
         filepath = [filepath_all, 'climate/'];
     end
@@ -82,18 +82,18 @@ l = legend([p(index1)], 'Climate (1979-2023)');
 l.Location = 'NorthWest';
 l.FontSize = 15;
 
-if sum(ismember(2017:2020, yyyy_all)) == 4
+if sum(ismember(2018:2025, yyyy_all)) == 8
 %     index2015 = find(yyyy_all == 2015);
 %     p(index2015).Color = 'y';
 %     p(index2015).LineWidth = 2;
 % 
-    index2016 = find(yyyy_all == 2016);
-    p(index2016).Color = [0.9294 0.6941 0.1255];
-    p(index2016).LineWidth = 2;
+%     index2016 = find(yyyy_all == 2016);
+%     p(index2016).Color = [0.9294 0.6941 0.1255];
+%     p(index2016).LineWidth = 2;
      
-    index2017 = find(yyyy_all == 2017);
-    p(index2017).Color = 'r';
-    p(index2017).LineWidth = 2;
+%     index2017 = find(yyyy_all == 2017);
+%     p(index2017).Color = 'r';
+%     p(index2017).LineWidth = 2;
 
     index2018 = find(yyyy_all == 2018);
     p(index2018).Color = 'g';
@@ -119,7 +119,15 @@ if sum(ismember(2017:2020, yyyy_all)) == 4
     p(index2023).Color = [0.3020 0.7451 0.9333];
     p(index2023).LineWidth = 2;    
 
-    l = legend([p(index1), p(index2016), p(index2017), p(index2018), p(index2019), p(index2020), p(index2021), p(index2022), p(index2023), p(2)], 'Climate (1979-2023)', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', 'others');
+    index2024 = find(yyyy_all == 2024);
+    p(index2024).Color = 'r';
+    p(index2024).LineWidth = 2;  
+
+    index2025 = find(yyyy_all == 2025);
+    p(index2025).Color = [0.8510 0.3255 0.0980];
+    p(index2025).LineWidth = 2;
+
+    l = legend([p(index1), p(index2018), p(index2019), p(index2020), p(index2021), p(index2022), p(index2023), p(index2024), p(index2025)], 'Climate (1979-2023)', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', 'others');
     l.Location = 'NorthWest';
     l.FontSize = 15;
 end

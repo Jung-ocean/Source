@@ -1,16 +1,16 @@
 clear; clc; close all
 
-file_river = 'BS_6rivers_others_2017_2022.nc';
+file_river = 'BS_6rivers_others_2017_2025.nc';
 
 % Load grid information
-grd_file = '/data/sdurski/ROMS_Setups/Grids/Bering_Sea/BeringSea_Dsm_grid.nc';
-theta_s = 2;
-theta_b = 0;
-Tcline = 50;
-N = 45;
-scoord = [theta_s theta_b Tcline N];
-Vtransform = 2;
-g = roms_get_grid(grd_file,scoord,0,Vtransform);
+g = grd('BSf');
+g.mask_rho = g.mask_rho';
+g.lon_rho = g.lon_rho';
+g.lat_rho = g.lat_rho';
+g.lon_u = g.lon_u';
+g.lat_u = g.lat_u';
+g.lon_v = g.lon_v';
+g.lat_v = g.lat_v';
 
 figure; hold on
 pcolor(g.lon_rho, g.lat_rho, g.mask_rho./g.mask_rho); shading interp

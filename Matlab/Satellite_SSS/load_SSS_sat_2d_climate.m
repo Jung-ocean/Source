@@ -68,7 +68,7 @@ switch sat
         si = 3;
 
         filepath_sat = ['/data/jungjih/Observations/Satellite_SSS/CMEMS/climate/'];
-        filename_sat = ['dataset-sss-ssd-rep-climate_', mstr, '.nc']
+        filename_sat = ['dataset-sss-ssd-rep-climate_', mstr, '.nc'];
         file_sat = [filepath_sat, filename_sat];
 
         if exist(file_sat)

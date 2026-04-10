@@ -212,5 +212,17 @@ switch region
         mask(hind) = NaN;
         area(hind) = NaN;
 
+    case 'Cape_Olyutor'
+        polygon = [;
+            -192.2   59.3
+            -189.0   59.3
+            -189.0   57.3
+            -192.2   57.3
+            -192.2   59.3
+            ];
+        [in, on] = inpolygon(g.lon_rho, g.lat_rho, polygon(:,1), polygon(:,2));
+        mask = mask.*in./in;
+        area = area.*mask;
+
 end
 end

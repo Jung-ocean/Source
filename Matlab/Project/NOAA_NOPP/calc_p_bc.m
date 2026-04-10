@@ -16,20 +16,22 @@ function [p_bc, dz] = calc_p_bc(g, zeta, temp, salt, rhob, depth_rhob)
 
 gconst = 9.8; % m/s^2
 
-SA = salt;
-pt = temp;
-CT = gsw_CT_from_pt(SA,pt);
-pden = gsw_rho(SA,CT,0);
-
 % will be integrated from -H to eta (not 0)
 z = zlevs(g.h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'r',2);
 z_w = zlevs(g.h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'w',2);
 dz = z_w(:,:,2:end) - z_w(:,:,1:end-1);
 
+p = gsw_p_from_z(-abs(z), lat);
+p(p < 0 ) = NaN;
+[SA, in_ocean] = gsw_SA_from_SP(salt,p,lon,lat);
+pt = temp;
+CT = gsw_CT_from_pt(SA,pt);
+rho = gsw_rho(SA,CT,p);
+
 z_vec = z(:); 
 rhob_z_vec = interp1(depth_rhob, rhob, z_vec);
 rhob_z = reshape(rhob_z_vec, size(z));
-rho_prime = pden - rhob_z;
+rho_prime = rho - rhob_z;
 
 % Pressure perturbation, pb is omitted here
 integrand = rho_prime.*gconst;

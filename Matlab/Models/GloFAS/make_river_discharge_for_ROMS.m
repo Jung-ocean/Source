@@ -11,8 +11,8 @@ clear; clc; close all
 
 % User defined variables
 major_rivers = {'Anadyr', 'Yukon', 'Kamchatka', 'Kuskokwim', 'Nushagak', 'Kvichak'};
-yyyy_all = [2023:2023]; % 9999 = climate
-filepath_all = '/data/jungjih/Models/GloFAS/';
+yyyy_all = [2025:2025]; % 9999 = climate
+filepath_all = '/data/jungjih/Models/GloFAS/daily/';
 river_source_points = 'river_source_points.mat';
 dist_radius = 0.3;
 %

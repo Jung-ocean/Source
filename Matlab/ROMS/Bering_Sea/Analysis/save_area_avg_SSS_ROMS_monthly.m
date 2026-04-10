@@ -7,18 +7,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-region = 'Gulf_of_Anadyr_common';
+region = 'Cape_Olyutor';
 
-exp = 'Dsm4';
+exp = 'Dsm4_mk2';
 vari_str = 'salt';
-yyyy_all = 2019:2022;
-mm_all = 7:7;
+yyyy_all = 2019:2023;
+mm_all = 1:12;
 mstr = num2str(mm_all, '%02i');
 layer = 45;
 
-maskname = ['common_07_01'];
+% maskname = ['common_07_01'];
 
-ismap = 1;
+ismap = 0;
 isice = 0;
 aice_value = 0.4;
 
@@ -45,8 +45,8 @@ if ismap == 1
 
     figure; hold on;
     set(gcf, 'Position', [1 200 800 500])
-    plot_map('Gulf_of_Anadyr', 'mercator', 'l');
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'k')
+    plot_map('NW_Bering', 'mercator', 'l');
+    contourm(g.lat_rho, g.lon_rho, g.h, [200 1000], 'k')
     [c,h] = contourfm(g.lat_rho, g.lon_rho, mask_map, [1 1], '--r', 'LineWidth', 2);
     set(h.Children(2), 'FaceColor', 'r')
     set(h.Children(2), 'FaceAlpha', 0.2)
@@ -55,9 +55,6 @@ if ismap == 1
 end
 
 % Model
-filepath_all = ['/data/jungjih/ROMS_BSf/Output/Multi_year/'];
-filepath_control = [filepath_all, exp, '/monthly/'];
-
 SSS_surf = [];
 SSS_bot = [];
 S_volavg = [];

@@ -2,8 +2,8 @@ clear; clc
 
 g = grd('NANOOS');
 
-timenum_start = datenum(2025,9,23);
-timenum_end = datenum(2025,10,13);
+timenum_start = datenum(2025,9,1);
+timenum_end = datenum(2025,9,30);
 
 filepath = '/data/jungjih/RTDAOW2/Prm/BC/';
 

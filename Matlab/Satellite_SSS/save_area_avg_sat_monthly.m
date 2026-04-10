@@ -8,14 +8,15 @@
 clear; clc; close all
 
 sat = 'SMOS_BEC';
-
-region = 'Gulf_of_Anadyr_common';
+region = 'Cape_Olyutor';
 area_frac_cutoff = 0.99;
 % area_frac_cutoff = 0.1;
 
-maskname = ['common_07_01'];
+ismap = 0;
 
-mm_all = 7:7;
+% maskname = ['common_07_01'];
+
+mm_all = 1:12;
 mstr = num2str(mm_all, '%02i');
 
 switch sat
@@ -23,8 +24,10 @@ switch sat
         yyyy_all = 2015:2025;
         version = 6;
     case 'SMOS'
-        yyyy_all = 2010:2023;
-        version = 9;
+%         yyyy_all = 2010:2023;
+%         version = 9;
+        yyyy_all = 2010:2024;
+        version = 10;
     case 'CMEMS'
         yyyy_all = 2019:2022;
         version = 0;
@@ -33,6 +36,9 @@ switch sat
         version = 4;
     case 'SMOS_Arctic'
         yyyy_all = 2010:2023;
+        version = 2;
+    case 'OISSS'
+        yyyy_all = 2011:2024;
         version = 2;
 end
 
@@ -49,6 +55,22 @@ if strcmp(region, 'Gulf_of_Anadyr_common') | strcmp(region, 'Koryak_coast_common
     area = dx.*dy.*mask;
 else
     [mask, area] = mask_and_area(region, g);
+end
+
+if ismap == 1
+    % Area plot
+    mask_map = mask;
+    mask_map(isnan(mask_map) == 1) = 0;
+
+    figure; hold on;
+    set(gcf, 'Position', [1 200 800 500])
+    plot_map('NW_Bering', 'mercator', 'l');
+    contourm(g.lat_rho, g.lon_rho, g.h, [200 1000], 'k')
+    [c,h] = contourfm(g.lat_rho, g.lon_rho, mask_map, [1 1], '--r', 'LineWidth', 2);
+    set(h.Children(2), 'FaceColor', 'r')
+    set(h.Children(2), 'FaceAlpha', 0.2)
+    set(h.Children(3), 'FaceColor', 'none')
+    print(['region_' region], '-dpng')
 end
 
 SSS = [];
@@ -81,7 +103,7 @@ datetick('x', 'yyyy', 'keepticks', 'keeplimits')
 if length(mm_all) == 1
     output_filename = ['SSS_', sat, '_', region, '_', num2str(mm_all, '%02i'), '.mat'];
 else
-    output_filename = ['SSS_', region, '.mat'];
+    output_filename = ['SSS_', sat, '_', region, '.mat'];
 end
 
 save(output_filename, 'timenum', 'SSS', 'err', 'area_frac_cutoff')

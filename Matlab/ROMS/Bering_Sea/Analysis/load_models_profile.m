@@ -1,20 +1,9 @@
-function profile = load_models_profile(model, g, timenum, lat_target, lon_target)
+function profile = load_models_profile(model, g, timenum, lon_target, lat_target)
 
 switch model
     case 'BSf'
-        filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/Dsm4/'];
         filenum = timenum - datenum(2018,7,1) + 1;
-        fstr = num2str(filenum, '%04i');
-        filename = ['Dsm4_avg_', fstr, '.nc'];
-        file = [filepath, filename];
-
-        if filenum == 0119
-            file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm4_rhZop05/Sum_2018_Dsm4_rhZop05_avg_0119.nc';
-        elseif filenum == 1640
-            file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2022/Dsm4_nKC/SumFal_2022_Dsm4_nKC_avg_1640.nc';
-        elseif filenum == 1826
-            file = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
-        end
+        file = get_ncfilename('Dsm4_mk2', 'avg', filenum);
 
     case 'NANOOS'
         filepath = ['/home/server/ftp/dist/tides/ingria/ORWA'];
@@ -43,13 +32,13 @@ if exist(file)
         zeta = ncread(file, 'zeta', [lonind latind 1], [1 1 Inf]);
         z = squeeze(zlevs(h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'r',2));
         pres = gsw_p_from_z(z,lat);
+        pres(pres < 0) = NaN;
         temp_sigma = squeeze(ncread(file, 'temp', [lonind latind 1 1], [1 1 Inf Inf]));
         salt_sigma = squeeze(ncread(file, 'salt', [lonind latind 1 1], [1 1 Inf Inf]));
         salt_sigma(salt_sigma < 0) = 0;
-
-        SA = salt_sigma;
-        pt = temp_sigma;
-        CT = gsw_CT_from_pt(SA,pt);
+        [SA, in_ocean] = gsw_SA_from_SP(salt_sigma,pres,lon,lat);
+        pt0 = temp_sigma;
+        CT = gsw_CT_from_pt(SA,pt0);
         pden = gsw_rho(SA,CT,0);
         [n2, p_mid] = gsw_Nsquared(SA,CT,pres,lat);
 

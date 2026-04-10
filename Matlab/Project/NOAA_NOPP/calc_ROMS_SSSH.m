@@ -12,7 +12,9 @@ filepath = '/home/server/ftp/dist/tides/ingria/ORWA/';
 g = grd('NANOOS');
 timenum_ref = datenum(2005,1,1);
 lat = g.lat_rho;
+lat_3d = repmat(lat, [1 1 g.N]);
 lon = g.lon_rho;
+lon_3d = repmat(lon, [1 1 g.N]);
 H = g.h;
 H_3d = repmat(H, [1 1 g.N]);
 rho0 = 1026;
@@ -51,13 +53,13 @@ for di = datenum_start:datenum_end
 end
 
 % Load background density
-avg_pden = load('ROMS_avg_pden.mat');
-zeta_avg = avg_pden.zeta_avg;
-pden_avg = avg_pden.pden_avg;
-dz = avg_pden.dz;
+avg_dens = load('ROMS_avg_dens.mat');
+zeta_avg = avg_dens.zeta_avg;
+dens_avg = avg_dens.dens_avg;
+dz = avg_dens.dz;
 
 zetabar = zeta_avg; % time-mean
-rhobar = sum(dz.*pden_avg,3)./sum(dz,3); % time-mean depth-averaged
+rhobar = sum(dz.*dens_avg,3)./sum(dz,3); % time-mean depth-averaged
 
 % SSSH Calculation
 SSSH = NaN.*zeta;
@@ -65,37 +67,34 @@ for ti = 1:length(timenum)
     zeta_tmp = zeta(:,:,ti);
     temp_tmp = temp(:,:,:,ti);
     salt_tmp = salt(:,:,:,ti);
-    SA = salt_tmp;
-    pt = temp_tmp;
-    CT = gsw_CT_from_pt(SA,pt);
-    pden = gsw_rho(SA,CT,0);
-
+    
     z = zlevs(H,zeta_tmp,g.theta_s,g.theta_b,g.hc,g.N,'r',2);
     z_w = zlevs(H,zeta_tmp,g.theta_s,g.theta_b,g.hc,g.N,'w',2);
     dz = z_w(:,:,2:end) - z_w(:,:,1:end-1);
-
-    rho = sum(dz.*pden,3)./sum(dz,3); % depth-averaged
-
+    
+    p = gsw_p_from_z(-abs(z), lat_3d);
+    p(p < 0 ) = NaN;
+    [SA, in_ocean] = gsw_SA_from_SP(salt_tmp,p,lon_3d,lat_3d);
+    pt = temp_tmp;
+    CT = gsw_CT_from_pt(SA,pt);
+    dens = gsw_rho(SA,CT,p);
+    
+    rho = sum(dz.*dens,3)./sum(dz,3); % depth-averaged
     SSSH_tmp = (rhobar./rho).*zetabar + ((rhobar-rho)./rho).*H;
-
     SSSH(:,:,ti) = SSSH_tmp;
 
     disp(['SSSH calculation ', num2str(ti), ' / ', num2str(length(timenum)), ' ...'])
 end
 
 % Bandpass filter
-fs = 1/2; % cph; 2 hour
-freq_M2 = load_tidal_frequency('M2');
-freq_M2 = freq_M2/24; % cpd to cph
-lf = 0.8*freq_M2;
-hf = 1.2*freq_M2;
+dt = 2; % 2 hour
 
 SSSH_filtered = SSSH;
 for i = 1:size(lon,1)
     for j = 1:size(lon,2)
         SSSH_tmp = squeeze(SSSH(i,j,:));
         if sum(isnan(SSSH_tmp)) == 0
-            SSSH_filtered(i,j,:) = bandpass_butter4(SSSH_tmp, fs, lf, hf, 0);
+            SSSH_filtered(i,j,:) = tide_bandpass_butter4(SSSH_tmp, dt, 'M2', 0);
         end
     end
     disp(['Bandpass filter ', num2str(i), ' / ', num2str(size(lon,1)), ' ...'])

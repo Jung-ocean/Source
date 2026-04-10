@@ -1,6 +1,7 @@
 function file = get_ncfilename(exp, type, fnum)
 
 timenum = fnum + datenum(2018,7,1) - 1;
+yyyymmdd = datestr(timenum, 'yyyymmdd');
 timevec = datevec(timenum);
 yyyy = timevec(:,1);
 mm = timevec(:,2);
@@ -18,7 +19,8 @@ end
 
 listing = dir(fullfile(filepath_all, '**', ['*', exp, '*', type, '*', fstr, '*']));
 if isempty(listing)
-    error(['No such file ', exp , ' ', type, ' ', fstr]);
+    disp(['No such file ', exp , ' ', type, ' on ', yyyymmdd]);
+    file = [];
 else
     if length(listing) > 1
         index = find([listing.bytes] == max([listing.bytes]));

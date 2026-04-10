@@ -15,8 +15,10 @@ if strcmp(colormap, 'redblue')
         close
     end
     color = color_tmp(floor(linspace(1,length(color_tmp),num_color)),:);
-else
+elseif ischar(colormap)
     color = eval([colormap, '(num_color)']);
+elseif ismatrix(colormap) == 1
+    color = colormap;
 end
 
 end

@@ -8,7 +8,7 @@
 export yyyy
 export mm
 
-for yyyy in {2023..2023}; do
+for yyyy in {2024..2025}; do
   if [ ! -d "${yyyy}" ]; then
     mkdir ${yyyy}
   fi

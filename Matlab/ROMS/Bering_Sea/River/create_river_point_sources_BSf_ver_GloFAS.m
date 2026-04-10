@@ -7,7 +7,7 @@ clear; clc
 % Nushagak, and Kvichak
 % The numbers from there are ...
 
-yyyy_all = 2017:2023;
+yyyy_all = 2017:2025;
 filepath = '/data/jungjih/Models/GloFAS/';
 num_majors = 6;
 num_points = 92; % include num_majors i.e. total

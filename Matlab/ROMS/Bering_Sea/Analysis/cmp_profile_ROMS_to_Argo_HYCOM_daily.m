@@ -1,0 +1,281 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Compare ROMS vertical profile to Argo data daily
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+plot_whole_map = 0;
+ispng = 0;
+isgif = 1;
+
+% [30, 36, 46, 47, 54, 58, 59]
+% Argo_num_all = [4 5 6 11 29 34 36 37 42 43 45 46 47 54 56 57 58 59 ...
+%   64 68 73 84 89 96 102 128 133 ];
+% Argo_num_all = [34 43 45 46 47 54 56 57 58 59 ...
+%     73 84 89 96 102 133];
+% Argo_num_all = [4 36 46 47 54 58 59];
+Argo_num_all = [5, 6, 11, 16, 34, 43, 45, 56, 57];
+
+exp = 'Dsm4_mk2';
+
+% Model
+g = grd('BSf');
+startdate = datenum(2018,7,1);
+
+for Ai = 1:length(Argo_num_all)
+
+    Argo_num = Argo_num_all(Ai);
+
+    % Argo
+    filepath = '/data/sdurski/Observations/ARGO/ARGO_drifters_BS/';
+    filename = 'Argo_traj_and_prof.mat';
+    file = [filepath, filename];
+    load(file)
+
+    if plot_whole_map == 1
+        figure; hold on;
+        set(gcf, 'Position', [1 200 1300 800])
+        plot_map('Bering', 'mercator', 'l')
+        contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200 1000], 'k');
+
+        %caxis([datenum(2019,1,1) datenum(2022,5,1)])
+        caxis([datenum(2015,7,1) datenum(2023,1,1)])
+        c = colorbar;
+        datetick(c, 'y', 'yyyy-mm-dd', 'keeplimits')
+
+        for ai = 1:length(Arg)
+            profile = Arg(ai).profile;
+            WMO_num = Arg(ai).profile_dir(end-15:end-9);
+
+            lon = [];
+            lat = [];
+            time = [];
+            for pi = 1:length(profile)
+
+                lon = [lon; profile(pi).lon];
+                lat = [lat; profile(pi).lat];
+                time = [time; profile(pi).time];
+            end
+            s = scatterm(lat, lon, 20, time, 'filled');
+
+            %         title(['Argo ', num2str(ai, '%03i'), ' (', num2str(WMO_num), ')'])
+            title(['Argo (', num2str(WMO_num), ')'])
+
+            print(['Argo_map_', num2str(WMO_num)], '-dpng')
+
+            %         % Make gif
+            %         gifname = ['Argo_map_w_date.gif'];
+            %
+            %         frame = getframe(f1);
+            %         im = frame2im(frame);
+            %         [imind,cm] = rgb2ind(im,256);
+            %         if ai == 1
+            %             imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+            %         else
+            %             imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+            %         end
+
+            delete(s);
+        end % i
+    end % plot_whole_map
+
+    % Model vs Argo comparison
+    profile = Arg(Argo_num).profile;
+    WMO_num = Arg(Argo_num).profile_dir(end-15:end-9);
+
+    f1 = figure('visible', 'off'); hold on;
+    set(gcf, 'Position', [1 200 1800 800])
+    t = tiledlayout(1,5);
+    t.Padding = 'compact';
+    t.TileSpacing = 'compact';
+
+    nexttile(1, [1 2]);
+    plot_map('Bering', 'mercator', 'l')
+    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
+
+    lon = []; lat = []; time = [];
+    for pi = 1:length(profile)
+        lon = [lon; profile(pi).lon];
+        lat = [lat; profile(pi).lat];
+        time = [time; profile(pi).time];
+    end
+    save(['Argo_num_', num2str(Argo_num, '%03i'), '.mat'], 'lon', 'lat', 'time', 'WMO_num')
+
+    timevec = datevec(datenum(datestr(time)));
+    % tindex = find(timevec(:,1) > 2018 & ismember(timevec(:,2), [1:4]));
+    tindex = 1:size(timevec,1);
+    % caxis([floor(min(time(tindex))) floor(max(time(tindex)))])
+    caxis([datenum(2015,7,1) datenum(2023,1,1)])
+    c = colorbar;
+    datetick(c, 'y', 'mm/dd/yy', 'keeplimits');
+    c.Location = 'Southoutside';
+    c.Position = [0.0442 0.1692 0.3341 0.0202];
+    c.FontSize = 12;
+
+    s = scatterm(lat, lon, 20, time, 'filled');
+
+    for ti = 1:length(tindex)
+        index = tindex(ti);
+
+        lon_tmp = lon(index);
+        lat_tmp = lat(index);
+        time_tmp = time(index);
+        
+        % Argo location
+        nexttile(t,1,[1 2]);
+        title([datestr(time_tmp, 'mmm dd, yyyy'), ' (Argo ', num2str(WMO_num), ')'], 'FontSize', 20)
+
+        if ti == 1
+            point = plotm(lat_tmp, lon_tmp, 'or', 'MarkerSize', 15, 'LineWidth', 4);
+        else
+            delete(point)
+            point = plotm(lat_tmp, lon_tmp, 'or', 'MarkerSize', 15, 'LineWidth', 4);
+        end
+        
+        filenumber = floor(time_tmp) - startdate + 1;
+        try
+            file = get_ncfilename(exp, 'avg', filenumber);
+        catch
+            file = [];
+        end
+        
+        if exist(file) == 0
+            zeta = NaN([size(g.lon_rho)]);
+            temp = NaN([size(g.lon_rho) g.N]);
+            salt = NaN([size(g.lon_rho) g.N]);
+        else
+            zeta = ncread(file, 'zeta');
+            temp = ncread(file, 'temp');
+            salt = ncread(file, 'salt');
+
+            if isempty(zeta)
+                zeta = NaN([size(g.lon_rho)]);
+                temp = NaN([size(g.lon_rho) g.N]);
+                salt = NaN([size(g.lon_rho) g.N ]);
+            end
+        end
+
+        z = zlevs(g.h,zeta,g.theta_s,g.theta_b,g.hc,g.N,'r',2);
+        dist = sqrt((g.lon_rho - lon_tmp).^2 + abs(g.lat_rho - lat_tmp).^2);
+        [lonind, latind] = find(dist == min(dist(:)));
+
+        lat_model = g.lat_rho(lonind,latind);
+        lon_model = g.lon_rho(lonind,latind);
+        temp_model = squeeze(temp(lonind, latind, :));
+        salt_model = squeeze(salt(lonind, latind, :));
+        z_model = squeeze(z(lonind, latind, :));
+
+        % ROMS
+        p = gsw_p_from_z(z_model,lat_model);
+        p(p < 0 ) = NaN;
+        [SA, in_ocean] = gsw_SA_from_SP(salt_model,p,lon_model,lat_model);
+        pt0 = temp_model;
+        CT = gsw_CT_from_pt(SA,pt0);
+        pden_model = gsw_rho(SA,CT,0);
+
+        % ARGO
+        p = profile(index).pres;
+        p(p < 0 ) = NaN;
+        salt_obs = profile(index).salt;
+        [SA, in_ocean] = gsw_SA_from_SP(salt_obs,p,lon_tmp,lat_tmp);
+        % Potential temperature
+        pt0 = gsw_pt0_from_t(SA,profile(index).temp,p);
+        % Potential density
+        % CT = gsw_CT_from_t(SA,temp,p);
+        CT = gsw_CT_from_pt(SA,pt0);
+        pden = gsw_rho(SA,CT,0);
+
+        z_obs = gsw_z_from_p(p,lat_tmp);
+%         salt_obs = SA;
+        temp_obs = pt0;
+        pden_obs = pden;
+
+        % HYCOM
+        profile_hycom = load_HYCOM_profile(lon_tmp, lat_tmp, time_tmp);
+        if isstruct(profile_hycom)
+            z_hycom = profile_hycom.depth;
+            salt_hycom = profile_hycom.salt;
+            temp_hycom = profile_hycom.pt0;
+            pden_hycom = profile_hycom.pden;
+        else
+            z_hycom = NaN;
+            salt_hycom = NaN;
+            temp_hycom = NaN;
+            pden_hycom = NaN;
+        end
+
+        % Temperature
+        nexttile(t,3); cla; hold on; grid on;
+        po = plot(temp_obs, z_obs, '-r', 'LineWidth', 2);
+        pm = plot(temp_model, z_model, '-k', 'LineWidth', 2);
+        ph = plot(temp_hycom, z_hycom, '-g', 'LineWidth', 2);
+%         xlim([min(min(temp_obs), min(temp_model))-.5 max(max(temp_obs), max(temp_model))+.5])
+%         xlim([-1 5])
+%         xticks([-3:1:15])
+        set(gca, 'XTickLabelRotation', 0);
+        ylim([-2000 0])
+        xlabel('Temperature (^oC)')
+        ylabel('Depth (m)')
+        set(gca, 'FontSize', 12)
+        title('Potential temperature', 'FontSize', 15)
+
+        l = legend([po, pm, ph], 'Argo', 'ROMS', 'HYCOM');
+        l.Location = 'SouthWest';
+        l.FontSize = 20;
+
+        % Salinity
+        nexttile(t,4); cla; hold on; grid on;
+        plot(salt_obs, z_obs, '-r', 'LineWidth', 2);
+        plot(salt_model, z_model, '-k', 'LineWidth', 2);
+        plot(salt_hycom, z_hycom, '-g', 'LineWidth', 2);
+%         xlim([min(min(salt_obs), min(salt_model))-.1 34.4])
+%         xlim([32.5 34.5])
+%         xticks([28:.5:36])
+        set(gca, 'XTickLabelRotation', 0);
+        ylim([-2000 0])
+        xlabel('Salinity (psu)')
+%         ylabel('Depth (m)')
+        yticklabels('')
+        set(gca, 'FontSize', 12)
+        title('Salinity', 'FontSize', 15)
+
+        % Potential density
+        nexttile(t,5); cla; hold on; grid on;
+        plot(pden_obs-1000, z_obs, '-r', 'LineWidth', 2);
+        plot(pden_model-1000, z_model, '-k', 'LineWidth', 2);
+        plot(pden_hycom-1000, z_hycom, '-g', 'LineWidth', 2);
+%         xlim([min(min(pden_obs-1000), min(pden_model-1000))-.1 27.2])
+%         xlim([26 27.2])
+%         xticks([20:.5:30])
+        ylim([-2000 0])
+        xlabel('\sigma_\theta (kg/m^3)')
+%         ylabel('Depth (m)')
+        yticklabels('')
+        set(gca, 'FontSize', 12)
+        title('Potential density', 'FontSize', 15)
+
+        % Save figure snapshtop
+        if ispng == 1
+            saveas(gcf, ['Argo_num_', num2str(Argo_num, '%03i'), '_', datestr(time(index), 'yyyymmdd'), '.png'])
+        end
+
+        if isgif == 1
+            % Make gif
+            gifname = ['Argo_num_', num2str(Argo_num, '%03i'), '.gif'];
+
+            frame = getframe(f1);
+            im = frame2im(frame);
+            [imind,cm] = rgb2ind(im,256);
+            if ti == 1
+                imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
+            else
+                imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');
+            end
+        end
+    end % ti
+
+    close all
+end % Ai

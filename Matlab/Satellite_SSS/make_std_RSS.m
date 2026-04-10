@@ -26,6 +26,8 @@ for mi = 1:length(month_avg)
         system(command)
     end
 
+    % The command `ncatted -a _FillValue,sss_smap,o,f,NaN example.nc` 
+    % was run by make_fillvalue_nan.m
     command = ['ncecat ', ['*', mstr, '_*'], ' ./cat.nc'];
     system(command)
 

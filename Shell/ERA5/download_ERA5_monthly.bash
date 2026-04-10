@@ -8,11 +8,11 @@
 export yyyy
 export mm
 
-for yyyy in {2024..2025}; do
+for yyyy in {1979..1995}; do
 #  if [ ! -d "${yyyy}" ]; then
 #    mkdir ${yyyy}
 #  fi
-  for mm in {01..12}; do
+  for mm in {03..05}; do
     python download_ERA5_monthly.py
     grib_to_netcdf tmp.grib -o ./monthly/ERA5_${yyyy}${mm}.nc
     rm -f tmp.grib

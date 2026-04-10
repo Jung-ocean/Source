@@ -3,10 +3,10 @@ function [lat, lon, vari] = load_SSS_err_sat_2d_monthly(sat, version, yyyy, mm)
 ystr = num2str(yyyy);
 mstr = num2str(mm, '%02i');
 
-lons_sat = {'lon', 'lon', 'lon', 'lon', 'lon'};
-lons_360ind = [360, 180, 360, 360, 360];
-lats_sat = {'lat', 'lat', 'lat', 'lat', 'lat'};
-varis_sat = {'sss_smap_unc', 'eSSS', 'sos_error', 'uncertainty_sss', 'eSSS'};
+lons_sat = {'lon', 'lon', 'lon', 'lon', 'lon', 'longitude'};
+lons_360ind = [360, 180, 360, 360, 360, 180];
+lats_sat = {'lat', 'lat', 'lat', 'lat', 'lat', 'latitude'};
+varis_sat = {'sss_smap_unc', 'eSSS', 'sos_error', 'uncertainty_sss', 'eSSS', 'sss_formal_uncertainty'};
 
 switch sat
     case 'SMAP'
@@ -138,7 +138,36 @@ switch sat
             lat = lat_sat;
             lon = lon_sat;
             vari = vari_sat;
-            disp(['Loading SMOS_Arctic v', vstr2, ' monthly SSS ', ystr, mstr]);
+            disp(['Loading SMOS_Arctic v', vstr2, ' monthly SSS err ', ystr, mstr]);
+        else
+            lat = NaN;
+            lon = NaN;
+            vari = NaN;
+            disp(['No data in ', ystr, mstr]);
+        end
+
+        case 'OISSS'
+        si = 6;
+
+        vstr = num2str(version, '%2.1f');
+        filepath_sat = ['/data/jungjih/Observations/Satellite_SSS/OISSS/v', vstr, '/monthly/'];
+        filename_sat = ['OISSS_L4_multimission_global_monthly_v', vstr, '_', ystr, '-', mstr, '.nc'];
+        file_sat = [filepath_sat, filename_sat];
+
+        if exist(file_sat)
+            lon_sat = double(ncread(file_sat,lons_sat{si}));
+            lat_sat = double(ncread(file_sat,lats_sat{si}));
+            vari_sat = double(squeeze(ncread(file_sat,varis_sat{si})));
+
+            index1 = find(lon_sat > 0); index2 = find(lon_sat < 0);
+            vari_sat = [vari_sat(index1,:); vari_sat(index2,:)];
+
+            lon_sat = lon_sat - lons_360ind(si);
+
+            lat = lat_sat;
+            lon = lon_sat;
+            vari = vari_sat;
+            disp(['Loading OISSS v', vstr, ' monthly SSS err ', ystr, mstr]);
         else
             lat = NaN;
             lon = NaN;

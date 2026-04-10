@@ -7,110 +7,76 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-map = 'Bering';
-
-vari_str = 'salt';
-yyyy_all = 2019:2022;
-plusind = yyyy_all(1) - 2015;
-mm = 8;
-mstr = num2str(mm, '%02i');
-
-remove_climate = 0;
-
-color = 'jet';
-climit = [31.5 33.5];
-unit = 'psu';
-
-savename = 'SSS';
-
-ERA5_filepath = '/data/jungjih/Models/ERA5/monthly/';
-interval_wind = 10;
-scale_wind = 0.02;
-color_wind = 'k';
-
-filepath = ['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng/monthly/'];
+exp = 'Dsm4_mk2';
+region = 'NW_Bering';
 
 % Load grid information
 g = grd('BSf');
 
+vari_str = 'salt';
+yyyy = 2023;
+ystr = num2str(yyyy);
+mm = 8;
+mstr = num2str(mm, '%02i');
+title_mstr = datestr(datenum(yyyy,mm,15),'mmm');
+
+colormap = 'jet';
+climit = [29 34];
+interval = 0.25;
+[color, contour_interval] = get_color(colormap, climit, interval);
+unit = 'psu';
+
+climit2 = [-2 2];
+interval2 = 0.5;
+[color2, contour_interval2] = get_color('redblue', climit2, interval2);
+
 figure;
-set(gcf, 'Position', [1 200 1400 900])
-t = tiledlayout(3,3);
-% Figure title
-title(t, ['ROMS SSS with wind'], 'FontSize', 25);
-
-for yi = 1:length(yyyy_all)
-    yyyy = yyyy_all(yi); ystr = num2str(yyyy);
-    title_str = datestr(datenum(yyyy,mm,1), 'mmm, yyyy');
-
-    filename = ['Dsm2_spng_', ystr, mstr, '.nc'];
-    file = [filepath, filename];
-    vari = ncread(file, 'salt', [1 1 g.N 1], [Inf Inf 1 Inf])';
-
-    if remove_climate == 1
-        filepath_climate = ['/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm2_spng/climate/'];
-        filename_climate = ['Dsm2_spng_climate_', mstr, '.nc'];
-        file_climate = [filepath_climate, filename_climate];
-        vari_climate = ncread(file_climate, 'salt', [1 1 g.N 1], [Inf Inf 1 Inf])';
-
-        vari = vari - vari_climate;
-
-        color = 'redblue';
-        climit = [-1 1];
-        title(t, ['ROMS SSSA with sea ice concentration (15%) in ', datestr(datenum(0,mm_sea_ice,1), 'mmm')], 'FontSize', 25);
-        savename = 'SSSA';
-        color_ice = 'g';
-    end
-
-    % Tile
-    nexttile(yi+plusind); hold on;
-
-    plot_map(map, 'mercator', 'l')
-    contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'k');
-
-    T = pcolorm(g.lat_rho,g.lon_rho,vari); shading flat
-    caxis(climit)
-    colormap(color)
-    uistack(T,'bottom')
-    plot_map(map, 'mercator', 'l')
-
-    if yi == 1
-        c = colorbar;
-        c.Layout.Tile = 'east';
-        c.Title.String = unit;
-        c.FontSize = 15;
-    end
-
-    textm(65, -205, [title_str], 'FontSize', 20)
-
-    % Wind
-    ERA5_filename = ['ERA5_', ystr, mstr, '.nc'];
-    ERA5_file = [ERA5_filepath, ERA5_filename];
-
-    ERA5_lon = ncread(ERA5_file, 'longitude');
-    ERA5_lat = ncread(ERA5_file, 'latitude');
-    ERA5_uwind = ncread(ERA5_file, 'u10')';
-    ERA5_vwind = ncread(ERA5_file, 'v10')';
-
-    [ERA5_lon2, ERA5_lat2] = meshgrid(double(ERA5_lon), double(ERA5_lat));
-
-    % Convert lat/lon to figure (axis) coordinates
-    [x, y] = mfwdtran(ERA5_lat2, ERA5_lon2);  % Convert lat/lon to projected x, y coordinates
-
-    % Draw arrows
-    q = quiver(x(1:interval_wind:end, 1:interval_wind:end), ...
-        y(1:interval_wind:end, 1:interval_wind:end), ...
-        ERA5_uwind(1:interval_wind:end, 1:interval_wind:end).*scale_wind, ...
-        ERA5_vwind(1:interval_wind:end, 1:interval_wind:end).*scale_wind, ...
-        0, 'MaxHeadSize', 0.5, 'Color', 'k', 'LineWidth', 1, 'AutoScale', 'off');
-
-    [xscale, yscale] = mfwdtran(63.5, 155);  % Convert lat/lon to projected x, y coordinates
-    qscale = quiver(xscale, yscale, 5.*scale_wind, 0.*scale_wind, 0, 'MaxHeadSize', 0.5, 'Color', 'r', 'AutoScale', 'off');
-    [xtscale, ytscale] = mfwdtran(62.5, 155);  % Convert lat/lon to projected x, y coordinates
-    text(xtscale, ytscale, '5 m/s', 'Color', 'r', 'FontSize', 12);
-end % yi
-
+set(gcf, 'Position', [1 200 1500 600])
+t = tiledlayout(1,3);
 t.Padding = 'compact';
 t.TileSpacing = 'compact';
 
-print([savename, '_', mstr, '_with_wind_monthly'],'-dpng');
+% Multi-year mean
+nexttile(1); hold on;
+plot_map(region, 'mercator', 'l')
+contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k');
+
+vari_climate = load_models_2d_monthly(exp, vari_str, g.N, 9999, mm);
+plot_contourf([], g.lat_rho, g.lon_rho, vari_climate, color, climit, contour_interval);
+plot_wind_ERA5(region, 9999, mm, 'k', 1);
+
+title(['SSS in ', title_mstr, ' (Multi-year mean)'], 'FontSize', 15)
+
+% Each year
+nexttile(2); hold on;
+plot_map(region, 'mercator', 'l')
+contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k');
+
+vari = load_models_2d_monthly(exp, vari_str, g.N, yyyy, mm);
+plot_contourf([], g.lat_rho, g.lon_rho, vari, color, climit, contour_interval);
+plot_wind_ERA5(region, yyyy, mm, 'k', 1);
+
+c = colorbar;
+c.Title.String = unit;
+c.FontSize = 15;
+
+plabel('off')
+
+title(['SSS in ', title_mstr, ' ', ystr], 'FontSize', 15)
+
+% Difference
+ax3 = nexttile(3); hold on;
+plot_map(region, 'mercator', 'l')
+contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k');
+
+plot_contourf(ax3, g.lat_rho, g.lon_rho, vari-vari_climate, color2, climit2, contour_interval2);
+   
+c = colorbar;
+c.Title.String = unit;
+c.FontSize = 15;
+
+plabel('off')
+
+title('Difference', 'FontSize', 15)
+
+print(['SSS_w_wind_', ystr, mstr],'-dpng');
