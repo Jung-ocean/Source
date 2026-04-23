@@ -1,0 +1,167 @@
+clear; clc
+
+yyyy = 2024;
+ystr = num2str(yyyy);
+
+reftime = datenum(yyyy,1,1);
+tstr = datestr(reftime, 'yyyy-mm-dd HH:MM:SS');
+
+% ROMS variables
+varnames_ROMS = {'Tair', 'Pair', 'Qair', 'rain', 'Uwind', 'Vwind', 'swrad', 'lwrad_down', 'cloud'};
+timenames_ROMS = {'tair_time', 'pair_time', 'qair_time', 'rain_time', 'wind_time', 'wind_time', 'srf_time', 'lrf_time', 'cloud_time'};
+longnames_ROMS = {...
+    'surface_air_temperature', ...
+    'surface_air_pressure', ...
+    'surface air relative humidity', ...
+    'rain fall rate', ...
+    'surface u-wind component', ...
+    'surface v-wind component', ...
+    'downward solar shortwave radiation flux', ...
+    'downward longwave radiation flux', ...
+    'cloud fraction'};
+units_ROMS = {...
+    'Celsius', ...
+    'millibar', ...
+    'percentage', ...
+    'kilogram meter-2 second-1', ...
+    'meter second-1', ...
+    'meter second-1', ...
+    'watt meter-2', ...
+    'watt meter-2', ...
+    'nondimensional'};
+
+% CFSv2 variables, two wnd10m for Uwind and Vwind
+filepath_CFSv2 = '/data/jungjih/Models/CFSv2/netcdf_sub/';
+filenames_CFSv2 = {...
+    'tmp2m', ...
+    'prmsl', ...
+    'q2m', ...
+    'prate', ...
+    'wnd10m', ...
+    'wnd10m', ...
+    'dswsfc', ...
+    'dlwsfc', ...
+    'tcdcclm'};
+varnames_CFSv2 = {...
+    'TMP_2maboveground', ...
+    'PRMSL_meansealevel', ...
+    'SPFH_2maboveground', ...
+    'PRATE_surface', ...
+    'UGRD_10maboveground', ...
+    'VGRD_10maboveground', ...
+    'DSWRF_surface', ...
+    'DLWRF_surface', ...
+    'TCDC_entireatmosphere_consideredasasinglelayer_'};
+
+for vi = 1:length(varnames_ROMS)
+
+    varname_ROMS = varnames_ROMS{vi};
+    timename_ROMS = timenames_ROMS{vi};
+    longname_ROMS = longnames_ROMS{vi};
+    unit_ROMS = units_ROMS{vi};
+    filename_ROMS = [varname_ROMS, '_', ystr, '.nc'];
+    filename_CFSv2 = filenames_CFSv2{vi};
+    varname_CFSv2 = varnames_CFSv2{vi};
+    
+    file_CFSv2_year = [filepath_CFSv2, filename_CFSv2, '_', ystr, '.nc'];
+    % Concatenate variables in the target year
+    if ~exist(file_CFSv2_year)
+        command = ['ncrcat ' filepath_CFSv2, filename_CFSv2, '* ', file_CFSv2_year];
+        system(command)
+    end
+    lon = ncread(file_CFSv2_year, 'longitude');
+    lat = ncread(file_CFSv2_year, 'latitude');
+    time_tmp = ncread(file_CFSv2_year, 'time');
+    
+    len_lon = length(lon);
+    len_lat = length(lat);
+    [lat2, lon2] = meshgrid(lat, lon);
+    timenum = time_tmp/60/60/24 + datenum(1970,1,1);
+    ocean_time = timenum - datenum(yyyy,1,1);
+    len_ot = length(ocean_time);
+    vari_CFSv2 = ncread(file_CFSv2_year, varname_CFSv2);
+
+switch varname_ROMS
+    case 'Tair'
+        vari_ROMS = vari_CFSv2 - 273.15; % K to deg C
+        lon_Tair = lon2;
+        lat_Tair = lat2;
+        Tair = vari_ROMS;
+    case 'Pair'
+        vari_ROMS = vari_CFSv2*0.01; % Pa to millibar
+        lon_Pair = lon2;
+        lat_Pair = lat2;
+        Pair = vari_ROMS;
+    case 'Qair'
+        shum = vari_CFSv2; % kg/kg
+        shum(shum < 0) = 0;
+        Tair_interp = NaN(size(shum));
+        Pair_interp = NaN(size(shum));
+        for ti = 1:len_ot
+            Tair_interp(:,:,ti) = interp2(lat_Tair, lon_Tair, Tair(:,:,ti), lat2, lon2);
+            Pair_interp(:,:,ti) = interp2(lat_Pair, lon_Pair, Pair(:,:,ti), lat2, lon2);
+        end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % qsat.m function from air_sea tools
+        % ew: air saturation vapor pressure (mb)
+        % Pair: air pressure (mb)
+        % Tair: air temperature (C)
+        % qsat: specific humidity at saturation (kg/kg)
+        ew = 6.1121.*(1.0007+3.46e-6.*Pair_interp).*exp((17.502.*Tair_interp)./(240.97+Tair_interp)); % mb
+        qsat = 0.62197.*(ew./(Pair_interp-0.378.*ew)); % mb -> kg/kg
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        rhum = 100*shum./qsat; % nondimensional to %
+        rhum(rhum > 100) = 100;
+        vari_ROMS = rhum;
+    case 'cloud'
+        vari_ROMS = vari_CFSv2*0.01; % % to fraction
+    otherwise
+        vari_ROMS = vari_CFSv2;
+end
+
+% Create a NetCDF file
+ncid = netcdf.create(filename_ROMS, 'clobber');
+
+% Global Attributes
+varid = netcdf.getConstant('GLOBAL');
+netcdf.putAtt(ncid,varid,'type','ROMS Forcing File');
+netcdf.putAtt(ncid,varid,'title','Bulk Formula Forcing File');
+netcdf.putAtt(ncid,varid,'source','CFSv2 Time-Series)');
+netcdf.putAtt(ncid,varid,'author','Created by Jihun Jung');
+netcdf.putAtt(ncid,varid,'date',datestr(date, 'yyyy-mm-dd HH:MM:SS'));
+
+% Dimensions
+lon_dimID = netcdf.defDim(ncid,'lon', len_lon);
+lat_dimID = netcdf.defDim(ncid,'lat', len_lat);
+time_dimID = netcdf.defDim(ncid, timename_ROMS, netcdf.getConstant('NC_UNLIMITED'));
+
+% Attributes associated with the variable
+time_ID = netcdf.defVar(ncid, timename_ROMS, 'double', time_dimID);
+netcdf.putAtt(ncid, time_ID, 'long_name', [longname_ROMS, ' time']);
+netcdf.putAtt(ncid, time_ID, 'units', ['days since ', tstr]);
+
+lon_ID = netcdf.defVar(ncid, 'lon', 'double', [lon_dimID lat_dimID]);
+netcdf.putAtt(ncid, lon_ID, 'long_name', 'native grid longitude');
+netcdf.putAtt(ncid, lon_ID, 'units', 'degree');
+
+lat_ID = netcdf.defVar(ncid, 'lat', 'double', [lon_dimID lat_dimID]);
+netcdf.putAtt(ncid, lat_ID, 'long_name', 'native grid latitude');
+netcdf.putAtt(ncid, lat_ID, 'units', 'degree');
+
+var_ID = netcdf.defVar(ncid, varname_ROMS, 'double', [lon_dimID lat_dimID time_dimID]);
+netcdf.putAtt(ncid, var_ID, 'long_name', longname_ROMS);
+netcdf.putAtt(ncid, var_ID, 'units', unit_ROMS);
+netcdf.putAtt(ncid, var_ID, 'time', timename_ROMS);
+
+netcdf.endDef(ncid);
+
+% Write data to variable
+netcdf.putVar(ncid, time_ID, 0, len_ot, ocean_time);
+netcdf.putVar(ncid, lon_ID, lon2);
+netcdf.putVar(ncid, lat_ID, lat2);
+% var_permute = permute(var, [3,2,1]);
+netcdf.putVar(ncid, var_ID, [0, 0, 0], [len_lon, len_lat, len_ot], vari_ROMS);
+
+netcdf.close(ncid);
+
+end % vi
