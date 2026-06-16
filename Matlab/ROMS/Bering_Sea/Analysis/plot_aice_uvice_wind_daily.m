@@ -1,13 +1,13 @@
 clear; clc; close all
 
 exp = 'Dsm4';
-map = 'Bering';
+map = 'Gulf_of_Anadyr';
 startdate = datenum(2018,7,1);
 reftime = datenum(1968,5,23);
 
-timenum_start = datenum(2023,1,1);
+timenum_start = datenum(2021,5,1);
 tsstr = datestr(timenum_start, 'yyyymmdd');
-timenum_end = datenum(2023,7,31);
+timenum_end = datenum(2021,7,1);
 testr = datestr(timenum_end, 'yyyymmdd');
 
 g = grd('BSf');
@@ -16,6 +16,37 @@ filepath = ['/data/sdurski/ROMS_BSf/Output/Multi_year/', exp, '/'];
 ERA5_filepath = '/data/sdurski/ROMS_Setups/Forcing/Atm/Bering_Sea/ERA5/';
 
 switch map
+    case 'Gulf_of_Anadyr'
+        text_ice_lat = 66.1;
+        text_ice_lon = -184.8;
+
+        text_wind_lat = 63.7;
+        text_wind_lon = -184.8;
+                     
+        text2_lat = 65.9;
+        text2_lon = -178;
+        text_FS = 15;
+        
+        color_ice = [1.0000 0.0745 0.6510];
+        interval_ice = 30;
+        scale_ice = 3;
+        scale_ice_value = 0.2;
+        scale_ice_lat = text_ice_lat-0.5;
+        scale_ice_lon = text_ice_lon;
+        scale_ice_text = '20 cm/s';
+        scale_ice_text_lat = scale_ice_lat-0.4;
+        scale_ice_text_lon = text_ice_lon;
+
+        color_wind = [0.0588 1.0000 1.0000];
+        interval_wind = 6;
+        scale_wind = 0.2;
+        scale_wind_value = 3;
+        scale_wind_lat = text_wind_lat-0.5;
+        scale_wind_lon = text_wind_lon;
+        scale_wind_text = '3 m/s';
+        scale_wind_text_lat = scale_wind_lat-0.4;
+        scale_wind_text_lon = text_wind_lon;
+
     case 'NW_Bering'
         text_ice_lat = 65.8;
         text_ice_lon = -192.5;
@@ -86,18 +117,18 @@ end
 [scale_wind_value, scale_wind_v, lon_scl] = adjust_vector(scale_wind_lon, scale_wind_lat, scale_wind_value, 0);
 
 % Figure properties
-interval = 0.1;
-climit = [0 1];
+interval = 10;
+climit = [0 100];
 contour_interval = climit(1):interval:climit(2);
 num_color = diff(climit)/interval;
 color = gray(num_color);
-unit = '';
+unit = '%';
 cutoff_aice = 0.15;
 
 h1 = figure;
 set(gcf, 'Position', [1 200 800 500])
 plot_map(map, 'mercator', 'l')
-contourm(g.lat_rho, g.lon_rho, g.h, [50 100 200], 'Color', [0.8510 0.3255 0.0980]);
+contourm(g.lat_rho, g.lon_rho, g.h, [50 75 100 200], 'Color', [0.8510 0.3255 0.0980]);
 
 t1 = textm(text_ice_lat, text_ice_lon, 'Sea ice', 'Color', color_ice, 'FontSize', text_FS);
 t2 = textm(text_wind_lat, text_wind_lon, 'Wind', 'Color', color_wind, 'FontSize', text_FS);
@@ -135,7 +166,7 @@ for ti = timenum_start:timenum_end
 
     % Convert lat/lon to figure (axis) coordinates
     [x, y] = mfwdtran(g.lat_rho, g.lon_rho);  % Convert lat/lon to projected x, y coordinates
-    vari = aice;
+    vari = aice*100;
     vari(vari < climit(1)) = climit(1);
     vari(vari > climit(end)) = climit(end);
 
@@ -232,6 +263,7 @@ for ti = timenum_start:timenum_end
     im = frame2im(frame);
     [imind,cm] = rgb2ind(im,256);
     if ti == timenum_start
+        pause(5)
         imwrite(imind,cm, gifname, 'gif', 'Loopcount', inf);
     else
         imwrite(imind,cm, gifname, 'gif', 'WriteMode', 'append');

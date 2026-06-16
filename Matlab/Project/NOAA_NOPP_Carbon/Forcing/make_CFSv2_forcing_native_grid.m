@@ -59,7 +59,11 @@ for vi = 1:length(varnames_ROMS)
     timename_ROMS = timenames_ROMS{vi};
     longname_ROMS = longnames_ROMS{vi};
     unit_ROMS = units_ROMS{vi};
-    filename_ROMS = [varname_ROMS, '_', ystr, '.nc'];
+    if strcmp(varname_ROMS, 'swrad') % swrad_down for ALBEDO
+        filename_ROMS = [varname_ROMS, '_down_', ystr, '.nc'];
+    else
+        filename_ROMS = [varname_ROMS, '_', ystr, '.nc'];
+    end
     filename_CFSv2 = filenames_CFSv2{vi};
     varname_CFSv2 = varnames_CFSv2{vi};
     
@@ -69,7 +73,7 @@ for vi = 1:length(varnames_ROMS)
         command = ['ncrcat ' filepath_CFSv2, filename_CFSv2, '* ', file_CFSv2_year];
         system(command)
     end
-    lon = ncread(file_CFSv2_year, 'longitude');
+    lon = ncread(file_CFSv2_year, 'longitude')-360;
     lat = ncread(file_CFSv2_year, 'latitude');
     time_tmp = ncread(file_CFSv2_year, 'time');
     
@@ -78,8 +82,20 @@ for vi = 1:length(varnames_ROMS)
     [lat2, lon2] = meshgrid(lat, lon);
     timenum = time_tmp/60/60/24 + datenum(1970,1,1);
     ocean_time = timenum - datenum(yyyy,1,1);
-    len_ot = length(ocean_time);
-    vari_CFSv2 = ncread(file_CFSv2_year, varname_CFSv2);
+    ot_unique = unique(ocean_time);
+    len_ot = length(ot_unique);
+    dindex = [];
+    for ti = 1:len_ot
+        index_tmp = find(ocean_time == ot_unique(ti));
+        if length(index_tmp) > 1
+            dindex(ti) = index_tmp(1);
+        else
+            dindex(ti) = index_tmp;
+        end
+    end
+
+    vari_CFSv2_tmp = ncread(file_CFSv2_year, varname_CFSv2);
+    vari_CFSv2 = vari_CFSv2_tmp(:,:,dindex);
 
 switch varname_ROMS
     case 'Tair'
@@ -126,9 +142,9 @@ ncid = netcdf.create(filename_ROMS, 'clobber');
 varid = netcdf.getConstant('GLOBAL');
 netcdf.putAtt(ncid,varid,'type','ROMS Forcing File');
 netcdf.putAtt(ncid,varid,'title','Bulk Formula Forcing File');
-netcdf.putAtt(ncid,varid,'source','CFSv2 Time-Series)');
+netcdf.putAtt(ncid,varid,'source','CFSv2 Time-Series');
 netcdf.putAtt(ncid,varid,'author','Created by Jihun Jung');
-netcdf.putAtt(ncid,varid,'date',datestr(date, 'yyyy-mm-dd HH:MM:SS'));
+netcdf.putAtt(ncid,varid,'date',datestr(date, 'yyyy-mm-dd'));
 
 % Dimensions
 lon_dimID = netcdf.defDim(ncid,'lon', len_lon);
@@ -152,16 +168,19 @@ var_ID = netcdf.defVar(ncid, varname_ROMS, 'double', [lon_dimID lat_dimID time_d
 netcdf.putAtt(ncid, var_ID, 'long_name', longname_ROMS);
 netcdf.putAtt(ncid, var_ID, 'units', unit_ROMS);
 netcdf.putAtt(ncid, var_ID, 'time', timename_ROMS);
+netcdf.putAtt(ncid, var_ID, 'coordinates', ['lon lat']);
 
 netcdf.endDef(ncid);
 
 % Write data to variable
-netcdf.putVar(ncid, time_ID, 0, len_ot, ocean_time);
+netcdf.putVar(ncid, time_ID, 0, len_ot, ot_unique);
 netcdf.putVar(ncid, lon_ID, lon2);
 netcdf.putVar(ncid, lat_ID, lat2);
 % var_permute = permute(var, [3,2,1]);
 netcdf.putVar(ncid, var_ID, [0, 0, 0], [len_lon, len_lat, len_ot], vari_ROMS);
 
 netcdf.close(ncid);
+
+disp(varname_ROMS);
 
 end % vi

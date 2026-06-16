@@ -25,16 +25,20 @@ setm(gca,'PLabelLocation',5)
 tightmap
 
 %setm(gca,'mlabelparallel',50)
-mlabel('FontSize', 8);
-plabel('FontSize', 8);
-if strcmp(casename, 'US_west') | strcmp(casename, 'US_west_HFR') | strcmp(casename, 'US_west_NANOOS')
-    setm(gca,'MLabelLocation',3)
-    setm(gca,'PLabelLocation',3)
-    gridm('MlineLocation',1,'PLineLocation',1);
+if min(lat) < 49
+    interval = 1;
+    if strcmp(casename, 'LiveOcean')
+        interval = 2;
+    end
+    setm(gca,'MLabelLocation',interval)
+    setm(gca,'PLabelLocation',interval)
+    gridm('MlineLocation',interval,'PLineLocation',interval);
     mlabel('FontSize', 10);
     plabel('FontSize', 10);
 else
     gridm('MlineLocation',2.5,'PLineLocation',2.5);
+    mlabel('FontSize', 8);
+    plabel('FontSize', 8);
 end
 
 %set(gcf,'position',[30 100 700 800]);

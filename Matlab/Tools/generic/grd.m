@@ -54,6 +54,28 @@ switch location
         Vtransform = 2;
         grd = roms_get_grid(grd_file,scoord,0,Vtransform);
 
+    case 'Oregon_1km'
+        grd_file = '/data/jungjih/Project/NOAA_NOPP_Carbon/Oregon_1km/Setups/Grid/grid_Oregon_1km.nc';
+        scoord = [7 2 10 45]; % theta_s theta_b hc N
+
+        disp(' ')
+        disp([ 'Loading ROMS grd for application: ' location])
+        disp([ 'using grid file ' grd_file])
+        disp(' ')
+        Vtransform = 2;
+        grd = roms_get_grid(grd_file,scoord,0,Vtransform);
+
+    case 'LiveOcean'
+        grd_file = '/data/jungjih/Models/LiveOcean/ocean_his_0025.nc';
+        scoord = [4 2 10 30]; % theta_s theta_b hc N
+
+        disp(' ')
+        disp([ 'Loading ROMS grd for application: ' location])
+        disp([ 'using grid file ' grd_file])
+        disp(' ')
+        Vtransform = 2;
+        grd = roms_get_grid(grd_file,scoord,1,Vtransform);
+
     case 'Lab'
         grd_file = 'G:\내 드라이브\Model\ROMS\Case\Lab\roms_grd.nc' ;
         scoord = [5 0.4 4 20]; % theta_s theta_b hc N

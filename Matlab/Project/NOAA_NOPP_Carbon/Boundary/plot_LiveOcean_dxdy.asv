@@ -1,0 +1,36 @@
+clear; clc
+
+region = 'US_west_NANOOS';
+
+g = grd('LiveOcean');
+dx = 1./g.pm;
+dy = 1./g.pn;
+
+figure;
+set(gcf, 'Position', [1 200 800 600])
+t = tiledlayout(1,2);
+t.Padding = 'compact';
+t.TileSpacing = 'tight';
+
+nexttile(1);
+plot_map(region, 'mercator', 'l');
+contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k');
+p = pcolorm(g.lat_rho, g.lon_rho, dx);
+uistack(p, 'bottom')
+colormap(jet(6))
+caxis([0 3000]);
+title('dx', 'FontSize', 15)
+
+nexttile(2);
+plot_map(region, 'mercator', 'l');
+contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k');
+p = pcolorm(g.lat_rho, g.lon_rho, dy);
+uistack(p, 'bottom')
+colormap(jet(6))
+caxis([0 3000]);
+c = colorbar;
+c.Title.String = 'm';
+plabel('off')
+title('dy', 'FontSize', 15)
+
+print('LiveOcean_dxdy', '-dpng')

@@ -37,15 +37,20 @@ if isstruct(grd_file)
     % the intention is to add vertical coordinates below
     grd = grd_file;
 else
-    
+
     % get the grid information from a ROMS grid file
     % nc = netcdf.open(grd_file);
     grd.grd_file = grd_file;
-    
+
     grd.lon_rho = ncread(grd_file,'lon_rho');
     grd.lat_rho = ncread(grd_file,'lat_rho');
     grd.mask_rho = ncread(grd_file,'mask_rho');
-    grd.angle = ncread(grd_file,'angle');
+    try
+        grd.angle = ncread(grd_file,'angle');
+    catch
+        disp('No angle in the file. Assume angle is zero everywhere')
+        grd.angle = zeros(size(grd.lon_rho));
+    end
     grd.h = ncread(grd_file,'h');
     grd.lon_psi = ncread(grd_file,'lon_psi');
     grd.lat_psi = ncread(grd_file,'lat_psi');
@@ -58,25 +63,26 @@ else
     grd.mask_u = ncread(grd_file,'mask_u');
     grd.pm = ncread(grd_file,'pm');
     grd.pn = ncread(grd_file,'pn');
+    grd.spherical = ncread(grd_file,'spherical');
 end
 
 %if nargin == 1, scoord = [5 0.4 50 20];end  % edit cskim
 if nargin >= 1                               % edit cskim
     % if nargin > 1                              % raw
-    
+
     % get z_r and z_w for the given s-coordinate parameters
-    
+
     if ~ischar(scoord)
-        
+
         % warning([ 'The option of a 4-element s-coordinate parameter ' ...
         %	  'vector has not be checked fully'])
-        
+
         theta_s = scoord(1);
         theta_b = scoord(2);
         Tcline  = scoord(3);
         N       = scoord(4);
         h = grd.h;
-        
+
         % code lifted from hernan's scoord3.m
         %     c1=1.0;
         %     c2=2.0;
@@ -105,62 +111,67 @@ if nargin >= 1                               % edit cskim
         %     Cs=(c1-theta_b).*Ptheta+theta_b.*Rtheta;
         %     sc_w = sc(:);
         %     Cs_w = Cs(:);
-        
-        [sc_r,Cs_r]=stretching(Vstretching, theta_s, theta_b, hc, N, 0);
-        sc_r = sc_r'; Cs_r = Cs_r';
-        [sc_w,Cs_w]=stretching(Vstretching, theta_s, theta_b, hc, N, 1);
-        sc_w = sc_w'; Cs_w = Cs_w';
-        
+
+        [s_rho,Cs_r]=stretching(Vstretching, theta_s, theta_b, hc, N, 0);
+        s_rho = s_rho'; Cs_r = Cs_r';
+        [s_w,Cs_w]=stretching(Vstretching, theta_s, theta_b, hc, N, 1);
+        s_w = s_w'; Cs_w = Cs_w';
+
         % input 'scoord' is the name of a his/avg/rst file name
         % attempt to get s-coord params from the file
-        
+
     else
         nc2 = netcdf(scoord);
-        
+
         theta_s = ncread('scoord','theta_s');
         theta_b = ncread('scoord','theta_b');
         Tcline = ncread('scoord','Tcline');
-        sc_r = ncread('scoord','sc_r');
+        s_rho = ncread('scoord','s_rho');
         Cs_r = ncread('scoord','Cs_r');
-        sc_w = ncread('scoord','sc_w');
+        s_w = ncread('scoord','s_w');
         Cs_w = ncread('scoord','Cs_w');
-        
-        N = length(sc_r);
+
+        N = length(s_rho);
         Np = N+1;
-        
+
         hc = ncread('scoord','hc');
         hc = hc(:);
         if isempty(hc)
             hc = min(h(:));
         end
-        
-        if length(sc_w)==N
-            sc_w = [-1; sc_w];
+
+        if length(s_w)==N
+            s_w = [-1; s_w];
             Cs_w = [-1; Cs_w];
         end
         close(nc2)
     end
-    
+
     % zeta
     zeta = zeros(size(grd.h)); % default
     if nargin > 2 % option to include zeta in z calculation
         if tindex ~= 0
-            if ~ischar(scoord)
-                error([ 'Can''t process zeta from file in the case that ' ...
-                    ' scoord parameters are input as a vector'])'
+            try
+                zeta = double(ncread(grd_file,'zeta', [1 1 tindex], [Inf Inf 1]));
+            catch
+                warning(['zeta not found in ' grd_file])
             end
-            nc2 = netcdf(scoord);
-            ncread('scoord','zeta')
-            zeta = zeta(tindex,:,:);
-            close(nc2)
-            if isempty(zeta)
-                warning([ 'zeta not found in ' scoord])
-                zeta = zeros(size(grd.h));
-            end
+%             if ~ischar(scoord)
+%                 error([ 'Can''t process zeta from file in the case that ' ...
+%                     ' scoord parameters are input as a vector'])'
+%             end
+%             nc2 = netcdf(scoord);
+%             ncread('scoord','zeta')
+%             zeta = zeta(tindex,:,:);
+%             close(nc2)
+%             if isempty(zeta)
+%                 warning([ 'zeta not found in ' scoord])
+%                 zeta = zeros(size(grd.h));
+%             end
         end
     end
     grd.zeta = zeta;
-    
+
     % rho-points
     z_r = zlevs(h,zeta,theta_s,theta_b,hc,N,'r',Vtransform);
     grd.z_r = z_r;
@@ -171,7 +182,7 @@ if nargin >= 1                               % edit cskim
     %         z_r = z_r + scmCshc*[zeta(:)./h(:)]' + (1+Cs_r)*zeta(:)';
     %     end
     %     grd.z_r = reshape(z_r,[N size(h)]);
-    
+
     % w-points
     z_w = zlevs(h,zeta,theta_s,theta_b,hc,N,'w',Vtransform);
     grd.z_w = z_w;
@@ -182,38 +193,44 @@ if nargin >= 1                               % edit cskim
     %     end
     %     grd.z_w = reshape(z_w,[Np size(h)]);
     clear z_r z_w
-    
+
     %   if nargin > 3
-    %
-    %     % u-points
-    %     hu = 0.5*(h(:,1:end-1)+h(:,2:end));
-    %     zu = 0.5*(zeta(:,1:end-1)+zeta(:,2:end));
-    %     z_u = repmat(scmCshc,[1 length(hu(:))]) + Cs_r*hu(:)';
-    %     if any(zu(:)~=0)
-    %       z_u = z_u + scmCshc*[zu(:)./hu(:)]' + (1+Cs_r)*zu(:)';
-    %     end
-    %     grd.z_u = reshape(z_u,[N size(hu)]);
-    %     clear z_u;
-    %
-    %     % v-points
-    %     hv = 0.5*(h(1:end-1,:)+h(2:end,:));
-    %     zv = 0.5*(zeta(1:end-1,:)+zeta(2:end,:));
-    %     z_v = repmat(scmCshc,[1 length(hv(:))]) + Cs_r*hv(:)';
-    %     if any(zeta(:)~=0)
-    %       z_v = z_v + scmCshc*[zv(:)./hv(:)]' + (1+Cs_r)*zv(:)';
-    %     end
-    %     grd.z_v = reshape(z_v,[N size(hv)]);
-    %
+
+    % u-points
+    hu = 0.5*(h(1:end-1,:)+h(2:end,:));
+    zeta_u = 0.5*(zeta(1:end-1,:)+zeta(2:end,:));
+    z_u = zlevs(hu,zeta_u,theta_s,theta_b,hc,N,'r',Vtransform);
+    grd.z_u = z_u;
+%     z_u = repmat(scmCshc,[1 length(hu(:))]) + Cs_r*hu(:)';
+%     if any(zu(:)~=0)
+%         z_u = z_u + scmCshc*[zu(:)./hu(:)]' + (1+Cs_r)*zu(:)';
+%     end
+%     grd.z_u = reshape(z_u,[N size(hu)]);
+    clear z_u;
+
+    % v-points
+    hv = 0.5*(h(:,1:end-1)+h(:,2:end));
+    zeta_v = 0.5*(zeta(:,1:end-1)+zeta(:,2:end));
+    z_v = zlevs(hv,zeta_v,theta_s,theta_b,hc,N,'r',Vtransform);
+    grd.z_v = z_v;
+%     z_v = repmat(scmCshc,[1 length(hv(:))]) + Cs_r*hv(:)';
+%     if any(zeta(:)~=0)
+%         z_v = z_v + scmCshc*[zv(:)./hv(:)]' + (1+Cs_r)*zv(:)';
+%     end
+%     grd.z_v = reshape(z_v,[N size(hv)]);
+    clear z_v;
 end
 
+grd.Vtransform = Vtransform;
+grd.Vstretching = Vstretching;
 grd.theta_s = theta_s;
 grd.theta_b = theta_b;
 grd.Tcline = Tcline;
 grd.N = N;
 grd.hc = hc;
-grd.sc_w = sc_w;
+grd.s_w = s_w;
 grd.Cs_w = Cs_w;
-grd.sc_r = sc_r;
+grd.s_rho = s_rho;
 grd.Cs_r = Cs_r;
 
 disp(['Vtransform = ', num2str(Vtransform), ', Vstretching = ', num2str(Vstretching)])

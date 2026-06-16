@@ -26,6 +26,16 @@ switch model
             file = [filepath, filename];
         end
 
+    case 'LiveOcean'
+        filepath = '/data/jungjih/Models/LiveOcean/monthly/';
+        filename = ['monthly_mean_', ystr, '_', mstr, '.nc'];
+        file = [filepath, filename];
+
+    case 'Oregon_1km'
+        filepath = '/data/jungjih/Project/NOAA_NOPP_Carbon/Oregon_1km/Output/monthly/';
+        filename = ['monthly_', ystr, mstr, '.nc'];
+        file = [filepath, filename];
+
     case 'Dsm4'
         filepath = '/data/jungjih/ROMS_BSf/Output/Multi_year/Dsm4/monthly/';
         filename = [model, '_', ystr, mstr, '.nc'];

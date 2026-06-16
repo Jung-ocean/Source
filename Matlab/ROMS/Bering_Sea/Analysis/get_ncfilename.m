@@ -1,6 +1,11 @@
 function file = get_ncfilename(exp, type, fnum)
 
 timenum = fnum + datenum(2018,7,1) - 1;
+if isnan(timenum(1)) == 1
+    disp(['File number is NaN']);
+    file = [];
+    return
+end
 yyyymmdd = datestr(timenum, 'yyyymmdd');
 timevec = datevec(timenum);
 yyyy = timevec(:,1);

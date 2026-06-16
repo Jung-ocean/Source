@@ -10,10 +10,10 @@ clear; clc; close all
 yyyy_all = 2012:2024;
 mm_all = 1:12;
 
-region = 'Koryak_coast_basin';
+region = 'M5_50km';
 ismap = 1;
 
-filepath_daily = '/data/jungjih/Observations/Sea_ice/ASI/daily_ROMSgrid/';
+filepath_daily = '/data/jungjih/Observations/Sea_ice/ASI/AMSR2/daily_ROMSgrid/';
 
 g = grd('BSf');
 [mask, area] = mask_and_area(region, g);
@@ -71,6 +71,26 @@ figure; hold on; grid on;
 plot(timenum, Fi, '-k')
 xticks(datenum(yyyy_all,1,1));
 datetick('x', 'mm/dd/yy', 'keepticks', 'keeplimits')
+
+aice = [Fi*100]';
+timenum = timenum';
+
+figure; hold on; grid on;
+plot(timenum, aice, '-k')
+xticks(datenum(yyyy_all,1,1));
+datetick('x', 'mm/dd/yy', 'keepticks', 'keeplimits')
+for yi = 1:length(yyyy_all)
+    yyyy = yyyy_all(yi);
+
+idx_start = find(timenum >= datenum(yyyy,5,1),1);
+idx_end = find(aice(idx_start:end) < 1e-3,1) + idx_start -1;
+% shading
+x_fill = [timenum(idx_start:idx_end) ...
+          fliplr(timenum(idx_start:idx_end))];
+y_fill = [aice(idx_start:idx_end) ...
+          zeros(1,length(idx_start:idx_end))];
+fill(x_fill, y_fill, 'b', 'FaceAlpha',0.3, 'EdgeColor','none');
+end
 
 ddd
 save(output_filename, 'timenum', 'Fi')

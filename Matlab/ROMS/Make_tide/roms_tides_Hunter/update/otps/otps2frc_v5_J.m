@@ -1,4 +1,4 @@
-function otps2frc_v5(gfile,base_date,pred_date,ofile,model_file,dname, ncon)
+function otps2frc_v5_J(gfile,base_date,pred_date,ofile,model_file,dname, ncon)
 %otps2frc_v5 Generete OTPS tidal forcing file for ROMS
 %
 %otps2frc_v5(gfile,base_date,pred_date,ofile,model_file,dname) generates a ROMS tidal

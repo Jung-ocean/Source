@@ -1,0 +1,112 @@
+clear; clc; close all
+
+yyyy = 2024;
+ystr = num2str(yyyy);
+mm = 2;
+mstr = num2str(mm, '%02i');
+
+vari_str = 'temp';
+
+g = grd('Oregon_1km');
+ismap = 1;
+
+switch vari_str
+    case 'temp'
+        unit = '^oC';
+        climit = [4 20];
+        climit2 = [-3 3];
+        title_str = 'Temperature';
+        colormap_interval = 16;
+
+    case 'salt'
+        unit = 'psu';
+        climit = [31 35];
+        climit2 = [-2 2];
+        title_str = 'Salinity';
+        colormap_interval = 20;
+
+    case 'pden'
+        unit = '\sigma_\theta';
+        climit = [22 28];
+        climit2 = [-1 1];
+        title_str = 'Potential density';
+        colormap_interval = 24;
+end
+cistr = num2str(colormap_interval);
+xlimit = [-126 -124];
+ylimit = [-500 0];
+
+load(['cmp_data_glider_', ystr, mstr, '.mat']);
+
+if ismap == 1
+    % Map
+    figure;
+    set(gcf, 'Position', [1 200 500 800])
+    plot_map('Oregon', 'mercator', 'l');
+    [cs, h] = contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k');
+    cl = clabelm(cs, h);
+    set(cl, 'BackgroundColor', 'none');
+    plotm(lat_line, lon_line, '.r');
+    print(['map_cmp_data_glider_', ystr, mstr], '-dpng')
+end
+
+vari_obs = eval([vari_str, '_interp']);
+vari_ROMS = eval([vari_str, '_ROMS']);
+if strcmp(vari_str, 'pden')
+    vari_obs = pden_interp - 1000;
+    vari_ROMS = vari_ROMS - 1000;
+end
+
+% Comparison
+figure;
+set(gcf, 'Position', [1 200 1300 500])
+t = tiledlayout(1,3);
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+title(t, [title_str, ' (', datestr(min(datenum_line), 'mmm dd'), ' - ', datestr(max(datenum_line), 'dd, yyyy'), ')'], 'FontSize', 15)
+
+ax1 = nexttile(1); hold on;
+pcolor(lon_line, -depth_interp, vari_obs'); shading flat
+xlim(xlimit);
+ylim(ylimit);
+colormap(ax1, ['jet(', cistr, ')'])
+caxis(climit);
+xlabel('Longitude (^o)')
+ylabel('Depth (m)')
+set(gca, 'FontSize', 15)
+title('Glider')
+box on
+
+ax2 = nexttile(2);
+pcolor(lon_line, -depth_interp, vari_ROMS'); shading flat
+colormap(ax2, ['jet(', cistr, ')'])
+caxis(climit);
+title('ROMS')
+xlim(xlimit);
+ylim(ylimit);
+xlabel('Longitude (^o)')
+yticklabels('');
+set(gca, 'FontSize', 15)
+box on
+
+c = colorbar;
+c.Title.String = unit;
+
+ax3 = nexttile(3);
+vari_diff = vari_ROMS - vari_obs;
+pcolor(lon_line, -depth_interp, vari_diff'); shading flat
+color
+colormap(ax3, 'redblue2');
+caxis(climit2)
+c = colorbar;
+c.Title.String = unit;
+title('Difference')
+
+xlim(xlimit);
+ylim(ylimit);
+xlabel('Longitude (^o)')
+yticklabels('');
+set(gca, 'FontSize', 15)
+box on
+
+print(['cmp_', vari_str, '_glider_', ystr, mstr], '-dpng')

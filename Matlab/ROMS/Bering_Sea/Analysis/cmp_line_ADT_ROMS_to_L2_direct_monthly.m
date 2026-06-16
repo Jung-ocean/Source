@@ -15,19 +15,19 @@ if strcmp(direction, 'p')
     lines = 1:15; % pline
 else
 %     lines = 1:24; % aline
-    lines = 4:8; % aline
+    lines = 10:13; % aline
 end
 
 isfilter = 0;
 filter_window = 8; % 1 ~ 5.75 km
 
 % xlimit = [154 203];
-xlimit = [175 183];
+xlimit = [170 176];
 % xlimit = [175 187.5];
 ylimit = [-25 25];
 
 yyyy_all = 2019:2022;
-mm_all = 5:8;
+mm_all = 1:6;
 
 % Load grid information
 g = grd('BSf');
@@ -35,9 +35,9 @@ g = grd('BSf');
 % Load ADT
 ADT = load(['ADT_model_obs_', direction, 'line.mat']);
 ADT = ADT.ADT;
-lines_all = cell2array(ADT.line);
+lines_all = cell2mat(ADT.line);
 lines_unique = unique(lines_all);
-timenum_all = cell2array(ADT.time);
+timenum_all = cell2mat(ADT.time);
 
 % Figure
 h1 = figure; hold on; grid on

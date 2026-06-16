@@ -1,7 +1,7 @@
 clear; clc; close all
 
-vari_str = 'std';
-isseason = 1;
+vari_str = 'mean';
+isseason = 0;
 season = 'winter';
 
 g = grd('BSf');
@@ -12,15 +12,13 @@ region = 'Bering';
 % Figure properties
 switch vari_str
     case 'mean'
-        climit = [29 34];
-        interval = 0.25;
+        climit = [32.7 33.2];
+        interval = 0.05;
     case 'std'
         climit = [0 .5];
         interval = 0.025;
 end
-contour_interval = climit(1):interval:climit(2);
-num_color = diff(climit)/interval;
-color = jet(num_color);
+[color, contour_interval] = get_color('redblue', climit, interval);
 unit = 'psu';
 FS = 15;
 
@@ -188,7 +186,7 @@ figure(f1); nexttile(num_tile); hold on;
 plot_map(region, 'mercator', 'l')
 contourm(g.lat_rho, g.lon_rho, g.h, [200 1000], 'k');
 plot_contourf([], lat2, lon2, vari, color, climit, contour_interval);
-title('BEC SMOS v4', 'FontSize', FS);
+title('BEC SMOS Arctic v4', 'FontSize', FS);
 plabel('off')
 mlabel('FontSize', 12)
 

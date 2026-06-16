@@ -7,10 +7,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc
 
-yyyy_all = 2023:2024;
+yyyy_all = 2024:2024;
 mm_all = 1:12;
 
-filepath = '/data/jungjih/Observations/HFR/daily/';
+filepath = '/data/jungjih/Observations/Surface_current/HFR/daily/';
 
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi);

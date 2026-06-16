@@ -1,0 +1,81 @@
+clear; clc; close all
+
+region = 'interior';
+vari_str = 'temp';
+
+go = grd('Oregon_1km');
+gl = grd('LiveOcean');
+
+ismap = 0;
+
+yyyy = 2024;
+timenum_start = datenum(yyyy,1,1);
+timenum_end = datenum(yyyy,12,31);
+
+switch region
+    case 'sponge'
+        lon_target = -126.48;
+    case 'interior'
+        lon_target = -125.5;
+end
+lat_target = 44.5;
+
+if ismap == 1
+    figure;
+    set(gcf, 'Position', [1 200 500 800])
+    plot_map('Oregon', 'mercator', 'l');
+    [cs, h] = contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k');
+    cl = clabelm(cs, h);
+    set(cl, 'BackgroundColor', 'none');
+    plotm(lat_target, lon_target, 'xr', 'MarkerSize', 15, 'LineWidth', 4);
+    print(['map_cmp_profile_', region], '-dpng')
+end
+
+depth_o = [];
+depth_l = [];
+vari_o = [];
+vari_l = [];
+for ti = timenum_start:timenum_end
+    timenum = ti;
+    
+    profile = load_models_profile_daily('Oregon_1km', go, timenum, lon_target, lat_target);
+    depth_o = [depth_o profile.depth];
+    vari_o = [vari_o eval(['profile.', vari_str])];
+
+    profile = load_models_profile_daily('LiveOcean', gl, timenum, lon_target, lat_target);
+    depth_l = [depth_l profile.depth];
+    vari_l = [vari_l eval(['profile.', vari_str])];
+end
+
+timenum_o = repmat([timenum_start:timenum_end], [go.N, 1]);
+timenum_l = repmat([timenum_start:timenum_end], [gl.N, 1]);
+
+figure; 
+set(gcf, 'Position', [1 200 1300 800]);
+t = tiledlayout(2,1);
+t.Padding = 'compact';
+t.TileSpacing = 'tight';
+
+nexttile(1); hold on;
+pcolor(timenum_o, depth_o, vari_o); shading flat
+colormap(jet(16));
+caxis([4 20]);
+xlim([timenum_start-1 timenum_end+1])
+ylim([-500 0]);
+xticklabels('');
+ylabel('Depth (m)');
+title('Oregon 1km')
+
+nexttile(2); hold on;
+pcolor(timenum_l, depth_l, vari_l); shading flat
+colormap(jet(16));
+caxis([4 20]);
+xlim([timenum_start-1 timenum_end+1])
+ylim([-500 0]);
+xticks([datenum(yyyy,1:12,1)]);
+datetick('x', 'mm/dd', 'keepticks', 'keeplimits')
+ylabel('Depth (m)');
+
+c = colorbar;
+c.Title.String = '^oC';
+c.Layout.Tile = 'East'

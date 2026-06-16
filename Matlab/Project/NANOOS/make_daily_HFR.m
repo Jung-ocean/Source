@@ -7,7 +7,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all
 
-yyyy_all = 2023:2024;
+yyyy_all = 2024:2024;
 filepath = '/data/jungjih/RTDAOW2/Data/HFR/';
 
 timenum_all = datenum(yyyy_all(1),1,1):datenum(yyyy_all(end),12,31);
@@ -55,12 +55,14 @@ for ti = 1:length(timenum_all)
     
     u = NaN(length(coordinate_unique),1);
     v = NaN(length(coordinate_unique),1);
+    prcnt = NaN(length(coordinate_unique),1);
     try
         data_tmp = importdata(file);
         data = data_tmp.data;
 
         lon_tmp = data(:,1);
         lat_tmp = data(:,2);
+        prcnt_tmp = data(:,3);
         u_tmp = data(:,4);
         v_tmp = data(:,5);
 
@@ -69,6 +71,7 @@ for ti = 1:length(timenum_all)
         
         u(Locb) = u_tmp;
         v(Locb) = v_tmp;
+        prcnt(Locb) = prcnt_tmp;
 
         ncfile = ['HFR_', datestr(timenum,'yyyymmdd'), '.nc'];
         ncwriteschema(ncfile ,mySchema)
@@ -78,6 +81,9 @@ for ti = 1:length(timenum_all)
         nccreate(ncfile, 'v', 'Dimensions', {'data', 'time'});
         ncwriteatt(ncfile,'v','description','Meridional velocity')
         ncwriteatt(ncfile,'v','unit','cm/s')
+        nccreate(ncfile, 'prcnt', 'Dimensions', {'data', 'time'});
+        ncwriteatt(ncfile,'prcnt','description','Percent coverage')
+        ncwriteatt(ncfile,'prcnt','unit','%')
         nccreate(ncfile, 'lon', 'Dimensions', {'data'});
         nccreate(ncfile, 'lat', 'Dimensions', {'data'});
         nccreate(ncfile, 'time', 'Dimensions', {'time'});
@@ -86,6 +92,7 @@ for ti = 1:length(timenum_all)
 
         ncwrite(ncfile, 'u', u);
         ncwrite(ncfile, 'v', v);
+        ncwrite(ncfile, 'prcnt', prcnt);
         ncwrite(ncfile, 'lon', lon);
         ncwrite(ncfile, 'lat', lat);
         ncwrite(ncfile, 'time', timenum);

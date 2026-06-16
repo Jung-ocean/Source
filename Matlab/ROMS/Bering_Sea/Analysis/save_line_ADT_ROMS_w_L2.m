@@ -8,7 +8,7 @@
 clear; clc; close all
 
 map = 'Bering';
-exp = 'Dsm4';
+exp = 'Dsm4_mk2';
 
 % Line numbers
 direction = 'a';
@@ -17,10 +17,6 @@ if strcmp(direction, 'p')
 else
     lines = 1:24; % aline
 end
-
-% Model
-filepath_all = ['/data/sdurski/ROMS_BSf/Output/Multi_year/'];
-filepath_control = [filepath_all, exp, '/'];
 
 year_start = 2018;
 month_start = 7;
@@ -46,22 +42,15 @@ for li = 1:length(lines)
     for ti = 1:size(timevec,1)
 
         timenum_tmp = floor(datenum(timevec(ti,:)));
-
         filenumber = timenum_tmp - datenum(year_start,month_start,1) + 1;
-        fstr = num2str(filenumber, '%04i');
-        file = [filepath_control, exp, '_avg_', fstr, '.nc'];
-        if filenumber == 0119
-            file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2018/Dsm4_rhZop05/Sum_2018_Dsm4_rhZop05_avg_0119.nc';
-        elseif filenumber == 1640
-            file = '/data/sdurski/ROMS_BSf/Output/NoIce/SumFal_2022/Dsm4_nKC/SumFal_2022_Dsm4_nKC_avg_1640.nc';
-        elseif filenumber == 1826
-            file = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
-        end
-
-        if exist(file) == 2
-            zeta = ncread(file,'zeta');
-            SSS = ncread(file, 'salt', [1 1 g.N 1], [Inf Inf 1 Inf]);
-            if ~isempty(zeta) 
+        file = get_ncfilename(exp, 'avg', filenumber);
+        if ~isempty(file)
+            try
+                zeta = ncread(file,'zeta');
+            catch
+                continue
+            end
+            if ~isempty(zeta)
                 zeta_line = interp2(g.lon_rho', g.lat_rho', zeta', lon_line, lat_line);
                 ADT.model{index} = zeta_line';
             else

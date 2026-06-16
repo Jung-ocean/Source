@@ -9,6 +9,10 @@ switch casename
         lon = [-126 -123.5]; lat = [40.6590 49.9874];
     case 'US_west_HFR'
         lon = [-127 -123]; lat = [43 47];
+    case 'Oregon'
+        lon = [-126.4936 -123.5176]; lat = [42.0045, 47.9940];
+    case 'LiveOcean'
+        lon = [-129.9798 -122.0018]; lat = [42.0067, 52.0099];
     case 'WCOFS'
         lon = [-147.5 -110]; lat = [17.5 57.5];
     case 'Bering_Arctic'

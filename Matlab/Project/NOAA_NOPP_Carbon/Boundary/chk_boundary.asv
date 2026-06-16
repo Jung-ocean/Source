@@ -1,0 +1,95 @@
+clear; clc; close all
+
+region = 'Oregon';
+[lon_lim, lat_lim] = load_domain(region);
+
+time_rec = 1;
+
+source = '/data/jungjih/Models/LiveOcean/monthly_mean_2023_12.nc';
+gs = grd('LiveOcean');
+
+bndy = './Boundary/boundary_Oregon_1km.nc';
+g = grd('Oregon_1km');
+
+direction = 'south';
+varis = {'temp', 'salt', 'u', 'v'};
+
+figure;
+set(gcf, 'Position', [1 200 800 500])
+t = tiledlayout(1,2);
+t.Padding = 'compact';
+t.TileSpacing = 'tight';
+
+for vi = 1:length(varis)
+    vari = varis{vi};
+    switch vari
+        case 'temp'
+            str = 'rho';
+            climit = [0 12];
+            unit = '^oC';
+        case 'salt'
+            str = 'rho';
+            climit = [29 35];
+            unit = 'psu';
+        case 'u'
+            str = 'u';
+            climit = [-.3 .3];
+            unit = 'm/s';
+        case 'v'
+            str = 'v';
+            climit = [-.3 .3];
+            unit = 'm/s';
+    end
+    lon_source = eval(['gs.lon_', str]);
+    lat_source = eval(['gs.lat_', str]);
+    mask_source = eval(['gs.mask_', str]);
+    lon_ini = eval(['g.lon_', str]);
+    lat_ini = eval(['g.lat_', str]);
+    mask_ini = eval(['g.mask_', str]);
+
+    switch direction
+        case 'south'
+            lat = min(lat_ini(:));
+            lon1 = min(lon_ini(:));
+            lon2 = max(lon_ini(:));
+
+            latdist = abs(gs.lat_rho(1,:) - lat);
+            latind = find(latdist == min(latdist));
+            lonind = find(gs.lon_rho(:,1) > lon1 & gs.lon_rho(:,1) < lon2);
+            vari_source = ncread(source, vari, [lonind(1) latind, 1, 1], [length(lonind), 1, Inf, 1]);
+            vari_source = squeeze(vari_source);
+            z_source = gs.z_r(lonind, latind, :);
+            z_source = squeeze(z_source);
+            xdata_1d = gs.lon_rho(lonind, latind);
+            xdata = repmat(xdata_1d, [1, gs.N]);
+
+            vari_bndy = ncread(bndy, [vari, '_', direction], [1, 1, time_rec], [Inf, Inf, 1]);
+            z_source = g.z_r(lonind, latind, :);
+            z_source = squeeze(z_source);
+            xdata_1d = g.lon_rho(:, 1);
+            xdata = repmat(xdata_1d, [1, gs.N]);
+    end
+
+    % Source
+    nexttile(1);
+    p1 = pcolor(xdata, z_source, vari_source);
+    colormap jet(12);
+    caxis(climit)
+    title(['Source ', vari], 'FontSize', 15);
+    
+    % Initial
+    nexttile(2);
+    plot_map(region, 'mercator', 'l');
+    p2 = pcolorm(lat_ini, lon_ini, vari_ini.*mask_ini./mask_ini);
+    colormap jet(12);
+    caxis(climit)
+    c = colorbar;
+    c.Title.String = unit;
+    plabel off
+    title(['Initial ', vari], 'FontSize', 15);
+
+    print(['chk_ini_', vari], '-dpng')
+    delete(p1); delete(p2)
+
+
+end

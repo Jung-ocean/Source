@@ -1,0 +1,25 @@
+function [lon_sat, lat_sat, SST_sat] = load_MODIS_monthly(yyyy,mm)
+
+    ystr = num2str(yyyy);
+    mstr = num2str(mm, '%02i');
+    
+    filepath = ['/data/jungjih/Observations/Satellite_SST/MODIS_Aqua/monthly/'];
+    files = dir([filepath, '*', ystr, mstr, '*']);
+    if length(files) == 1
+        filename = files(1).name;
+    else
+        error('More than one files are found')
+    end
+    file = [filepath, filename];
+
+    lon_sat = double(ncread(file, 'lon'));
+    lat_sat = double(ncread(file, 'lat'));
+    SST_sat = ncread(file, 'sst');
+    qual_sst = 
+
+    lon1 = find(lon_sat > 0);
+    lon2 = find(lon_sat < 0);
+    lon_sat = [lon_sat(lon1)-360; lon_sat(lon2)];
+    SST_sat = [SST_sat(lon1,:); SST_sat(lon2,:)];
+
+end

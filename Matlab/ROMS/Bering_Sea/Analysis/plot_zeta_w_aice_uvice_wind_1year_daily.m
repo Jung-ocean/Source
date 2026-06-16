@@ -10,7 +10,7 @@ clear; clc; close all
 
 exp = 'Dsm4';
 map = 'Gulf_of_Anadyr';
-startdate = datenum(2018,7,1);
+startdate = datenum(2018,7,p1);
 
 ispng = 1;
 

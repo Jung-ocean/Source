@@ -11,15 +11,15 @@ region = 'Bering';
 
 exp = 'Dsm4';
 vari_str = 'aice';
-yyyy_all = 2022:2022;
+yyyy_all = 2021:2021;
 mm_all = 1:6;
 % dd_all = 1:28;
 
 switch vari_str
     case 'aice'
-        climit_model = [0 1];
+        climit_model = [0 100];
         climit_sat = climit_model;
-        unit = '';
+        unit = '%';
 end
 
 % Model
@@ -37,7 +37,7 @@ startdate = datenum(2018,7,1,0,0,0);
 
 % Satellite SSH
 % ASI
-filepath_ASI = ['/data/jungjih/Observations/Sea_ice/ASI/daily_ROMSgrid/'];
+filepath_ASI = ['/data/jungjih/Observations/Sea_ice/ASI/AMSR2/daily_ROMSgrid/'];
 
 for yi = 1:length(yyyy_all)
     yyyy = yyyy_all(yi); ystr = num2str(yyyy);
@@ -66,7 +66,7 @@ for yi = 1:length(yyyy_all)
                 file = '/data/sdurski/ROMS_BSf/Output/Ice/Winter_2022/Dsm4_nKC/Output/Winter_2022_Dsm4_nKC_avg_1826.nc';
             end
 
-            vari_control = ncread(file, 'aice');
+            vari_control = 100*ncread(file, 'aice');
             ot = ncread(file, 'ocean_time');
 
             timenum = datenum(yyyy,mm,dd);
@@ -79,7 +79,7 @@ for yi = 1:length(yyyy_all)
             if mi == 1 && di == 1
                 plot_map(region, 'mercator', 'l')
                 hold on;
-                contourm(lat, lon, h, [50 100 200], 'Color', [0.8510 0.3255 0.0980]);
+                contourm(lat, lon, h, [50 75 100 200], 'Color', [0.8510 0.3255 0.0980]);
             else
                 delete(T(1));
             end
@@ -90,8 +90,8 @@ for yi = 1:length(yyyy_all)
             caxis(climit_model)
             if mi == 1 && di == 1
                 c = colorbar;
-                %             c.Title.String = unit;
-                c.Ticks = [climit_model(1):.5:climit_model(end)];
+                c.Title.String = unit;
+                c.Ticks = [climit_model(1):50:climit_model(end)];
             end
             title(['ROMS'], 'Interpreter', 'None', 'FontSize', 20)
 
@@ -103,7 +103,7 @@ for yi = 1:length(yyyy_all)
             file_sat = [filepath_sat, filename_sat.name];
             lon_sat = double(ncread(file_sat,'longitude'));
             lat_sat = double(ncread(file_sat,'latitude'));
-            vari_sat = double(squeeze(ncread(file_sat,'z')))/100;
+            vari_sat = 100*double(squeeze(ncread(file_sat,'z')))/100;
 
             % Tile
             nexttile(1);
@@ -111,7 +111,7 @@ for yi = 1:length(yyyy_all)
             if mi == 1 && di == 1
                 plot_map(region, 'mercator', 'l')
                 hold on;
-                contourm(lat, lon, h, [50 100 200], 'Color', [0.8510 0.3255 0.0980]);
+                contourm(lat, lon, h, [50 75 100 200], 'Color', [0.8510 0.3255 0.0980]);
             else
                 delete(T(2));
             end

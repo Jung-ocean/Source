@@ -69,7 +69,7 @@ for vi = 1:length(varnames_ROMS)
         command = ['ncrcat ' filepath_CFSv2, filename_CFSv2, '* ', file_CFSv2_year];
         system(command)
     end
-    lon = ncread(file_CFSv2_year, 'longitude');
+    lon = ncread(file_CFSv2_year, 'longitude')-360;
     lat = ncread(file_CFSv2_year, 'latitude');
     time_tmp = ncread(file_CFSv2_year, 'time');
     
@@ -78,24 +78,41 @@ for vi = 1:length(varnames_ROMS)
     [lat2, lon2] = meshgrid(lat, lon);
     timenum = time_tmp/60/60/24 + datenum(1970,1,1);
     ocean_time = timenum - datenum(yyyy,1,1);
-    len_ot = length(ocean_time);
-    vari_CFSv2 = ncread(file_CFSv2_year, varname_CFSv2);
+    ot_unique = unique(ocean_time);
+    len_ot = length(ot_unique);
+    dindex = [];
+    for ti = 1:len_ot
+        index_tmp = find(ocean_time == ot_unique(ti));
+        if length(index_tmp) > 1
+            dindex(ti) = index_tmp(1);
+        else
+            dindex(ti) = index_tmp;
+        end
+    end
+
+    vari_CFSv2_tmp = ncread(file_CFSv2_year, varname_CFSv2);
+    vari_CFSv2 = vari_CFSv2_tmp(:,:,dindex);
 
 switch varname_ROMS
     case 'Tair'
         vari_ROMS = vari_CFSv2 - 273.15; % K to deg C
-        lon_Tair = lon;
-        lat_Tair = lat;
+        lon_Tair = lon2;
+        lat_Tair = lat2;
         Tair = vari_ROMS;
     case 'Pair'
         vari_ROMS = vari_CFSv2*0.01; % Pa to millibar
-        lon_Pair = lon;
-        lat_Pair = lat;
+        lon_Pair = lon2;
+        lat_Pair = lat2;
         Pair = vari_ROMS;
     case 'Qair'
         shum = vari_CFSv2; % kg/kg
-        Tair_interp = interp2(lon_Tair, lat_Tair, Tair, lon, lat);
-        Pair_interp = interp2(lon_Pair, lat_Pair, Pair, lon, lat);
+        shum(shum < 0) = 0;
+        Tair_interp = NaN(size(shum));
+        Pair_interp = NaN(size(shum));
+        for ti = 1:len_ot
+            Tair_interp(:,:,ti) = interp2(lat_Tair, lon_Tair, Tair(:,:,ti), lat2, lon2);
+            Pair_interp(:,:,ti) = interp2(lat_Pair, lon_Pair, Pair(:,:,ti), lat2, lon2);
+        end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % qsat.m function from air_sea tools
         % ew: air saturation vapor pressure (mb)
@@ -106,7 +123,12 @@ switch varname_ROMS
         qsat = 0.62197.*(ew./(Pair_interp-0.378.*ew)); % mb -> kg/kg
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         rhum = 100*shum./qsat; % nondimensional to %
+        rhum(rhum > 100) = 100;
         vari_ROMS = rhum;
+    case 'cloud'
+        vari_ROMS = vari_CFSv2*0.01; % % to fraction
+    otherwise
+        vari_ROMS = vari_CFSv2;
 end
 
 % Create a NetCDF file
@@ -116,9 +138,9 @@ ncid = netcdf.create(filename_ROMS, 'clobber');
 varid = netcdf.getConstant('GLOBAL');
 netcdf.putAtt(ncid,varid,'type','ROMS Forcing File');
 netcdf.putAtt(ncid,varid,'title','Bulk Formula Forcing File');
-netcdf.putAtt(ncid,varid,'source','CFSv2 Time-Series)');
+netcdf.putAtt(ncid,varid,'source','CFSv2 Time-Series');
 netcdf.putAtt(ncid,varid,'author','Created by Jihun Jung');
-netcdf.putAtt(ncid,varid,'date',datestr(date, 'yyyy-mm-dd HH:MM:SS'));
+netcdf.putAtt(ncid,varid,'date',datestr(date, 'yyyy-mm-dd'));
 
 % Dimensions
 lon_dimID = netcdf.defDim(ncid,'lon', len_lon);
@@ -142,16 +164,19 @@ var_ID = netcdf.defVar(ncid, varname_ROMS, 'double', [lon_dimID lat_dimID time_d
 netcdf.putAtt(ncid, var_ID, 'long_name', longname_ROMS);
 netcdf.putAtt(ncid, var_ID, 'units', unit_ROMS);
 netcdf.putAtt(ncid, var_ID, 'time', timename_ROMS);
+netcdf.putAtt(ncid, var_ID, 'coordinates', ['lon lat']);
 
 netcdf.endDef(ncid);
 
 % Write data to variable
-netcdf.putVar(ncid, time_ID, 0, len_ot, ocean_time);
+netcdf.putVar(ncid, time_ID, 0, len_ot, ot_unique);
 netcdf.putVar(ncid, lon_ID, lon2);
 netcdf.putVar(ncid, lat_ID, lat2);
 % var_permute = permute(var, [3,2,1]);
 netcdf.putVar(ncid, var_ID, [0, 0, 0], [len_lon, len_lat, len_ot], vari_ROMS);
 
 netcdf.close(ncid);
+
+disp(varname_ROMS);
 
 end % vi
