@@ -9,12 +9,15 @@ function [R, P, P_ess, ESS] = calc_ess_and_pvalue(x,y)
 % J. Jung
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+x = x(:);
+y = y(:);
+
 Tx = length(x);
 Ty = length(y);
-if length(Tx) == length(Ty)
+if Tx == Ty
     T = Tx;
 else
-    error('Lengths of two data are different')
+    error('Lengths of the two data series are different')
 end
 
 % Pearson correlation coefficient
@@ -23,11 +26,13 @@ R = R(1,2);
 P = P(1,2);
 
 % Calculate effective sample size (ESS)
-[rhox,lags] = xcorr(x, 'normalize');
-[rhoy,lags] = xcorr(y, 'normalize');
-index1 = find(lags == -(T-1));
-index2 = find(lags == (T-1));
-tau = [lags(index1):lags(index2)]';
+[rhox,lags] = xcov(x, 'coeff');
+[rhoy,~] = xcov(y, 'coeff');
+
+tau = lags(:);
+rhox = rhox(:);
+rhoy = rhoy(:);
+
 numerator = T;
 denominator = sum( (1-abs(tau)/T).*rhox.*rhoy );
 ESS = numerator/denominator;

@@ -27,7 +27,7 @@ tightmap
 %setm(gca,'mlabelparallel',50)
 if min(lat) < 49
     interval = 1;
-    if strcmp(casename, 'LiveOcean')
+    if strcmp(casename, 'LiveOcean') | strcmp(casename, 'US_west_NANOOS')
         interval = 2;
     end
     setm(gca,'MLabelLocation',interval)

@@ -1,0 +1,118 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Compare TS between buoy and model results
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all
+
+sindex = 1;
+
+expnames = {'LiveOcean', 'LiveOcean_nudg', 'WCOFS', 'WCOFS_nudg'};
+cd(['/data/jungjih/Project/NOAA_NOPP_Carbon/Oregon_1km/Results/General'])
+
+vari_str = 'SST';
+
+yyyy = 2024;
+
+switch vari_str
+    case 'SST'
+        unit = '^oC';
+
+        climit = [6 20];
+        interval = 1;
+
+        climit2 = [-3 3];
+        interval2 = .25;
+    case 'SSS'
+        unit = 'psu';
+
+        climit = [20 34];
+        interval = 1;
+        
+          climit2 = [-2 2];
+        interval2 = .2;
+end
+        filepath_obs = '/data/jungjih/Project/NANOOS/Intercomparison/';
+        filename_obs = [vari_str, '_buoy_daily.mat'];
+        file_obs = [filepath_obs, filename_obs];
+        data = load(file_obs);
+        
+        timenum_obs = data.timenum;
+        timevec_obs = datevec(timenum_obs);
+        lat_obs = data.lats;
+        lon_obs = data.lons;
+        vari_obs_tmp = eval(['data.', vari_str, '_daily']);
+        index = find(timevec_obs(:,1) == yyyy);
+        vari_obs = vari_obs_tmp(:,index);
+        
+        cm = 'jet';
+        [color, contour_interval] = get_color(cm, climit, interval);
+
+        cm2 = 'redblue';
+        [color2, contour_interval2] = get_color(cm2, climit2, interval2);
+
+FS = 12;
+
+figure; hold on; grid on;
+set(gcf, 'Position', [1 200 1300 500])
+t = tiledlayout(1,4);
+t.Padding = 'compact';
+t.TileSpacing = 'tight';
+
+% Observation
+ax1 = nexttile(1); hold on; grid on;
+plot_map('Oregon', 'mercator', 'l');
+g = grd('Oregon_1km');
+[cs, h] = contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k');
+
+plotm(lat_obs, lon_obs, '.k', 'MarkerSize', 20);
+plotm(lat_obs(sindex), lon_obs(sindex), 'xr', 'MarkerSize', 10, 'LineWidth', 4)
+
+title('Buoy locations', 'FontSize', FS);
+
+ax2 = nexttile(2, [1 3]); hold on; grid on;
+for ei = 1:length(expnames)
+    expname = expnames(ei)
+    load(['SST_and_SSS_points_', expname, '.mat'])
+
+% ROMS
+vari_NANOOS = load_models_surf_monthly('Oregon_1km', expname, vari_str, yyyy, mm);
+Fn = scatteredInterpolant(g.lat_rho(:), g.lon_rho(:), vari_NANOOS(:));
+vari_ROMS_interp = Fn(lat_obs, lon_obs);
+
+ax2 = nexttile(2); hold on; grid on;
+plot_map(map, 'mercator', 'l');
+[cs, h] = contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k');
+
+pNd = scatterm(ax2, lat_obs, lon_obs, 60, vari_ROMS_interp, 'Filled', 'MarkerEdgeColor', 'k');
+colormap(ax2, color)
+caxis(ax2, climit)
+c = colorbar;
+c.Title.String = unit;
+c.FontSize = FS;
+title(['ROMS'], 'FontSize', FS);
+
+plabel('off')
+
+% Difference
+vari_ROMS_diff = vari_ROMS_interp - vari_obs;
+
+ax3 = nexttile(3); hold on; grid on;
+plot_map(map, 'mercator', 'l');
+[cs, h] = contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k');
+
+pNd = scatterm(ax3, lat_obs, lon_obs, 60, vari_ROMS_diff, 'Filled', 'MarkerEdgeColor', 'k');
+colormap(ax3, color2)
+caxis(ax3, climit2)
+c2 = colorbar;
+c2.Title.String = unit;
+c2.FontSize = FS;
+c2.Ticks = contour_interval2(1:2:end);
+
+title(['Diff (ROMS - obs)'], 'FontSize', FS);
+
+plabel('off')
+
+print(['cmp_SST_buoy_', ystr, mstr], '-dpng')

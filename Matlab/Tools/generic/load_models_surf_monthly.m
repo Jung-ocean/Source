@@ -1,4 +1,4 @@
-function vari = load_models_surf_monthly(model, vari_str, yyyy, mm)
+function vari = load_models_surf_monthly(model, expname, vari_str, yyyy, mm)
 
 ystr = num2str(yyyy);
 mstr = num2str(mm, '%02i');
@@ -50,6 +50,14 @@ switch model
         else
             vari = ncread(file, vari_str);
         end
+    case 'Oregon_1km'
+        filepath = ['/data/jungjih/Project/NOAA_NOPP_Carbon/Oregon_1km/Outputs/Output_', expname, '/monthly/'];
+        filename = ['monthly_', ystr, mstr, '.nc'];
+        file = [filepath, filename];
+        if ismember(vari_str, {'temp', 'salt'})
+            vari = ncread(file, vari_str, [1 1 45 1], [Inf Inf 1 Inf]);
+        end
+
 end
 
 end

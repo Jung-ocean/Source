@@ -1,0 +1,179 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Calculate uv RMSE of NANOOS and WCOFS models
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all;
+
+yyyy = 2024;
+ystr = num2str(yyyy);
+
+mm_start = 6;
+mm_end = 7;
+
+datenum_start = datenum(yyyy,mm_start,1);
+datenum_end = datenum(yyyy,mm_end,eomday(yyyy,mm_end));
+timenum = datenum_start:datenum_end;
+
+gn = grd('NANOOS');
+Fn = scatteredInterpolant(gn.lat_rho(:), gn.lon_rho(:), 0.*gn.lat_rho(:));
+Fn.ExtrapolationMethod = 'none';
+
+gw = grd('WCOFS');
+Fw = scatteredInterpolant(gw.lat_rho(:), gw.lon_rho(:), 0.*gw.lat_rho(:));
+Fw.ExtrapolationMethod = 'none';
+
+u_obs = [];
+v_obs = [];
+u_NANOOS_interp = [];
+v_NANOOS_interp = [];
+u_WCOFS_interp = [];
+v_WCOFS_interp = [];
+for di = 1:length(timenum)
+    yyyymmdd = datestr(timenum(di), 'yyyymmdd');
+    yyyy = str2num(datestr(timenum(di), 'yyyy'));
+    mm = str2num(datestr(timenum(di), 'mm'));
+    dd = str2num(datestr(timenum(di), 'dd'));
+    timenum_tmp = timenum(di);
+
+    % Obs
+    [lon_obs, lat_obs, u_obs_tmp, v_obs_tmp] = load_HFR_daily(timenum_tmp);
+    lonind = find(lon_obs > min(gn.lon_rho(:)) & lon_obs < max(gn.lon_rho(:)));
+    latind = find(lat_obs > min(gn.lat_rho(:)) & lat_obs < max(gn.lat_rho(:)));
+    [lat2, lon2] = meshgrid(lat_obs(latind), lon_obs(lonind));
+    u_obs(:,:,di) = u_obs_tmp(lonind, latind);
+    v_obs(:,:,di) = v_obs_tmp(lonind, latind);
+    
+    % NANOOS
+    u_NANOOS = 100.*load_models_surf_daily('NANOOS', 'u', yyyy, mm, dd);
+    Fn.Values = u_NANOOS(:);
+    u_NANOOS_interp(:,:,di) = Fn(lat2, lon2);
+    v_NANOOS = 100.*load_models_surf_daily('NANOOS', 'v', yyyy, mm, dd);
+    Fn.Values = v_NANOOS(:);
+    v_NANOOS_interp(:,:,di) = Fn(lat2, lon2);
+
+    % WCOFS
+    u_WCOFS = 100.*load_models_surf_daily('WCOFS', 'u', yyyy, mm, dd);
+    Fw.Values = u_WCOFS(:);
+    u_WCOFS_interp(:,:,di) = Fw(lat2, lon2);
+    v_WCOFS = 100.*load_models_surf_daily('WCOFS', 'v', yyyy, mm, dd);
+    Fw.Values = v_WCOFS(:);
+    v_WCOFS_interp(:,:,di) = Fw(lat2, lon2);
+
+    disp([yyyymmdd, '...'])
+end
+u_obs_mean = mean(u_obs,3);
+v_obs_mean = mean(v_obs,3);
+
+u_NANOOS_mean = mean(u_NANOOS_interp,3);
+u_NANOOS_mean(isnan(u_obs_mean)==1) = NaN;
+v_NANOOS_mean = mean(v_NANOOS_interp,3);
+v_NANOOS_mean(isnan(v_obs_mean)==1) = NaN;
+
+u_WCOFS_mean = mean(u_WCOFS_interp,3);
+u_WCOFS_mean(isnan(u_obs_mean)==1) = NaN;
+v_WCOFS_mean = mean(v_WCOFS_interp,3);
+v_WCOFS_mean(isnan(v_obs_mean)==1) = NaN;
+
+% NANOOS
+diff_u_NANOOS = u_NANOOS_interp - u_obs;
+diff_v_NANOOS = v_NANOOS_interp - v_obs;
+vrmse_NANOOS = NaN(size(diff_u_NANOOS, 1), size(diff_u_NANOOS, 2));
+for i = 1:size(diff_u_NANOOS,1)
+    for j = 1:size(diff_u_NANOOS,2)
+        diff_u_tmp = squeeze(diff_u_NANOOS(i,j,:));
+        diff_v_tmp = squeeze(diff_v_NANOOS(i,j,:));
+        unanind = isnan(diff_u_tmp);
+        vnanind = isnan(diff_v_tmp);
+
+        if sum(unanind) == 0 & sum(vnanind) == 0
+            vrmse_NANOOS(i,j) = sqrt(mean(diff_u_tmp.^2 + diff_v_tmp.^2, 'omitnan'));
+        end
+    end
+end
+
+% WCOFS
+diff_u_WCOFS = u_WCOFS_interp - u_obs;
+diff_v_WCOFS = v_WCOFS_interp - v_obs;
+vrmse_WCOFS = NaN(size(diff_u_WCOFS, 1), size(diff_u_WCOFS, 2));
+for i = 1:size(diff_u_WCOFS,1)
+    for j = 1:size(diff_u_WCOFS,2)
+        diff_u_tmp = squeeze(diff_u_WCOFS(i,j,:));
+        diff_v_tmp = squeeze(diff_v_WCOFS(i,j,:));
+        unanind = isnan(diff_u_tmp);
+        vnanind = isnan(diff_v_tmp);
+
+        if sum(unanind) == 0 & sum(vnanind) == 0
+            vrmse_WCOFS(i,j) = sqrt(mean(diff_u_tmp.^2 + diff_v_tmp.^2, 'omitnan'));
+        end
+    end
+end
+
+mask_NANOOS = vrmse_NANOOS./vrmse_NANOOS;
+mask_WCOFS = vrmse_WCOFS./vrmse_WCOFS;
+mask = mask_NANOOS.*mask_WCOFS;
+
+% Area-averaged RMSE Columbia River
+[lon_lim, lat_lim] = load_domain('Columbia_River');
+aarmse_CR_NANOOS = [];
+aarmse_CR_WCOFS = [];
+num_points_aarmse_CR = [];
+for ti = 1:size(diff_u_NANOOS,3)
+    diff_u_NANOOS_tmp = diff_u_NANOOS(:,:,ti).*mask;
+    diff_v_NANOOS_tmp = diff_v_NANOOS(:,:,ti).*mask;
+    unanind_NANOOS = isnan(diff_u_NANOOS_tmp);
+    vnanind_NANOOS = isnan(diff_v_NANOOS_tmp);
+
+    diff_u_WCOFS_tmp = diff_u_WCOFS(:,:,ti).*mask;
+    diff_v_WCOFS_tmp = diff_v_WCOFS(:,:,ti).*mask;
+    unanind_WCOFS = isnan(diff_u_WCOFS_tmp);
+    vnanind_WCOFS = isnan(diff_v_WCOFS_tmp);
+
+    dataind = find(...
+        unanind_NANOOS == 0 & vnanind_NANOOS == 0 & ...
+        unanind_WCOFS == 0 & vnanind_WCOFS == 0 & ...
+        lon2 < lon_lim(2) & lon2 > lon_lim(1) & ...
+        lat2 < lat_lim(2) & lat2 > lat_lim(1));
+
+    aarmse_CR_NANOOS(ti) = sqrt(mean(diff_u_NANOOS_tmp(dataind).^2 + diff_v_NANOOS_tmp(dataind).^2));
+    aarmse_CR_WCOFS(ti) = sqrt(mean(diff_u_WCOFS_tmp(dataind).^2 + diff_v_WCOFS_tmp(dataind).^2));
+    num_points_aarmse_CR(ti) = length(dataind);
+end
+
+% Area-averaged RMSE Heceta Bank
+[lon_lim, lat_lim] = load_domain('Heceta');
+aarmse_HB_NANOOS = [];
+aarmse_HB_WCOFS = [];
+num_points_aarmse_HB = [];
+for ti = 1:size(diff_u_NANOOS,3)
+    diff_u_NANOOS_tmp = diff_u_NANOOS(:,:,ti).*mask;
+    diff_v_NANOOS_tmp = diff_v_NANOOS(:,:,ti).*mask;
+    unanind_NANOOS = isnan(diff_u_NANOOS_tmp);
+    vnanind_NANOOS = isnan(diff_v_NANOOS_tmp);
+
+    diff_u_WCOFS_tmp = diff_u_WCOFS(:,:,ti).*mask;
+    diff_v_WCOFS_tmp = diff_v_WCOFS(:,:,ti).*mask;
+    unanind_WCOFS = isnan(diff_u_WCOFS_tmp);
+    vnanind_WCOFS = isnan(diff_v_WCOFS_tmp);
+
+    dataind = find(...
+        unanind_NANOOS == 0 & vnanind_NANOOS == 0 & ...
+        unanind_WCOFS == 0 & vnanind_WCOFS == 0 & ...
+        lon2 < lon_lim(2) & lon2 > lon_lim(1) & ...
+        lat2 < lat_lim(2) & lat2 > lat_lim(1));
+
+    aarmse_HB_NANOOS(ti) = sqrt(mean(diff_u_NANOOS_tmp(dataind).^2 + diff_v_NANOOS_tmp(dataind).^2));
+    aarmse_HB_WCOFS(ti) = sqrt(mean(diff_u_WCOFS_tmp(dataind).^2 + diff_v_WCOFS_tmp(dataind).^2));
+    num_points_aarmse_HB(ti) = length(dataind);
+end
+
+save(['metrics_uv_HFR_', ystr, '.mat'], ...
+    'timenum', 'lon2', 'lat2', ...
+    'u_obs_mean', 'v_obs_mean', ...
+    'u_NANOOS_mean', 'v_NANOOS_mean', ...
+    'u_WCOFS_mean', 'v_WCOFS_mean', ...
+    'vrmse_NANOOS', 'vrmse_WCOFS', 'mask', ...
+    'aarmse_CR_NANOOS', 'aarmse_CR_WCOFS', 'num_points_aarmse_CR', ...
+    'aarmse_HB_NANOOS', 'aarmse_HB_WCOFS', 'num_points_aarmse_HB');

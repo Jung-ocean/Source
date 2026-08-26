@@ -6,11 +6,17 @@ switch casename
     case 'US_west_NANOOS'
         lon = [-131 -121]; lat = [41 53];
     case 'US_west_shelf'
-        lon = [-126 -123.5]; lat = [40.6590 49.9874];
+        lon = [-125.5 -123.5]; lat = [43.5 47.5];
     case 'US_west_HFR'
         lon = [-127 -123]; lat = [43 47];
-    case 'Oregon'
+    case 'Oregon_1km'
         lon = [-126.4936 -123.5176]; lat = [42.0045, 47.9940];
+    case 'Oregon_1km_large'
+        lon = [-127.9816 -123.5176]; lat = [42.0045, 47.9940];
+    case 'Columbia_River'
+        lon = [-125.1 -123.9]; lat = [45.7, 46.7];
+    case 'Heceta'
+        lon = [-125.1 -123.9]; lat = [43.8, 45];
     case 'LiveOcean'
         lon = [-129.9798 -122.0018]; lat = [42.0067, 52.0099];
     case 'WCOFS'

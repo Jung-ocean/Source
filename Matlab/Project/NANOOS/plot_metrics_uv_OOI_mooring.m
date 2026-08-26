@@ -1,0 +1,206 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Plot current timeseries of NANOOS and WCOFS models using OOI mooring
+%
+% J. Jung
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; clc; close all;
+
+vari_str = 'vvel';
+vari_model = vari_str(1);
+region = 'WA_shelf';
+
+timenum_target = datenum(2024,1,1):datenum(2024,12,31);
+
+switch region
+    case 'WA_shelf'
+        h_obs = 87;
+        lon_obs = -124.566;
+        lat_obs = 46.9859;
+    case 'OR_shelf'
+        h_obs = 80;
+        lon_obs = -124.304;
+        lat_obs = 44.6393;
+end
+
+depth_target = -10:-1:-(h_obs-10); % should be negative
+dstr1 = num2str(abs(depth_target(1)));
+dstr2 = num2str(abs(depth_target(end)));
+
+ismap = 0;
+
+gn = grd('NANOOS');
+gw = grd('WCOFS');
+
+if ismap == 1
+    % Map
+    figure;
+    set(gcf, 'Position', [1 200 500 800])
+    plot_map('US_west', 'mercator', 'l');
+    [cs, h] = contourm(gn.lat_rho, gn.lon_rho, gn.h, [100 200 1000 2000], 'k');
+    plotm(lat_obs, lon_obs, 'o', 'MarkerSize', 10, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'r');
+    print(['location_OOI_mooring_', regions], '-dpng')
+end
+
+data = load_OOI_mooring_uv_daily(region, vari_str, timenum_target, depth_target);
+vari_obs1 = 100*data(1).vari; % m/s to cm/s
+vari_obs2 = 100*data(2).vari; % m/s to cm/s
+vari_cat = cat(3,vari_obs1,vari_obs2);
+vari_obs = mean(vari_cat,3,'omitnan');
+
+if strcmp(vari_str, 'uvel')
+    title_str = ['Depth-averaged zonal current (', dstr1, '-', dstr2, 'm)', ', ', replace(region, '_', ' ')];
+else
+    title_str = ['Depth-averaged meridional current (', dstr1, '-', dstr2, 'm)', ', ', replace(region, '_', ' ')];
+end
+
+file_models = [vari_str, '_', region, '_daily_models.mat'];
+if exist(file_models)
+    load(file_models)
+else
+    vari_ROMS = vari_str(1);
+    vari_NANOOS = [];
+    vari_WCOFS = [];
+    for ti = 1:length(timenum_target)
+        timenum_tmp = timenum_target(ti);
+
+        profile_tmp = load_models_uv_profile_daily('NANOOS', gn, timenum_tmp, lon_obs, lat_obs, h_obs);
+        vari_tmp = eval(['profile_tmp.', vari_ROMS]);
+        vari_NANOOS(:,ti) = 100*interp1(profile_tmp.z_r, vari_tmp, depth_target);
+
+        profile_tmp = load_models_uv_profile_daily('WCOFS', gw, timenum_tmp, lon_obs, lat_obs, h_obs);
+        vari_tmp = eval(['profile_tmp.', vari_ROMS]);
+        vari_WCOFS(:,ti) = 100*interp1(profile_tmp.z_r, vari_tmp, depth_target);
+    end
+    save(file_models, 'timenum_target', 'depth_target', 'vari_NANOOS', 'vari_WCOFS')
+end
+
+vari_obs_bar = mean(vari_obs,1);
+vari_NANOOS_bar = mean(vari_NANOOS,1);
+vari_WCOFS_bar = mean(vari_WCOFS,1);
+
+figure; hold on; grid on;
+set(gcf, 'Position', [1 200 1300 900])
+t = tiledlayout(2,3);
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+
+nexttile(1, [1 3]); hold on; grid on;
+pn = plot(timenum_target, vari_NANOOS_bar, '-k', 'LineWidth', 2);
+pw = plot(timenum_target, vari_WCOFS_bar, '-r', 'LineWidth', 2);
+po = plot(timenum_target, vari_obs_bar, '-g', 'LineWidth', 2);
+plot(timenum_target, 0.*timenum_target, '-k');
+xlim([timenum_target(1)-1 timenum_target(end)+1])
+ylim([-50 50])
+
+xticks([datenum(2024,1:12,1)])
+datetick('x', 'mm/dd', 'keepticks', 'keeplimits')
+ylabel('cm/s')
+
+set(gca, 'FontSize', 15)
+
+l = legend([po, pn, pw], ...
+    'OOI mooring', 'OSU ROMS', 'WCOFS');
+l.Location = 'Southeast';
+l.NumColumns = 3;
+l.FontSize = 20;
+
+title(title_str, 'FontSize', 20)
+box on
+
+corrcoef_NANOOS = [];
+issig_NANOOS = [];
+corrcoef_WCOFS = [];
+issig_WCOFS = [];
+bias_NANOOS = [];
+rmse_NANOOS = [];
+bias_WCOFS = [];
+rmse_WCOFS = [];
+for di = 0:length(depth_target)
+    if di == 0
+        vari_obs_tmp = vari_obs_bar;
+        vari_NANOOS_tmp = vari_NANOOS_bar;
+        vari_WCOFS_tmp = vari_WCOFS_bar;
+    else
+        vari_obs_tmp = vari_obs(di,:);
+        vari_NANOOS_tmp = vari_NANOOS(di,:);
+        vari_WCOFS_tmp = vari_WCOFS(di,:);
+    end
+
+    index = find(isnan(vari_obs_tmp) ~= 1);
+    vari_obs_data = vari_obs_tmp(index);
+    vari_NANOOS_data = vari_NANOOS_tmp(index);
+    vari_WCOFS_data = vari_WCOFS_tmp(index);
+
+    corrcoef_tmp = corrcoef(vari_obs_data, vari_NANOOS_data, 'row', 'complete');
+    corrcoef_NANOOS(di+1) = corrcoef_tmp(1,2);
+    [R, P, P_ess, ESS] = calc_ess_and_pvalue(vari_obs_data,vari_NANOOS_data);
+    if P_ess < 0.05
+        issig_NANOOS(di+1) = 1;
+    else
+        issig_NANOOS(di+1) = 0;
+    end
+
+    corrcoef_tmp = corrcoef(vari_obs_data, vari_WCOFS_data, 'row', 'complete');
+    corrcoef_WCOFS(di+1) = corrcoef_tmp(1,2);
+    [R, P, P_ess, ESS] = calc_ess_and_pvalue(vari_obs_data,vari_WCOFS_data);
+    if P_ess < 0.05
+        issig_WCOFS(di+1) = 1;
+    else
+        issig_WCOFS(di+1) = 0;
+    end
+
+    vari_NANOOS_diff = vari_NANOOS_data - vari_obs_data;
+    index = find(isnan(vari_NANOOS_diff) == 0);
+    bias_NANOOS(di+1) = mean(vari_NANOOS_diff(index));
+    rmse_NANOOS(di+1) = sqrt( mean( vari_NANOOS_diff(index).^2 ) );
+
+    vari_WCOFS_diff = vari_WCOFS_data - vari_obs_data;
+    index = find(isnan(vari_WCOFS_diff) == 0);
+    bias_WCOFS(di+1) = mean(vari_WCOFS_diff(index));
+    rmse_WCOFS(di+1) = sqrt( mean( vari_WCOFS_diff(index).^2 ) );
+end
+
+nexttile(4); hold on; grid on;
+dn = plot(corrcoef_NANOOS(1), [0], '.k', 'MarkerSize', 30);
+plot(corrcoef_NANOOS(2:end), [depth_target], '-k', 'LineWidth', 2);
+dw = plot(corrcoef_WCOFS(1), [0], '.r', 'MarkerSize', 30);
+plot(corrcoef_WCOFS(2:end), [depth_target], '-r', 'LineWidth', 2);
+
+xlim([0.4 1]);
+ylim([-h_obs, 1])
+xlabel('')
+ylabel('Depth (m)');
+set(gca, 'FontSize', 15)
+title('Correlation coefficient')
+
+t = text(0.41, -5, 'Dots = Depth-averaged currents', 'FontSize', 12);
+
+nexttile(5); hold on; grid on;
+plot(bias_NANOOS(1), [0], '.k', 'MarkerSize', 30);
+plot(bias_NANOOS(2:end), [depth_target], '-k', 'LineWidth', 2);
+plot(bias_WCOFS(1), [0], '.r', 'MarkerSize', 30);
+plot(bias_WCOFS(2:end), [depth_target], '-r', 'LineWidth', 2);
+
+xlim([-8 8]);
+ylim([-h_obs, 1])
+xlabel('cm/s')
+ylabel('Depth (m)');
+set(gca, 'FontSize', 15)
+title('Bias')
+
+nexttile(6); hold on; grid on;
+plot(rmse_NANOOS(1), [0], '.k', 'MarkerSize', 30);
+plot(rmse_NANOOS(2:end), [depth_target], '-k', 'LineWidth', 2);
+plot(rmse_WCOFS(1), [0], '.r', 'MarkerSize', 30);
+plot(rmse_WCOFS(2:end), [depth_target], '-r', 'LineWidth', 2);
+
+xlim([5 15]);
+ylim([-h_obs, 1])
+xlabel('cm/s')
+ylabel('Depth (m)');
+set(gca, 'FontSize', 15)
+title('RMSE')
+
+print(['metrics_', vari_model, '_OOI_', region], '-dpng')

@@ -241,7 +241,8 @@ Vname.salt        = 'salt';
 %--------------------------------------------------------------------------
 
 mode = netcdf.getConstant('CLOBBER');
-mode = bitor(mode, netcdf.getConstant('64BIT_OFFSET'));
+% mode = bitor(mode, netcdf.getConstant('64BIT_OFFSET'));
+mode = bitor(mode, netcdf.getConstant('NETCDF4'));
 
 ncid = netcdf.create(ncname, mode);
 

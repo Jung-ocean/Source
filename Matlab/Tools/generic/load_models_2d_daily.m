@@ -1,4 +1,4 @@
-function vari = load_models_2d_daily(model, vari_str, layer, timenum)
+function vari = load_models_2d_daily(model, expname, vari_str, layer, timenum)
 
 lstr = num2str(layer);
 
@@ -8,7 +8,11 @@ dstr = datestr(timenum, 'dd');
 
 switch model
     case 'Oregon_1km'
-        filepath = '/data/jungjih/Project/NOAA_NOPP_Carbon/Oregon_1km/Output/daily/';
+        if isempty(expname)
+            filepath = '/data/jungjih/Project/NOAA_NOPP_Carbon/Oregon_1km/Outputs/daily/';
+        else
+            filepath = ['/data/jungjih/Project/NOAA_NOPP_Carbon/Oregon_1km/Outputs/Output_', expname, '/daily/'];
+        end
         filenum = timenum - datenum(2024,1,1) + 1;
         fstr = num2str(filenum, '%04i');
         filename = ['ocean_avg_', fstr, '.nc'];
@@ -55,10 +59,10 @@ end
 if exist(file)
     if strcmp(vari_str, 'zeta')
         vari = ncread(file, vari_str);
-        disp(['Loading ', model, ' ', vari_str, ' on ', ystr, mstr, dstr])
+        disp(['Loading ', model, ' ', expanme, ' ', vari_str, ' on ', ystr, mstr, dstr])
     else
         vari = ncread(file, vari_str, [1 1 layer 1], [Inf Inf 1 Inf]);
-        disp(['Loading ', model, ' ', vari_str, ' at layer ', lstr, ' on ', ystr, mstr, dstr])
+        disp(['Loading ', model, ' exp_', expname, ' ', vari_str, ' at layer ', lstr, ' on ', ystr, mstr, dstr])
     end
 else
     error(['No data: no such file: ', file])

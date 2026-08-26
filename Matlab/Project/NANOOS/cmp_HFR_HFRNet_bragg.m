@@ -1,6 +1,6 @@
-clear; clc
+clear; clc; 
 
-timenum = datenum(2024,5,30);
+timenum = datenum(2024,6,1);
 
 g = grd('Oregon_1km');
 

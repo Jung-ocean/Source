@@ -19,8 +19,16 @@ c.retrieve(
     {
         'product_type': ["reanalysis"],
         'variable': [
-            '10m_u_component_of_wind',
-            '10m_v_component_of_wind',
+            "2m_temperature",
+            "mean_sea_level_pressure",
+            "2m_dewpoint_temperature",
+            "mean_total_precipitation_rate",
+            "10m_u_component_of_wind",
+            "10m_v_component_of_wind",
+            "mean_surface_downward_short_wave_radiation_flux",
+            "mean_surface_downward_long_wave_radiation_flux",
+            "mean_surface_net_short_wave_radiation_flux",
+            "total_cloud_cover"
         ],
         'year': [target_date.strftime("%Y")],
         'month': [target_date.strftime("%m")],
@@ -49,6 +57,6 @@ c.retrieve(
         ],       
         'data_format': 'grib',
         'download_format': 'unarchived',
-        'area': [67, -186, 59, -169]
+        'area': [38, -132, 52, -119]
     },
     (filename))

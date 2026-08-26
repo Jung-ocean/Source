@@ -1,0 +1,31 @@
+function data = load_OOI_mooring_uv_daily(region, timenum_target, depth_target);
+
+filepath_all = '/data/jungjih/Observations/OOI_mooring/';
+
+switch region
+    case 'WA_shelf'
+        filepath_tmp = 'WA_shelf_near_surface/';
+        filepath = [filepath_all, filepath_tmp];
+        filename = [region, '_vvel.nc'];
+        file = [filepath, filename];
+
+        timenum = double(ncread(file, 'time'))/60/60/24 + datenum(1970,1,1);
+        z = double(ncread(file, 'z'));
+        vari_all = ncread(file, 'northward_sea_water_velocity_mean');
+        vari = [];
+        for ti = 1:length(timenum_target)
+            timenum_tmp = timenum_target(ti);
+            index = find(floor(timenum) == timenum_tmp);
+            vari_tmp = mean(vari_all(:,index),2);
+            vari(ti) = interp1(z, dep)
+
+    case 'OR_shelf'
+
+
+
+
+
+
+
+
+end

@@ -86,29 +86,21 @@ switch model
         end
 
     case 'Oregon_1km'
-        filepath = '/data/jungjih/Project/NOAA_NOPP_Carbon/ncks/';
+        filepath = '/data/jungjih/Project/NOAA_NOPP_Carbon/Oregon_1km/Output/';
+        filename = ['zeta.nc'];
+        file = [filepath, filename];
+        ot = ncread(file, 'ocean_time');
+        vari = ncread(file, 'zeta');
 
-        timenum_all = [];
+        timenum_all = ot/60/60/24 + datenum(2024,1,1);
         vari_all = [];
-        for di = datenum_start:datenum_end
-            datenum_target = di;
-            filenum = datenum_target - datenum(2024,1,1) + 1;
-            fstr = num2str(filenum, '%04i');
-            filename = ['zeta_', fstr, '.nc'];
-            file = [filepath, filename];
-            ot = ncread(file, 'ocean_time');
-            vari = ncread(file, 'zeta');
 
-            timenum = ot/60/60/24 + datenum(2024,1,1);
-            timenum_all = [timenum_all; timenum];
+        for ti = 1:length(timenum_all)
+            vari_tmp = vari(:,:,ti);
+            vari_tmp2 = vari_tmp(:);
+            vari_all = [vari_all vari_tmp2(dataind)];
 
-            for ti = 1:length(timenum)
-                vari_tmp = vari(:,:,ti);
-                vari_tmp2 = vari_tmp(:);
-
-                vari_all = [vari_all vari_tmp2(dataind)];
-
-                disp(datestr(timenum(ti), 'yyyymmdd HH:MM ...'))
-            end
+            disp(datestr(timenum_all(ti), 'yyyymmdd HH:MM ...'))
         end
+       
 end

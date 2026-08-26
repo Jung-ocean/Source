@@ -1,0 +1,115 @@
+clear; clc; close all
+
+region = 'Oregon_1km_large';
+[lon_lim, lat_lim] = load_domain(region);
+
+time_rec = 100;
+filenum = time_rec;
+fstr = num2str(filenum, '%04i');
+
+source = ['/data/jungjih/Models/LiveOcean/daily/ocean_avg_', fstr, '.nc'];
+gs = grd('LiveOcean');
+
+bndy = './boundary_Oregon_1km_large_LiveOcean.nc';
+g = grd('Oregon_1km_large');
+
+direction = 'west';
+varis = {'zeta', 'ubar', 'vbar'};
+
+figure; hold on;
+set(gcf, 'Position', [1 200 800 500])
+
+for vi = 1:length(varis)
+    vari = varis{vi};
+    switch vari
+        case 'zeta'
+            str = 'rho';
+            ylimit = [-.5 .5];
+            unit = 'm';
+        case 'u'
+            str = 'u';
+            ylimit = [-.3 .3];
+            unit = 'm/s';
+        case 'v'
+            str = 'v';
+            ylimit = [-.3 .3];
+            unit = 'm/s';
+    end
+    lon_source = eval(['gs.lon_', str]);
+    lat_source = eval(['gs.lat_', str]);
+    lon_bndy = eval(['g.lon_', str]);
+    lat_bndy = eval(['g.lat_', str]);
+
+    switch direction
+        case 'south'
+            lat = min(lat_bndy(:));
+            lon1 = min(lon_bndy(:));
+            lon2 = max(lon_bndy(:));
+
+            latdist = abs(gs.lat_rho(1,:) - lat);
+            latind = find(latdist == min(latdist));
+            lonind = find(gs.lon_rho(:,1) > lon1 & gs.lon_rho(:,1) < lon2);
+            vari_source = ncread(source, vari, [lonind(1) latind, 1], [length(lonind), 1, 1]);
+            vari_source = squeeze(vari_source);
+            xdata_1d = lon_source(lonind, latind);
+            xdata_source = repmat(xdata_1d, [1, gs.N]);
+
+            vari_bndy = ncread(bndy, [vari, '_', direction], [1, time_rec], [Inf, 1]);
+            xdata_1d = lon_bndy(:, 1);
+            xdata_bndy = repmat(xdata_1d, [1, g.N]);
+
+            xlabel_str = 'Longitude';
+        case 'north'
+            lat = max(lat_bndy(:));
+            lon1 = min(lon_bndy(:));
+            lon2 = max(lon_bndy(:));
+
+            latdist = abs(gs.lat_rho(1,:) - lat);
+            latind = find(latdist == min(latdist));
+            lonind = find(gs.lon_rho(:,end) > lon1 & gs.lon_rho(:,end) < lon2);
+            vari_source = ncread(source, vari, [lonind(1) latind, 1, 1], [length(lonind), 1, Inf, 1]);
+            vari_source = squeeze(vari_source);
+            z_source = squeeze(z_source(lonind, latind, :));
+            xdata_1d = lon_source(lonind, latind);
+            xdata_source = repmat(xdata_1d, [1, gs.N]);
+
+            vari_bndy = ncread(bndy, [vari, '_', direction], [1, 1, time_rec], [Inf, Inf, 1]);
+            z_bndy = squeeze(z_bndy(:, end, :));
+            xdata_1d = lon_bndy(:, end);
+            xdata_bndy = repmat(xdata_1d, [1, g.N]);
+
+            xlabel_str = 'Longitude';
+        case 'west'
+            lon = min(lon_bndy(:));
+            lat1 = min(lat_bndy(:));
+            lat2 = max(lat_bndy(:));
+
+            londist = abs(gs.lon_rho(:,1) - lon);
+            lonind = find(londist == min(londist));
+            latind = find(gs.lat_rho(1,:) > lat1 & gs.lat_rho(1,:) < lat2);
+            vari_source = ncread(source, vari, [lonind latind(1), 1], [1 length(latind), 1]);
+            vari_source = squeeze(vari_source);
+            xdata_1d = lat_source(lonind, latind)';
+            xdata_source = repmat(xdata_1d, [1, gs.N]);
+
+            vari_bndy = ncread(bndy, [vari, '_', direction], [1, time_rec], [Inf, 1]);
+            xdata_1d = lat_bndy(1, :)';
+            xdata_bndy = repmat(xdata_1d, [1, g.N]);
+
+            xlabel_str = 'Latitude';
+    end
+
+    % Source
+    p1 = plot(xdata_source, vari_source, '-r');
+    xlabel(xlabel_str)
+    ylabel(unit)
+    title(['Source ', vari], 'FontSize', 15);
+    
+    % Initial
+    p2 = plot(xdata_bndy, vari_bndy, '-k');
+    ylim(ylimit)
+    title(['Boundary ', vari], 'FontSize', 15);
+asdf
+    print(['chk_bndy_1d_', vari, '_', direction, '_', fstr], '-dpng')
+    delete(p1); delete(p2)
+end
