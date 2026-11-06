@@ -144,7 +144,7 @@ ncid = netcdf.create(filename_ROMS, 'clobber');
 varid = netcdf.getConstant('GLOBAL');
 netcdf.putAtt(ncid,varid,'type','ROMS Forcing File');
 netcdf.putAtt(ncid,varid,'title','Bulk Formula Forcing File');
-netcdf.putAtt(ncid,varid,'source','CFSv2 Time-Series');
+netcdf.putAtt(ncid,varid,'source','ECMWF ERA5');
 netcdf.putAtt(ncid,varid,'author','Created by Jihun Jung');
 netcdf.putAtt(ncid,varid,'date',datestr(date, 'yyyy-mm-dd'));
 

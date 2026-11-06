@@ -9,9 +9,9 @@ dstr = datestr(timenum, 'dd');
 switch model
     case 'Oregon_1km'
         if isempty(expname)
-            filepath = '/data/jungjih/Project/NOAA_NOPP_Carbon/Oregon_1km/Outputs/daily/';
+            filepath = '/data/jungjih/Project/NOPP_Carbon/Oregon_1km/Outputs/daily/';
         else
-            filepath = ['/data/jungjih/Project/NOAA_NOPP_Carbon/Oregon_1km/Outputs/Output_', expname, '/daily/'];
+            filepath = ['/data/jungjih/Project/NOPP_Carbon/Oregon_1km/Outputs/Output_', expname, '/daily/'];
         end
         filenum = timenum - datenum(2024,1,1) + 1;
         fstr = num2str(filenum, '%04i');

@@ -11,6 +11,8 @@ switch casename
         lon = [-127 -123]; lat = [43 47];
     case 'Oregon_1km'
         lon = [-126.4936 -123.5176]; lat = [42.0045, 47.9940];
+    case 'Oregon_1km_north'
+        lon = [-124.9 -124.2]; lat = [47, 47.9940];
     case 'Oregon_1km_large'
         lon = [-127.9816 -123.5176]; lat = [42.0045, 47.9940];
     case 'Columbia_River'

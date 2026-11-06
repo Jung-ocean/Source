@@ -32,7 +32,14 @@ addpath(genpath(roms_matlab));
 
  OA_INTERPOLATE = 0;               % switch to interpolate from OA fields
  R2R = 1;                          % ROMS 2 ROMS interpolation
- R2R_source_file = '/data/jungjih/Models/LiveOcean/daily/ocean_avg_0001.nc';
+%  R2R_source_file = '/data/jungjih/Models/LiveOcean/daily/ocean_avg_0001.nc';
+ R2R_source_date = datenum(2024,5,1);
+ filenum = R2R_source_date-refdate+1;
+ fstr = num2str(filenum, '%04i');
+ if filenum > 1
+    INIname = ['initial_', domain, '_LiveOcean_', datestr(R2R_source_date, 'yyyymmdd'), '.nc'];
+ end
+ R2R_source_file = ['/data/jungjih/Models/LiveOcean/daily/ocean_avg_', fstr, '.nc'];
  R2R_source_grid = grd('LiveOcean');
  
  method='linear';                  % linear interpolation
@@ -303,7 +310,8 @@ S.vbar = vbar;
 
 IniRec = 1;                               % NetCDF time record
 
-S.ocean_time = 0.0*86400;                % initial conditions time (s)
+% S.ocean_time = 0.0*86400;                % initial conditions time (s)
+S.ocean_time = (R2R_source_date-refdate)*86400;                % initial conditions time (s)
 
 [~]=nc_write(INIname, 'ocean_time', S.ocean_time, IniRec);
 

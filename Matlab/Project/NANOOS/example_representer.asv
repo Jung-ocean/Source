@@ -1,0 +1,320 @@
+clear; clc; close all;
+%% ============================================================
+%  Representer method for a simple example
+%
+%  du/dt + lambda*u = 0
+%
+%  lambda is constant
+%
+%  Analysis:
+%
+%       u_hat(t) = u_b(t) + sum_j a_j v_j(t)
+%
+%  where
+%
+%       nu_i : adjoint representer
+%       v_i  : forward representer
+%       a_i  : representer coefficient
+%% ============================================================
+
+
+%% ------------------------------------------------------------
+% 1. Model parameters
+%% ------------------------------------------------------------
+lambda = 0.4;
+T = 3.0;
+
+% Background initial condition
+ub0 = 1.0;
+
+% Background error standard deviation
+sigma0 = 0.5;
+
+% Background covariance
+B = sigma0^2;
+
+%% ------------------------------------------------------------
+% 2. Generate synthetic observations
+%% ------------------------------------------------------------
+% True initial condition
+utrue0 = 2.0;
+
+% Observation times
+t_obs = [0.5 1.0 2.0];
+
+N = length(t_obs);
+
+% Observation error standard deviation
+sigma_obs = 0.1;
+
+% True solution at observation times
+u_true_obs = utrue0 * exp(-lambda*t_obs);
+
+% Add synthetic observation noise
+rng(1);
+
+u_obs = u_true_obs + sigma_obs*randn(size(t_obs));
+
+
+%% ------------------------------------------------------------
+% 3. Background trajectory
+%% ------------------------------------------------------------
+u_b_obs = ub0 * exp(-lambda*t_obs);
+
+% Innovation:
+%
+%       observation - background
+%
+innovation = u_obs - u_b_obs;
+
+%% ============================================================
+% 4. Construct adjoint representers nu_i
+%
+%       -d(nu_i)/dt + lambda*nu_i
+%           = delta(t-t_i)
+%
+%       nu_i(T) = 0
+%
+% Analytical solution:
+%
+%       nu_i(t) = exp[-lambda*(t_i-t)]   for t <= t_i
+%                 0                      for t > t_i
+%% ============================================================
+t = linspace(0,T,500);
+
+nu = zeros(N,length(t));
+for i = 1:N
+    tj = t_obs(i);
+
+    for k = 1:length(t)
+        if t(k) <= tj
+            nu(i,k) = exp(-lambda*(tj-t(k)));
+        else
+            nu(i,k) = 0;
+        end
+    end
+
+end
+
+%% ============================================================
+% 5. Construct forward representers v_i
+%
+%       dv_i/dt + lambda*v_i = 0
+%
+%       v_i(0) = B * nu_i(0)
+%
+% Since
+%
+%       nu_i(0) = exp(-lambda*t_j)
+%
+% we have
+%
+%       v_i(t)
+%       = B*exp[-lambda*(t_i+t)]
+%% ============================================================
+
+v = zeros(N,length(t));
+for i = 1:N
+    ti = t_obs(i);
+    v(i,:) = B * exp(-lambda*(ti+t));
+end
+
+%% ============================================================
+% 6. Construct representer matrix
+%
+%       R_ij = v_j(t_i)
+%% ============================================================
+
+R = zeros(N,N);
+for i = 1:N
+    for j = 1:N
+        % Evaluate representer j at observation time i
+        R(i,j) = B * ...
+            exp(-lambda*(t_obs(i)+t_obs(j)));
+    end
+end
+
+%% ------------------------------------------------------------
+% Observation error covariance
+%% ------------------------------------------------------------
+
+Robs = sigma_obs^2 * eye(N);
+
+%% ============================================================
+% 7. Solve for representer coefficients a
+%
+%       (R + Robs)*a = innovation
+%
+%       innovation = y - H(u_b)
+%% ============================================================
+
+a = (R + Robs) \ innovation(:);
+
+%% ============================================================
+% 8. Construct analysis / optimal state
+%
+%       u_hat(t)
+%       = u_b(t) + sum_j a_j*v_j(t)
+%% ============================================================
+
+u_b = ub0 * exp(-lambda*t);
+
+u_hat = u_b;
+
+for j = 1:N
+
+    u_hat = u_hat + a(j)*v(j,:);
+
+end
+
+
+%% ============================================================
+% 9. Compute true solution
+%% ============================================================
+
+u_true = utrue0 * exp(-lambda*t);
+
+
+%% ============================================================
+% 10. Print results
+%% ============================================================
+
+fprintf('\n');
+fprintf('============================================\n');
+fprintf(' REPRESENTer method\n');
+fprintf('============================================\n');
+
+fprintf('\n');
+fprintf('lambda = %.3f\n', lambda);
+fprintf('Background u(0) = %.3f\n', ub0);
+fprintf('True u(0)       = %.3f\n', utrue0);
+
+fprintf('\nRepresenter coefficients:\n');
+
+for j = 1:N
+    fprintf('a(%d) = %.8f\n',j,a(j));
+end
+
+fprintf('\nEstimated initial condition:\n');
+
+u_hat0 = u_hat(1);
+
+fprintf('u_hat(0) = %.8f\n',u_hat0);
+
+
+%% ============================================================
+% 11. Display representer matrix
+%% ============================================================
+
+fprintf('\nRepresenter matrix R:\n');
+disp(R);
+
+fprintf('R + R_obs:\n');
+disp(R + Robs);
+
+
+%% ============================================================
+% 12. Plot adjoint representers nu_j
+%% ============================================================
+
+figure;
+
+plot(t,nu(1,:),'LineWidth',2);
+hold on;
+
+if N >= 2
+    plot(t,nu(2,:),'LineWidth',2);
+end
+
+if N >= 3
+    plot(t,nu(3,:),'LineWidth',2);
+end
+
+xlabel('t');
+ylabel('\nu_j(t)');
+
+title('Adjoint representers');
+
+legend('\nu_1','\nu_2','\nu_3',...
+       'Location','best');
+
+grid on;
+
+
+%% ============================================================
+% 13. Plot forward representers v_j
+%% ============================================================
+
+figure;
+
+plot(t,v(1,:),'LineWidth',2);
+hold on;
+
+if N >= 2
+    plot(t,v(2,:),'LineWidth',2);
+end
+
+if N >= 3
+    plot(t,v(3,:),'LineWidth',2);
+end
+
+xlabel('t');
+ylabel('v_j(t)');
+
+title('Forward representers');
+
+legend('v_1','v_2','v_3',...
+       'Location','best');
+
+grid on;
+
+
+%% ============================================================
+% 14. Plot background, truth, observations and analysis
+%% ============================================================
+
+figure;
+
+plot(t,u_true,'--','LineWidth',2);
+hold on;
+
+plot(t,u_b,':','LineWidth',2);
+
+plot(t,u_hat,'-','LineWidth',2);
+
+plot(t_obs,u_obs,'o','MarkerSize',8);
+
+xlabel('t');
+ylabel('u(t)');
+
+legend('True',...
+       'Background',...
+       'Analysis / \hat{u}',...
+       'Observations',...
+       'Location','best');
+
+title('Representer-method solution');
+
+grid on;
+
+
+%% ============================================================
+% 15. Check observation-space solution
+%
+%       H(u_hat)
+%       = H(u_b) + R*a
+%% ============================================================
+
+u_hat_obs = u_b_obs(:) + R*a;
+
+fprintf('\n');
+fprintf('Observation comparison:\n');
+fprintf('--------------------------------------------\n');
+fprintf('       t       observation       analysis\n');
+
+for i = 1:N
+
+    fprintf('%8.3f     %12.6f     %12.6f\n',...
+        t_obs(i),u_obs(i),u_hat_obs(i));
+
+end

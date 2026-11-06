@@ -1,0 +1,113 @@
+clear; clc; close all
+
+domain = 'Oregon_1km';
+expname = 'bio_20261008';
+
+cd(['/data/jungjih/Project/NOPP_Carbon/', domain, ...
+    '/Results/Output_', expname])
+
+regions = {'inshore', 'shelf', 'offshore'};
+depths = [25, 80, 588];
+filenums = 1:36;
+
+% Station-specific depth intervals
+depthIntervals = [5, 10, 100];
+
+% Figure
+figure;
+t = tiledlayout(1,3);
+t.Padding = 'compact';
+t.TileSpacing = 'compact';
+
+set(gcf, 'Position', [1 200 1300 500]);
+
+for ri = 1:length(regions)
+    region = regions{ri};
+
+    timenum = [];
+    depth = [];
+    NO3 = [];
+    SiO2 = [];
+    for fi = 1:length(filenums)
+        filenum = filenums(fi);
+        fstr = num2str(filenum, '%04i');
+        filename = ['vari_', expname, '_', fstr, '.mat'];
+        file = filename;
+        load(file);
+        vari = eval(['vari_', region]);
+
+        depth_tmp = vari.depth;
+    NO3_tmp = vari.NO3;
+    SiO2_tmp = vari.Silica;
+
+    depth = [depth depth_tmp];
+    NO3 = [NO3 NO3_tmp];
+    SiO2 = [SiO2 SiO2_tmp];
+    end
+    depth = -depth(:);
+    NO3 = NO3(:);
+    SiO2 = SiO2(:);
+
+    % Station-specific depth interval
+    depthInterval = depthIntervals(ri);
+
+    % Depth groups
+    depthGroup = floor(depth/depthInterval);
+
+    % Maximum valid depth group
+    maxGroup = max(depthGroup);
+    nBins = maxGroup + 1;
+
+    % Individual colormap
+    cmap = jet(nBins);
+
+    % Plot
+    ax = nexttile(ri);
+    hold(ax, 'on');
+    box(ax, 'on');
+    grid(ax, 'on');
+
+    % Scatter plot
+    scatter(ax, NO3, SiO2, 25, depthGroup, 'filled');
+
+    % 1:1 reference line
+    plot(ax, [0 120], [0 120], 'k--', ...
+        'LineWidth', 1.2);
+
+    % Axis settings
+    xlim(ax, [0 120]);
+    ylim(ax, [0 120]);
+
+    axis(ax, 'square');
+
+    xlabel(ax, 'NO_3 (mmol N m^{-3})');
+    ylabel(ax, 'SiO_2 (mmol Si m^{-3})');
+
+    title(ax, ['Oregon ', region, ' (', num2str(depths(ri)), ' m)']);
+
+    set(ax, 'FontSize', 11);
+
+    % Individual colormap and color limits
+    colormap(ax, cmap);
+    clim(ax, [-0.5, nBins-0.5]);
+
+    % Individual colorbar
+    cb = colorbar(ax);
+
+    cb.Ticks = 0:nBins-1;
+
+    cb.TickLabels = arrayfun(@(k) ...
+        sprintf('%d-%d', k*depthInterval, ...
+        (k+1)*depthInterval), ...
+        0:nBins-1, 'UniformOutput', false);
+
+    cb.Label.String = 'Depth (m)';
+    cb.Label.FontSize = 10;
+    cb.FontSize = 9;
+end
+
+% Overall title
+title(t, ['NO_3 vs SiO_2 (', replace(expname, '_', ' '), ')'], ...
+    'FontSize', 14, 'FontWeight', 'bold');
+
+print(['NO3_SiO2_', expname] , '-dpng')

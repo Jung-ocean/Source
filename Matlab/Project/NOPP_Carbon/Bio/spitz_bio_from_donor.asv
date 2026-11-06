@@ -1,0 +1,168 @@
+function B = spitz_bio_from_donor(Donor, P, verbose)
+
+%
+% SPITZ_BIO_FROM_DONOR:  Builds Spitz biology tracers from donor fields
+%
+% B = spitz_bio_from_donor(Donor, P, verbose)
+%
+% Applies the Spitz biology initialization plan to a set of donor
+% (LiveOcean, BIO_FENNEL-type) fields.  The donor carries an equivalent
+% pool for some Spitz tracers, a single lumped pool where the Spitz
+% model resolves two, and nothing at all for the dissolved organic
+% matter and bacteria compartments.  The plan is:
+%
+%    Used as is from the donor:
+%      NO3   <- NO3            NH4   <- NH4
+%      DetN  <- SdetritusN     DetC  <- SdetritusC
+%      LDetN <- LdetritusN     LDetC <- LdetritusC
+%
+%    Split of a single lumped donor pool:
+%      Phytoplankton / Diatoms          P.phyto_diatom_split of
+%                                         donor 'phytoplankton'
+%      Microzooplankton / Mesozoo.      P.zoo_micro_split of
+%                                         donor 'zooplankton'
+%
+%    Derived from the pools above:
+%      Chlorophyll = P.ChlN_phyto  (Chl:N) x Phytoplankton
+%      ChlD        = P.ChlN_diatom (Chl:N) x Diatoms
+%      Silica      = P.SiN_ratio   (Si:N)  x NO3
+%      LDetS       = P.SiN_ratio   (Si:N)  x LDetN
+%      DOC         = P.CN_ratio    (C:N)   x DON
+%      Bacteria    = P.Bacteria_fraction   x Phytoplankton
+%
+%    No donor counterpart, set to a small non-zero background:
+%      DON         (a zero value would prevent growth)
+%
+% Bacteria is floored at the same small background value as DON so it
+% cannot start at zero anywhere.  The donor's own 'chlorophyll' field is
+% intentionally NOT used: Chlorophyll is rebuilt from the split
+% Phytoplankton pool using the Chl:N ratio above, so that Chlorophyll
+% and ChlD stay consistent with their respective nitrogen pools.
+%
+% This function is shape agnostic: the donor fields may be 3D volumes
+% (initial conditions) or 2D boundary slices (open boundary conditions).
+% It is shared by make_spitz_bio.m and make_spitz_bio_obc.m so that the
+% initial and boundary conditions are always built with identical math.
+%
+% On Input:
+%
+%    Donor       Structure with the donor fields, named as in the donor
+%                  file (struct array):
+%
+%                    Donor.NO3            Donor.NH4
+%                    Donor.SdetritusN     Donor.SdetritusC
+%                    Donor.LdetritusN     Donor.LdetritusC
+%                    Donor.phytoplankton  Donor.zooplankton
+%
+%    P           Ratios structure (optional; default spitz_bio_params)
+%
+%    verbose     Report each step to the command window (optional;
+%                  default false)
+%
+% On Output:
+%
+%    B           Structure with one field per Spitz biology tracer,
+%                  each the same size as the donor fields
+%
+
+if (nargin < 3),
+  verbose = false;
+end
+if (nargin < 2 || isempty(P)),
+  P = spitz_bio_params();
+end
+
+if (verbose),
+  disp(' ')
+  disp('Setting biology tracers:')
+end
+
+%  Interpolating the donor onto the receiver grid can undershoot near
+%  sharp gradients and produce small negative concentrations, which tend
+%  to destabilize the biology.  Clamp the donor pools at zero before
+%  deriving anything from them: because every tracer below is a
+%  non-negative multiple of these pools, clamping the inputs makes all
+%  17 tracers non-negative while leaving the ratios between them exact.
+
+if (~isfield(P, 'clamp_negative') || P.clamp_negative),
+  dn = fieldnames(Donor);
+  nneg = 0;
+  for n = 1:length(dn)
+    v = Donor.(dn{n});
+    nneg = nneg + sum(v(:) < 0);
+    v(v < 0) = 0;
+    Donor.(dn{n}) = v;
+  end
+  if (verbose && nneg > 0),
+    disp(['  clamped ', num2str(nneg),                                  ...
+          ' negative donor values to zero']);
+  end
+end
+
+%  Tracers with an equivalent donor pool: used as is.
+
+B.NO3   = Donor.NO3;
+B.NH4   = Donor.NH4;
+B.DetN  = Donor.SdetritusN;
+B.DetC  = Donor.SdetritusC;
+B.LDetN = Donor.LdetritusN;
+B.LDetC = Donor.LdetritusC;
+if (verbose),
+  disp('  NO3, NH4, DetN, DetC, LDetN, LDetC: used as is from donor');
+end
+
+%  Split the donor's single phytoplankton and zooplankton pools.
+
+B.Phytoplankton    = P.phyto_diatom_split*Donor.phytoplankton;
+B.Diatoms          = (1-P.phyto_diatom_split)*Donor.phytoplankton;
+B.Microzooplankton = P.zoo_micro_split*Donor.zooplankton;
+B.Mesozooplankton  = (1-P.zoo_micro_split)*Donor.zooplankton;
+if (verbose),
+  disp(['  Phytoplankton:Diatoms = ',                                   ...
+        num2str(100*P.phyto_diatom_split), ':',                         ...
+        num2str(100*(1-P.phyto_diatom_split)),                          ...
+        ' split of donor phytoplankton']);
+  disp(['  Microzooplankton:Mesozooplankton = ',                        ...
+        num2str(100*P.zoo_micro_split), ':',                            ...
+        num2str(100*(1-P.zoo_micro_split)),                             ...
+        ' split of donor zooplankton']);
+end
+
+%  Chlorophyll pools from their respective nitrogen pools.  The donor's
+%  own chlorophyll field is deliberately not used here.
+
+B.Chlorophyll = P.ChlN_phyto*B.Phytoplankton;
+B.ChlD        = P.ChlN_diatom*B.Diatoms;
+if (verbose),
+  disp(['  Chlorophyll = ', num2str(P.ChlN_phyto),                      ...
+        ' (Chl:N) x Phytoplankton']);
+  disp(['  ChlD        = ', num2str(P.ChlN_diatom),                     ...
+        ' (Chl:N) x Diatoms']);
+end
+
+%  Silica pools, assuming Si:N ~ 1 (not Fe limited).
+
+B.Silica = P.SiN_ratio*B.NO3;
+B.LDetS  = P.SiN_ratio*B.LDetN;
+if (verbose),
+  disp(['  Silica = ', num2str(P.SiN_ratio), ' (Si:N) x NO3']);
+  disp(['  LDetS  = ', num2str(P.SiN_ratio), ' (Si:N) x LDetN']);
+end
+
+%  Pools with no donor counterpart.  DON is set to a small non-zero
+%  background (a zero value would prevent growth), DOC follows from DON
+%  at the Redfield C:N ratio, and Bacteria starts at a fraction of
+%  Phytoplankton, floored at the same small background value.
+
+% B.DON      = P.Bio_background*ones(size(B.NO3));
+B.DOC      = P.CN_ratio*B.DON;
+B.Bacteria = max(P.Bacteria_fraction*B.Phytoplankton, P.Bio_background);
+if (verbose),
+  disp(['  DON      = ', num2str(P.Bio_background),                     ...
+        ' (small non-zero background)']);
+  disp(['  DOC      = ', num2str(P.CN_ratio), ' (C:N) x DON']);
+  disp(['  Bacteria = ', num2str(P.Bacteria_fraction),                  ...
+        ' x Phytoplankton, floored at ', num2str(P.Bio_background)]);
+end
+
+return

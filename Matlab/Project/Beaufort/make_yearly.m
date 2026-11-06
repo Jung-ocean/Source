@@ -1,0 +1,124 @@
+clear; clc;
+
+vari_str = 'SIC';
+switch vari_str
+    case 'SIT'
+        varname = 'sea_ice_thickness';
+    case 'SIC'
+        varname = 'sea_ice_concentration';
+end
+    
+    lonname = 'lon';
+    latname = 'lat';
+
+yyyy_all = 2010:2025;
+
+filepath_all = '/data/jungjih/Observations/Sea_ice/SIT/AWI/weekly/';
+
+for yi = 1:length(yyyy_all)
+    yyyy = yyyy_all(yi);
+    ystr = num2str(yyyy);
+    output_file = [vari_str, '_', ystr, '.mat'];
+
+    filepath = [filepath_all, ystr, '/'];
+
+    % Find all NetCDF files recursively
+    files = dir(fullfile(filepath, '**', '*.nc'));
+
+    if isempty(files)
+        error('No NetCDF files found in the specified directory.');
+    end
+
+    % Exclude the output directory if necessary; only .nc files are selected.
+    nFiles = numel(files);
+    fprintf('Found %d NetCDF files.\n', nFiles);
+
+    % Read longitude and latitude
+    firstFile = fullfile(files(1).folder, files(1).name);
+
+    lon = double(ncread(firstFile, lonname));
+    lat = double(ncread(firstFile, latname));
+
+    % Initialize accumulators
+    sumvari = [];
+    hasMissing = [];
+    nTotal = 0;
+
+    % Process all files and all time records
+    for iFile = 1:nFiles
+
+        filename = fullfile(files(iFile).folder, files(iFile).name);
+        fprintf('Processing %d/%d: %s\n', ...
+            iFile, nFiles, files(iFile).name);
+
+        % Read sea ice thickness
+        info = ncinfo(filename, varname);
+        data = double(ncread(filename, varname));
+
+        % Handle the declared fill value, if present
+        fillValue = [];
+
+        for iAttr = 1:numel(info.Attributes)
+            if strcmp(info.Attributes(iAttr).Name, '_FillValue')
+                fillValue = double(info.Attributes(iAttr).Value);
+                break;
+            end
+        end
+
+        if ~isempty(fillValue)
+            if isnan(fillValue)
+                data(isnan(data)) = NaN;
+            else
+                data(data == fillValue) = NaN;
+            end
+        end
+
+        % Treat all non-finite values as missing
+        data(~isfinite(data)) = NaN;
+
+        % Assumes MATLAB returns data as [xc, yc, time]
+        % for the NetCDF variable (time, yc, xc).
+        if ndims(data) < 3
+            data = reshape(data, size(data, 1), size(data, 2), 1);
+        end
+
+        % Initialize arrays using the spatial dimensions
+        if isempty(sumvari)
+            spatialSize = size(data);
+            spatialSize = spatialSize(1:2);
+
+            sumvari = zeros(spatialSize);
+            hasMissing = false(spatialSize);
+        end
+
+        % Check spatial dimensions
+        if size(data, 1) ~= size(sumvari, 1) || ...
+                size(data, 2) ~= size(sumvari, 2)
+            error('Spatial dimensions do not match in file: %s', filename);
+        end
+
+        % Accumulate every time record
+        for it = 1:size(data, 3)
+
+            slice = data(:, :, it);
+            missing = isnan(slice);
+
+            hasMissing = hasMissing | missing;
+
+            % Add only valid values; missing locations are masked later
+            slice(missing) = 0;
+            sumvari = sumvari + slice;
+
+            nTotal = nTotal + 1;
+        end
+    end
+
+    % Calculate strict mean
+    % Every grid cell must have valid data in every record.
+    vari = sumvari ./ nTotal;
+    vari(hasMissing) = NaN;
+
+    eval([vari_str, ' = vari;']);
+    % Save results
+    save(output_file, vari_str, 'lon', 'lat');
+end

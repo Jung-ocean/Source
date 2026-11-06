@@ -1,17 +1,18 @@
 clear; clc; close all
 
-expname = 'LiveOcean_nudg_ERA5';
-cd(['/data/jungjih/Project/NOAA_NOPP_Carbon/Oregon_1km/Results/Output_', expname])
+domain = 'Oregon_1km';
+model = domain;
+expname = 'LiveOcean_rad_out';
+cd(['/data/jungjih/Project/NOPP_Carbon/', domain, '/Results/Output_', expname])
 
-model = 'Oregon_1km';
-g = grd(model);
+g = grd(domain);
 lon_ROMS = g.lon_rho;
 lat_ROMS = g.lat_rho;
 F = scatteredInterpolant(lat_ROMS(:), lon_ROMS(:), 0.*lat_ROMS(:));
 
 yyyy = 2024;
 ystr = num2str(yyyy);
-mm = 7;
+mm = 8;
 mstr = num2str(mm, '%02i');
 
 f1 = figure;
@@ -52,7 +53,7 @@ for di = 1:eomday(yyyy,mm)
 
     ax1 = nexttile(1);
     if di == 1
-        plot_map('Oregon', 'mercator', 'l')
+        plot_map(domain, 'mercator', 'l')
         contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k')
         isscale = 1;
     else
@@ -65,7 +66,7 @@ for di = 1:eomday(yyyy,mm)
 
     ax2 = nexttile(2);
     if di == 1
-        plot_map('Oregon', 'mercator', 'l')
+        plot_map(domain, 'mercator', 'l')
         contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k')
     end
     interval = 18;
@@ -75,7 +76,7 @@ for di = 1:eomday(yyyy,mm)
 
     ax3 = nexttile(3);
     if di == 1
-        plot_map('Oregon', 'mercator', 'l')
+        plot_map(domain, 'mercator', 'l')
         contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k')
     end
     u_diff = u_interp - u_HFR;

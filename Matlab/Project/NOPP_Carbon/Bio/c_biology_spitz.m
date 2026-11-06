@@ -80,6 +80,28 @@ end
 
 bio = spitz_bio_vars();
 
+%  Skip any tracer already defined in the file, so this function can be
+%  run against a file that already carries some of them.
+
+status=0;
+
+V=nc_vnames(ncname);
+ExistingNames = {V.Variables.Name};
+
+define = true([1 length(bio)]);
+for n=1:length(bio),
+  if (any(strcmp(ExistingNames, bio(n).name))),
+    define(n) = false;
+    disp(['C_BIOLOGY_SPITZ - variable already defined, skipping: ',     ...
+          bio(n).name]);
+  end
+end
+
+if (~any(define)),
+  disp('C_BIOLOGY_SPITZ - all biology variables already defined.');
+  return
+end
+
 %--------------------------------------------------------------------------
 %  Open existing initial conditions or climatology file and put in
 %  definition mode.
@@ -92,9 +114,8 @@ netcdf.reDef(ncid);
 %  Define biology tracer variables.
 %--------------------------------------------------------------------------
 
-status=0;
-
 for n=1:length(bio),
+  if (~define(n)), continue, end
   Var.name        = bio(n).name;
   Var.type        = vartype;
   Var.dimid       = [did.time did.Nr did.yr did.xr];
@@ -103,7 +124,10 @@ for n=1:length(bio),
   Var.time        = Vname.time;
   Var.coordinates = Vname.coord;
   [~,status]=nc_vdef(ncid,Var);
-  if (status ~= 0), return, end
+  if (status ~= 0),
+    netcdf.close(ncid);
+    return
+  end
   clear Var
 end
 

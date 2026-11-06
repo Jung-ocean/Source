@@ -25,7 +25,7 @@ outfile= ['grid_', domain, '_3.nc'];
 %outfile ='/home/europe/data2/kurapov/OR_2km/Prm/grd_or2km_03.nc';
 eval(['!cp ' infile ' ' outfile]);
 
-hmin = 5;
+hmin = 10;
 
 Case='OR'; %'Bering'; % 'Amukta','OR','Tas','OR_2km'
 

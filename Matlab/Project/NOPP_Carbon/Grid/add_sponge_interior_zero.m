@@ -9,7 +9,7 @@ filename_org = ['grid_', domain, '_3.nc'];
 filename = ['grid_', domain, '_sponge.nc'];
 copyfile(filename_org, filename);
 
-factor = 3;
+factor = 5;
 % Nfilter = 25;
 Nfilter = 25;
 Lplot = 1;

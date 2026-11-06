@@ -1,4 +1,4 @@
-function data = load_models_uv_profile_daily(model, g, timenum_target, lon_target, lat_target, h_target)
+function data = load_models_uv_profile_daily(model, expname, g, timenum_target, lon_target, lat_target, h_target)
 
 yyyymmdd = datestr(timenum_target, 'yyyymmdd');
 
@@ -25,7 +25,7 @@ Fv = scatteredInterpolant(lon_v(:), lat_v(:), ones(size(lon_v(:))));
 
 switch model
     case 'Oregon_1km'
-        filepath = '/data/jungjih/Project/NOAA_NOPP_Carbon/Oregon_1km/Output/daily/';
+        filepath = ['/data/jungjih/Project/NOPP_Carbon/Oregon_1km/Outputs/Output_', expname, '/daily/'];
         filenum = timenum_target - datenum(2024,1,1) + 1;
         fstr = num2str(filenum, '%04i');
         filename = ['ocean_avg_', fstr, '.nc'];

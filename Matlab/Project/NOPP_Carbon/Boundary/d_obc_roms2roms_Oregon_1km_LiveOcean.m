@@ -27,13 +27,31 @@ source = 'LiveOcean';
 R2R_source_grid = grd('LiveOcean');
 datatype = 'daily';
 
-domain = 'Oregon_1km_large';
+domain = 'Oregon_1km';
 g = grd(domain);
 refdate = datenum(2024,1,1);
 GRDname = g.grd_file;
 BRYname = ['boundary_', domain, '_LiveOcean.nc'];
 
-for di = 1:366
+%  Days to process.
+%
+%  A full 366-day run takes many hours in a single session.  To spread it
+%  over several sessions running at the same time, set the environment
+%  variable PHY_BRY_DAYS before starting Matlab and give each session its
+%  own working directory, then concatenate the chunks along 'bry_time'
+%  with ncrcat.  run_phy_bry_parallel.sh does this.  The environment
+%  variable survives the 'clear' above, so it can be set from outside
+%  without editing this script.
+
+DayList = 1:366;
+
+env_days = getenv('PHY_BRY_DAYS');            % e.g. '1:46'
+if (~isempty(env_days))
+    DayList = eval(env_days);                                          %#ok<EVLDCL>
+    disp(['Day range from PHY_BRY_DAYS: ', env_days]);
+end
+
+for di = DayList
 
 filenum = di;
 fstr = num2str(filenum, '%04i');
@@ -45,7 +63,7 @@ NWAgrid = R2R_source_grid.grd_file;
 StrDay = datenum(yyyy,1,1,12,0,0)+di-1;        % starting day to process
 EndDay = datenum(yyyy,12,31,12,0,0);        % ending   day to process
 
-if di == 1
+if di == DayList(1)
     CREATE = true;                          % logical switch to create NetCDF
 else
     CREATE = false;                          % logical switch to create NetCDF

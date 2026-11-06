@@ -7,31 +7,44 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all;
 
+domain = 'Oregon_1km';
+expname = 'LiveOcean_rad_out';
+cd(['/data/jungjih/Project/NOPP_Carbon/', domain, '/Results/Output_', expname])
+
 yyyy = 2024;
 ystr = num2str(yyyy);
 
+timenum_obs = datenum(yyyy,1,1):datenum(yyyy,12,31);
+
 vari_str = 'vbar';
-vari_obs = [vari_str(1), 'vel'];
+vari_str_obs = [vari_str(1), 'vel'];
 vari_model = vari_str(1);
-regions_target = 'OR_shelf';
+regions_target = 'WA_shelf';
+ismap = 0;
 
-ismap = 1;
+switch regions_target
+    case 'WA_shelf'
+        h_obs = 87;
+        lon_obs = -124.566;
+        lat_obs = 46.9859;
+    case 'OR_shelf'
+        h_obs = 80;
+        lon_obs = -124.304;
+        lat_obs = 44.6393;
+end
 
-g = grd('Oregon_1km');
+depth_target = -10:-1:-(h_obs-10); % should be negative
+dstr1 = num2str(abs(depth_target(1)));
+dstr2 = num2str(abs(depth_target(end)));
 
-load_OOI_mooring_info
-rindex = find(strcmp(regions, regions_target));
-lat_obs = lats(rindex);
-lon_obs = lons(rindex);
-h_obs = depths(rindex);
+g = grd(domain);
 
 if ismap == 1
     % Map
     ismap = 1;
-    g = grd('Oregon_1km');
     figure;
     set(gcf, 'Position', [1 200 500 800])
-    plot_map('Oregon', 'mercator', 'l');
+    plot_map(domain, 'mercator', 'l');
     [cs, h] = contourm(g.lat_rho, g.lon_rho, g.h, [200 200], 'k');
     cl = clabelm(cs, h);
     set(cl, 'BackgroundColor', 'none');
@@ -39,21 +52,16 @@ if ismap == 1
     print(['map_OOI_mooring_', regions_target], '-dpng')
 end
 
-addpath('/data/jungjih/Project/NANOOS/Intercomparison/')
-load([vari_obs, '_', regions_target, '_daily.mat'])
-rmpath('/data/jungjih/Project/NANOOS/Intercomparison/')
+data = load_OOI_mooring_uv_daily(regions_target, vari_str_obs, timenum_obs, depth_target);
+vari_obs1 = 100*data(1).vari; % m/s to cm/s
+vari_obs2 = 100*data(2).vari; % m/s to cm/s
+vari_cat = cat(3,vari_obs1,vari_obs2);
+vari_obs_tmp = mean(vari_cat,3,'omitnan');
+vari_obs = mean(vari_obs_tmp,1,'omitnan');
 
-tindex = find(timenum >= datenum(yyyy,1,1) & timenum < datenum(yyyy+1,1,1));
-timenum_obs = timenum(tindex);
-vari_obs_tmp = vari(:,tindex)*100; % m/s to cm/s
-dindex = find(depth < -10 & depth > -(h_obs-10));
-depth_target = depth(dindex);
-vari_obs_tmp2 = vari_obs_tmp(dindex,:);
-vari_obs = mean(vari_obs_tmp2, 1, 'omitnan');
-mask = vari_obs_tmp2./vari_obs_tmp2;
-mask_isnan = isnan(mask);
-mask_isnan_sum = sum(mask_isnan,1);
-index = find(mask_isnan_sum == size(mask,1));
+mask = vari_obs_tmp./vari_obs_tmp;
+vari_obs_isnan = isnan(vari_obs);
+index = find(vari_obs_isnan == 1);
 mask(:,index) = 1;
 
 if strcmp(vari_str, 'ubar')
@@ -70,7 +78,7 @@ else
     v_ROMS_tmp = [];
     for ti = 1:length(timenum_obs)
         timenum_target = timenum_obs(ti);
-        profile = load_models_uv_profile_daily('Oregon_1km', g, timenum_target, lon_obs, lat_obs, h_obs);
+        profile = load_models_uv_profile_daily('Oregon_1km', expname, g, timenum_target, lon_obs, lat_obs, h_obs);
         u_tmp = profile.u;
         u_interp = interp1(profile.z_r, u_tmp, depth_target);
         u_ROMS_tmp(:,ti) = 100*u_interp; % m/s to cm/s
@@ -93,7 +101,7 @@ set(gcf, 'Position', [1 200 1300 500])
 pn = plot(timenum_obs, vari_ROMS, '-k', 'LineWidth', 2);
 po = plot(timenum_obs, vari_obs, '-r', 'LineWidth', 2);
 
-ylim([-50 50])
+ylim([-55 55])
 
 xticks([datenum(2024,1:12,1)])
 datetick('x', 'mm/dd', 'keepticks', 'keeplimits')
@@ -120,7 +128,7 @@ l = legend([pn, po], ...
     'bias = ', num2str(bias_ROMS, '%.2f'), ' cm/s, ', ...
     'RMSE = ', num2str(rmse_ROMS, '%.2f'), ' cm/s, ', ...
     'r = ', num2str(corrcoef_ROMS, '%.2f'), ')'], ...
-    'Observation (OOI mooring');
+    ['Observation (', replace(regions_target, '_', ' '), ')']);
 l.Location = 'SouthEast';
 l.FontSize = 15;
 

@@ -2,7 +2,7 @@ function vari = load_PDO(yyyy_target, mm_all)
 
 filepath = '/data/jungjih/Indices/PDO/';
 
-filename = 'ersst.v5.pdo.dat';
+filename = 'ersst.v6.pdo.dat';
 file = [filepath, filename];
 data = importdata(file);
 data = data.data;

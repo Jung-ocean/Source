@@ -1,10 +1,10 @@
 clear; clc
 
-domain = 'Oregon_1km_large';
+domain = 'Oregon_1km';
 g = grd(domain);
 N = g.N;
 
-day = 14;
+day = 5;
 dstr = num2str(day);
 
 filename_org = ['boundary_', domain, '_LiveOcean.nc'];
